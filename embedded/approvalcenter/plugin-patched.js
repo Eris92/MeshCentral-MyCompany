@@ -118,31 +118,82 @@ require.cache[modulePath].exports = originalModule;
 
 module.exports.approvalcenter = function (parent) {
     var obj = originalPlugin.approvalcenter(parent);
-    var originalStartup = obj.onWebUIStartupEnd;
     var originalGet = obj.handleAdminReq;
     var originalPost = obj.handleAdminPostReq;
 
+    // This function is serialized by MeshCentral and runs in the browser.
+    // It must be completely self-contained and cannot reference Node closures.
     obj.onWebUIStartupEnd = function () {
-        var result = originalStartup && originalStartup.apply(obj, arguments);
-        if (typeof window !== "undefined" && typeof document !== "undefined") {
-            var loadOverride = function () {
-                if (document.getElementById("mycompany-navigation-script-054")) return;
-                if (window.ApprovalCenter) delete window.ApprovalCenter.__noApprovalPatchInstalled;
-                var endpoint = new URL("pluginadmin.ashx", window.location.href);
-                endpoint.searchParams.set("pin", "mycompany");
-                endpoint.searchParams.set("module", "approvals");
-                endpoint.searchParams.set("asset", "noapproval.js");
-                endpoint.searchParams.set("v", "0.5.4");
+        if (typeof window === "undefined" || typeof document === "undefined") return;
+
+        var version = "0.5.5";
+        window.MyCompanyAssetUrl = window.MyCompanyAssetUrl || function (moduleName, assetName) {
+            var endpoint = new URL("pluginadmin.ashx", window.location.href);
+            endpoint.searchParams.set("pin", "mycompany");
+            endpoint.searchParams.set("module", moduleName);
+            endpoint.searchParams.set("asset", assetName);
+            endpoint.searchParams.set("v", version);
+            return endpoint.href;
+        };
+
+        window.ApprovalCenter = window.ApprovalCenter || {};
+        if (window.ApprovalCenter.bootstrapPromise) return;
+
+        var assetUrl = function (asset) {
+            var endpoint = new URL("pluginadmin.ashx", window.location.href);
+            endpoint.searchParams.set("pin", "mycompany");
+            endpoint.searchParams.set("module", "approvals");
+            endpoint.searchParams.set("asset", asset);
+            endpoint.searchParams.set("v", version);
+            return endpoint.href;
+        };
+
+        var load = function (id, source) {
+            return new Promise(function (resolve, reject) {
+                var existing = document.getElementById(id);
+                if (existing) {
+                    if (existing.getAttribute("data-loaded") === "1") resolve();
+                    else {
+                        existing.addEventListener("load", resolve, { once: true });
+                        existing.addEventListener("error", reject, { once: true });
+                    }
+                    return;
+                }
                 var script = document.createElement("script");
-                script.id = "mycompany-navigation-script-054";
-                script.src = endpoint.href;
+                script.id = id;
+                script.src = source;
                 script.async = false;
+                script.onload = function () { script.setAttribute("data-loaded", "1"); resolve(); };
+                script.onerror = reject;
                 (document.head || document.documentElement).appendChild(script);
-            };
-            if (window.ApprovalCenter && window.ApprovalCenter.bootstrapPromise) window.ApprovalCenter.bootstrapPromise.then(loadOverride);
-            else window.setTimeout(loadOverride, 0);
+            });
+        };
+
+        var style = document.getElementById("approvalcenter-style-055");
+        if (!style) {
+            style = document.createElement("link");
+            style.id = "approvalcenter-style-055";
+            style.rel = "stylesheet";
+            style.href = assetUrl("plugin.css");
+            (document.head || document.documentElement).appendChild(style);
         }
-        return result;
+
+        window.ApprovalCenter.bootstrapPromise = load("approvalcenter-core-script-055", assetUrl("core.js"))
+            .then(function () { return load("approvalcenter-main-script-055", assetUrl("main.js")); })
+            .then(function () {
+                if (window.ApprovalCenter) delete window.ApprovalCenter.__noApprovalPatchInstalled;
+                return load("approvalcenter-noapproval-script-055", assetUrl("noapproval.js"));
+            })
+            .then(function () {
+                if (!window.ApprovalCenter || typeof window.ApprovalCenter.initialize !== "function") {
+                    throw new Error("Approval Center UI API is missing.");
+                }
+                return window.ApprovalCenter.initialize();
+            })
+            .catch(function (error) {
+                window.ApprovalCenter.bootstrapPromise = null;
+                if (window.console) window.console.error("Approval Center bootstrap error", error);
+            });
     };
 
     obj.handleAdminReq = function (req, res, user) {
