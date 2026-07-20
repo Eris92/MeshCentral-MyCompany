@@ -1,0 +1,52 @@
+name: Build standalone plugin
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout MyCompany
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout source plugins
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .build-sources
+          git clone --depth 1 https://github.com/Eris92/MeshCentral-MyScripts.git .build-sources/MeshCentral-MyScripts
+          git clone --depth 1 https://github.com/Eris92/MeshCentral-MyCommands.git .build-sources/MeshCentral-MyCommands
+          git clone --depth 1 https://github.com/Eris92/MeshCentral-ApprovalCenter.git .build-sources/MeshCentral-ApprovalCenter
+          git clone --depth 1 https://github.com/Eris92/MeshCentral-MoveRequests.git .build-sources/MeshCentral-MoveRequests
+
+      - name: Build embedded package
+        run: node scripts/build-standalone.js .build-sources
+
+      - name: Validate package
+        shell: bash
+        run: |
+          test -f embedded-manifest.json
+          test -d embedded/myscripts
+          test -d embedded/mycommands
+          test -d embedded/approvalcenter
+          test -d embedded/moverequest
+          node -e "JSON.parse(require('fs').readFileSync('config.json','utf8'))"
+
+      - name: Publish standalone branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .build-sources
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build standalone MyCompany bundle from ${GITHUB_SHA}" || true
+          git push origin HEAD:standalone --force
