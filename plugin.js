@@ -37,11 +37,15 @@ module.exports.mycompany = function (parent) {
         });
     }
 
+    function embeddedInstance(key) {
+        return embedded[key] && embedded[key].instance;
+    }
+
     loadEmbedded();
 
     obj.parent = parent;
     obj.meshServer = parent && parent.parent;
-    obj.exports = ["onWebUIStartupEnd", "goPageStart", "goPageEnd"];
+    obj.exports = ["onWebUIStartupEnd", "goPageStart", "goPageEnd", "onDeviceRefreshEnd", "commandResult"];
 
     [
         ["scripts", "embeddedScriptsStartup"],
@@ -49,16 +53,16 @@ module.exports.mycompany = function (parent) {
         ["approvals", "embeddedApprovalsStartup"],
         ["move", "embeddedMoveStartup"]
     ].forEach(function (pair) {
-        var record = embedded[pair[0]];
-        if (record && record.instance && typeof record.instance.onWebUIStartupEnd === "function") {
-            obj[pair[1]] = record.instance.onWebUIStartupEnd;
+        var instance = embeddedInstance(pair[0]);
+        if (instance && typeof instance.onWebUIStartupEnd === "function") {
+            obj[pair[1]] = instance.onWebUIStartupEnd;
             obj.exports.push(pair[1]);
         }
     });
 
     obj.server_startup = function () {
         Object.keys(embedded).forEach(function (key) {
-            var instance = embedded[key].instance;
+            var instance = embeddedInstance(key);
             if (instance && typeof instance.server_startup === "function") {
                 try { instance.server_startup(); }
                 catch (error) { console.log("MyCompany module startup failed " + key + ":", error.stack || error); }
@@ -68,15 +72,39 @@ module.exports.mycompany = function (parent) {
 
     obj.handleAdminReq = function (req, res, user) {
         var key = String(req && req.query && req.query.module || "");
-        var record = embedded[key];
-        if (!record || !record.instance || typeof record.instance.handleAdminReq !== "function") {
+        var instance = embeddedInstance(key);
+        if (!instance || typeof instance.handleAdminReq !== "function") {
             res.statusCode = 404;
             res.setHeader("Content-Type", "application/json; charset=utf-8");
             res.end(JSON.stringify({ ok: false, error: "Embedded module is unavailable: " + key }));
             return;
         }
-        return record.instance.handleAdminReq(req, res, user);
+        return instance.handleAdminReq(req, res, user);
     };
+
+    obj.handleAdminPostReq = function (req, res, user) {
+        var key = String(req && req.query && req.query.module || "");
+        var instance = embeddedInstance(key);
+        if (!instance || typeof instance.handleAdminPostReq !== "function") {
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify({ ok: false, error: "Embedded module POST endpoint is unavailable: " + key }));
+            return;
+        }
+        return instance.handleAdminPostReq(req, res, user);
+    };
+
+    var commandsInstance = embeddedInstance("commands");
+    if (commandsInstance) {
+        if (typeof commandsInstance.hook_processAgentData === "function") obj.hook_processAgentData = function () { return commandsInstance.hook_processAgentData.apply(commandsInstance, arguments); };
+        if (typeof commandsInstance.serveraction === "function") obj.serveraction = function () { return commandsInstance.serveraction.apply(commandsInstance, arguments); };
+    }
+
+    var approvalsInstance = embeddedInstance("approvals");
+    if (approvalsInstance) {
+        if (typeof approvalsInstance.hook_setupHttpHandlers === "function") obj.hook_setupHttpHandlers = function () { return approvalsInstance.hook_setupHttpHandlers.apply(approvalsInstance, arguments); };
+        if (typeof approvalsInstance.handleExternalApi === "function") obj.handleExternalApi = function () { return approvalsInstance.handleExternalApi.apply(approvalsInstance, arguments); };
+    }
 
     obj.onWebUIStartupEnd = function () {
         if (typeof window === "undefined" || typeof document === "undefined") return;
@@ -88,10 +116,10 @@ module.exports.mycompany = function (parent) {
         app.activeModule = "settings";
         app.nativeState = null;
         app.modules = {
-            scripts: { label: "Scripts", viewmode: 101, globals: ["MyScripts"], startup: "embeddedScriptsStartup" },
-            commands: { label: "Commands", viewmode: 102, globals: ["MyCommands"], startup: "embeddedCommandsStartup" },
-            approvals: { label: "Approvals", viewmode: 105, globals: ["ApprovalCenter"], startup: "embeddedApprovalsStartup" },
-            move: { label: "Move Requests", viewmode: 104, globals: ["MoveRequest", "MoveRequests"], startup: "embeddedMoveStartup" }
+            scripts: { label: "Scripts", globals: ["MyScripts"] },
+            commands: { label: "Commands", globals: ["MyCommands"] },
+            approvals: { label: "Approvals", globals: ["ApprovalCenter"] },
+            move: { label: "Move Requests", globals: ["MoveRequest"] }
         };
 
         window.MyCompanyAssetUrl = function (moduleName, assetName) {
@@ -103,8 +131,8 @@ module.exports.mycompany = function (parent) {
         };
 
         function getGlobal(definition) {
-            for (var i = 0; i < definition.globals.length; i++) {
-                if (window[definition.globals[i]]) return window[definition.globals[i]];
+            for (var index = 0; index < definition.globals.length; index++) {
+                if (window[definition.globals[index]]) return window[definition.globals[index]];
             }
             return null;
         }
@@ -125,16 +153,20 @@ module.exports.mycompany = function (parent) {
         function bootstrapModules() {
             var api = window.pluginHandler && window.pluginHandler.mycompany;
             if (!api) return;
-            Object.keys(app.modules).forEach(function (key) {
-                var name = app.modules[key].startup;
-                if (typeof api[name] === "function") {
-                    try { api[name](); }
-                    catch (error) { if (window.console) console.error("MyCompany module bootstrap failed: " + key, error); }
+            [
+                ["scripts", "embeddedScriptsStartup"],
+                ["commands", "embeddedCommandsStartup"],
+                ["approvals", "embeddedApprovalsStartup"],
+                ["move", "embeddedMoveStartup"]
+            ].forEach(function (pair) {
+                if (typeof api[pair[1]] === "function") {
+                    try { api[pair[1]](); }
+                    catch (error) { if (window.console) console.error("MyCompany module bootstrap failed: " + pair[0], error); }
                 }
             });
-            window.setTimeout(removeEmbeddedMenus, 300);
-            window.setTimeout(removeEmbeddedMenus, 1000);
-            window.setTimeout(removeEmbeddedMenus, 3000);
+            window.setTimeout(removeEmbeddedMenus, 500);
+            window.setTimeout(removeEmbeddedMenus, 1500);
+            window.setTimeout(removeEmbeddedMenus, 3500);
         }
 
         function hideElement(element) {
@@ -154,6 +186,7 @@ module.exports.mycompany = function (parent) {
             if (!page || !titleHost) return null;
             var host = document.getElementById("MyCompanyWorkspace");
             if (host) return host;
+
             host = document.createElement("div");
             host.id = "MyCompanyWorkspace";
             host.style.display = "none";
@@ -162,6 +195,7 @@ module.exports.mycompany = function (parent) {
             host.style.height = "calc(100vh - 104px)";
             host.style.overflow = "auto";
             host.style.padding = "8px 12px 18px";
+
             var nav = document.createElement("div");
             nav.id = "MyCompanyNavigation";
             nav.style.display = "flex";
@@ -177,6 +211,7 @@ module.exports.mycompany = function (parent) {
                 nav.appendChild(button);
             });
             host.appendChild(nav);
+
             var content = document.createElement("div");
             content.id = "MyCompanyContent";
             content.style.border = "1px solid rgba(127,127,127,.65)";
@@ -216,6 +251,41 @@ module.exports.mycompany = function (parent) {
             app.nativeState = null;
         };
 
+        app.showError = function (title, message) {
+            if (!app.showNativePage()) return false;
+            var content = document.getElementById("MyCompanyContent");
+            content.innerHTML = "";
+            var heading = document.createElement("h3");
+            heading.textContent = title || "Module error";
+            content.appendChild(heading);
+            var status = document.createElement("div");
+            status.className = "alert alert-danger";
+            status.textContent = message || "The module could not be opened.";
+            content.appendChild(status);
+            app.active = true;
+            window.xxcurrentView = 106;
+            return false;
+        };
+
+        app.openApprovalCenter = function (providerType) {
+            var approval = window.ApprovalCenter;
+            if (!approval) return app.showError("Approval Center", "Approval Center UI has not loaded.");
+            var open = function () {
+                if (typeof approval.open !== "function") return app.showError("Approval Center", "Approval Center does not expose an open function.");
+                approval.open();
+                if (providerType && typeof approval.activateTab === "function") {
+                    window.setTimeout(function () { approval.activateTab(providerType); }, 0);
+                }
+                return false;
+            };
+            var pending = approval.bootstrapPromise || (typeof approval.initialize === "function" ? approval.initialize() : null);
+            if (pending && typeof pending.then === "function") {
+                pending.then(open).catch(function (error) { app.showError("Approval Center", error && error.message || "Approval Center initialization failed."); });
+                return false;
+            }
+            return open();
+        };
+
         app.renderSettings = function () {
             if (!app.showNativePage()) return false;
             var content = document.getElementById("MyCompanyContent");
@@ -225,6 +295,12 @@ module.exports.mycompany = function (parent) {
             content.appendChild(heading);
             Object.keys(app.modules).forEach(function (key) {
                 var definition = app.modules[key];
+                var target = getGlobal(definition);
+                var ready = false;
+                if (key === "scripts") ready = !!(target && typeof target.open === "function");
+                else if (key === "commands") ready = !!(target && typeof target.openStandalone === "function");
+                else if (key === "approvals") ready = !!(target && typeof target.open === "function");
+                else if (key === "move") ready = !!(target && typeof target.openHostDialog === "function");
                 var row = document.createElement("div");
                 row.style.padding = "10px 0";
                 row.style.borderBottom = "1px solid rgba(127,127,127,.25)";
@@ -232,7 +308,7 @@ module.exports.mycompany = function (parent) {
                 title.textContent = definition.label;
                 row.appendChild(title);
                 var detail = document.createElement("div");
-                detail.textContent = getGlobal(definition) ? "Embedded and initialized" : "Embedded - UI is initializing";
+                detail.textContent = ready ? "Embedded and initialized" : "Embedded - UI is initializing";
                 detail.style.opacity = ".8";
                 row.appendChild(detail);
                 content.appendChild(row);
@@ -244,20 +320,25 @@ module.exports.mycompany = function (parent) {
 
         app.showModule = function (key) {
             if (key === "settings") return app.renderSettings();
-            var definition = app.modules[key];
-            if (!definition) return false;
             app.restoreNativePage();
             app.active = false;
             app.activeModule = key;
-            var target = getGlobal(definition);
-            if (target && typeof target.open === "function") return target.open();
-            if (typeof window.go === "function") return window.go(definition.viewmode);
-            window.location.href = "?viewmode=" + definition.viewmode;
-            return false;
+
+            if (key === "scripts") {
+                if (window.MyScripts && typeof window.MyScripts.open === "function") return window.MyScripts.open();
+                return app.showError("Scripts", "My Scripts UI has not loaded.");
+            }
+            if (key === "commands") {
+                if (window.MyCommands && typeof window.MyCommands.openStandalone === "function") return window.MyCommands.openStandalone();
+                return app.showError("Commands", "My Commands UI has not loaded or access is not granted.");
+            }
+            if (key === "approvals") return app.openApprovalCenter("");
+            if (key === "move") return app.openApprovalCenter("moverequest");
+            return app.showError("Module", "Unknown module: " + key);
         };
 
         app.open = function (event) {
-            if (event) { event.preventDefault(); event.stopPropagation(); }
+            if (event) { if (event.preventDefault) event.preventDefault(); if (event.stopPropagation) event.stopPropagation(); }
             if (typeof window.go === "function") window.go(1);
             return app.renderSettings();
         };
@@ -271,6 +352,7 @@ module.exports.mycompany = function (parent) {
                 main.title = "My Company";
                 main.href = "#";
                 main.onclick = app.open;
+                main.onmouseup = app.open;
                 mainAnchor.parentNode.insertBefore(main, mainAnchor.nextSibling);
             }
             var leftAnchor = document.getElementById("LeftMenuMyDevices");
@@ -280,6 +362,7 @@ module.exports.mycompany = function (parent) {
                 left.title = "My Company";
                 left.href = "#";
                 left.onclick = app.open;
+                left.onmouseup = app.open;
                 leftAnchor.parentNode.insertBefore(left, leftAnchor.nextSibling);
             }
         };
@@ -292,11 +375,35 @@ module.exports.mycompany = function (parent) {
     };
 
     obj.goPageStart = function (view) {
-        if (typeof window !== "undefined" && window.MyCompany && window.MyCompany.active) window.MyCompany.restoreNativePage();
+        if (typeof window === "undefined") return;
+        if (window.MyCompany && window.MyCompany.active) window.MyCompany.restoreNativePage();
+        if (window.MyScripts && typeof window.MyScripts.onNativePageStart === "function") window.MyScripts.onNativePageStart(view);
+        if (window.MyCommands && typeof window.MyCommands.onNativePageStart === "function") window.MyCommands.onNativePageStart(view);
+        if (window.ApprovalCenter && typeof window.ApprovalCenter.onNativePageStart === "function") window.ApprovalCenter.onNativePageStart(view);
     };
 
-    obj.goPageEnd = function () {
-        if (typeof window !== "undefined" && window.MyCompany) window.MyCompany.ensureMenus();
+    obj.goPageEnd = function (view) {
+        if (typeof window === "undefined") return;
+        if (window.MyScripts && typeof window.MyScripts.onNativePageEnd === "function") window.MyScripts.onNativePageEnd(view);
+        if (window.MyCommands && typeof window.MyCommands.onNativePageEnd === "function") window.MyCommands.onNativePageEnd(view);
+        if (window.ApprovalCenter && typeof window.ApprovalCenter.onNativePageEnd === "function") window.ApprovalCenter.onNativePageEnd(view);
+        if (window.MyCompany) window.MyCompany.ensureMenus();
+    };
+
+    obj.onDeviceRefreshEnd = function (nodeId) {
+        if (typeof window === "undefined") return;
+        if (window.MyCommands) {
+            window.MyCommands.pendingNodeId = nodeId;
+            if (typeof window.MyCommands.onDeviceRefreshEnd === "function") window.MyCommands.onDeviceRefreshEnd(nodeId);
+        }
+        if (window.MoveRequest) {
+            if (typeof window.MoveRequest.setHostNodeId === "function") window.MoveRequest.setHostNodeId(nodeId);
+            if (typeof window.MoveRequest.scheduleHostButton === "function") window.MoveRequest.scheduleHostButton();
+        }
+    };
+
+    obj.commandResult = function (server, message) {
+        if (typeof window !== "undefined" && window.MyCommands && typeof window.MyCommands.commandResult === "function") window.MyCommands.commandResult(message);
     };
 
     return obj;
