@@ -8,9 +8,9 @@ module.exports.mycommands = function (parent) {
     var obj = {};
     var pluginRoot = parent.path.join(parent.pluginPath, "mycommands");
     var config = backendCore.readJson(parent.fs, parent.path.join(pluginRoot, "config.json"), {
-        name: "My Commands", shortName: "mycommands", version: "4.5.1", viewmode: 102,
+        name: "My Commands", shortName: "mycommands", version: "4.5.2", viewmode: 102,
         pageText: "My Commands", leftMenuIcon: "assets/LeftMenu.png", credentialsEnabled: false,
-        showInMenu: true, showOnDevice: true, maxMultiHostNodes: 200, multiHostConcurrency: 8
+        showInMenu: false, showOnDevice: true, maxMultiHostNodes: 200, multiHostConcurrency: 8
     });
     var pluginModule = extendModule(createModule(config, parent, obj), config, parent, obj);
     var auditLogger = backendCore.createAuditLogger(parent, "mycommands", obj);
@@ -46,14 +46,14 @@ module.exports.mycommands = function (parent) {
         if (typeof window === "undefined" || typeof document === "undefined") return;
         window.MyCommands = window.MyCommands || {};
         if (window.MyCommands.bootstrapPromise) return;
-        var assetUrl = function (asset) { var endpoint = new URL("pluginadmin.ashx", window.location.href); endpoint.searchParams.set("pin", "mycompany"); endpoint.searchParams.set("module", "commands"); endpoint.searchParams.set("asset", asset); endpoint.searchParams.set("v", "4.5.1"); return endpoint.href; };
+        var assetUrl = function (asset) { var endpoint = new URL("pluginadmin.ashx", window.location.href); endpoint.searchParams.set("pin", "mycompany"); endpoint.searchParams.set("module", "commands"); endpoint.searchParams.set("asset", asset); endpoint.searchParams.set("v", "4.5.2"); return endpoint.href; };
         var load = function (id, source) { return new Promise(function (resolve, reject) { var existing = document.getElementById(id); if (existing) { if (existing.getAttribute("data-loaded") === "1") resolve(); else { existing.addEventListener("load", resolve, { once: true }); existing.addEventListener("error", reject, { once: true }); } return; } var script = document.createElement("script"); script.id = id; script.src = source; script.async = false; script.onload = function () { script.setAttribute("data-loaded", "1"); resolve(); }; script.onerror = reject; (document.head || document.documentElement).appendChild(script); }); };
-        ["plugin.css", "enhancements.css", "ui-fixes.css"].forEach(function (file) { var id = "mycommands-" + file.replace(/\W/g, "-"); if (!document.getElementById(id)) { var style = document.createElement("link"); style.id = id; style.rel = "stylesheet"; style.href = assetUrl(file); (document.head || document.documentElement).appendChild(style); } });
-        window.MyCommands.bootstrapPromise = load("mycommands-core-script", assetUrl("core.js"))
-            .then(function () { return load("mycommands-main-script", assetUrl("main.js")); })
-            .then(function () { return load("mycommands-enhancements-script", assetUrl("enhancements.js")); })
-            .then(function () { return load("mycommands-fixes-script", assetUrl("fixes.js")); })
-            .then(function () { return load("mycommands-ui-fixes-script", assetUrl("ui-fixes.js")); })
+        ["plugin.css", "enhancements.css", "ui-fixes.css"].forEach(function (file) { var id = "mycommands-452-" + file.replace(/\W/g, "-"); if (!document.getElementById(id)) { var style = document.createElement("link"); style.id = id; style.rel = "stylesheet"; style.href = assetUrl(file); (document.head || document.documentElement).appendChild(style); } });
+        window.MyCommands.bootstrapPromise = load("mycommands-core-script-452", assetUrl("core.js"))
+            .then(function () { return load("mycommands-main-script-452", assetUrl("main.js")); })
+            .then(function () { return load("mycommands-enhancements-script-452", assetUrl("enhancements.js")); })
+            .then(function () { return load("mycommands-fixes-script-452", assetUrl("fixes.js")); })
+            .then(function () { return load("mycommands-ui-fixes-script-452", assetUrl("ui-fixes.js")); })
             .then(function () { return window.MyCommands.initialize(); })
             .catch(function (error) { window.MyCommands.bootstrapPromise = null; if (window.console) console.error("My Commands bootstrap error", error); });
     };
@@ -67,9 +67,9 @@ module.exports.mycommands = function (parent) {
 
     obj.handleAdminReq = function (req, res, user) {
         var asset = String(req && req.query && req.query.asset || "");
-        if (asset === "access") { var bootstrap = pluginModule.getBootstrap(user); sendJson(res, 200, { ok: true, access: bootstrap.access, ui: bootstrap.ui, config: pluginModule.getClientConfig() }); return; }
-        if (asset === "config") { sendJson(res, 200, pluginModule.getClientConfig()); return; }
-        if (asset === "settings") { var settings = pluginModule.getSettings(user); if (!settings) { sendJson(res, 403, { ok: false, error: "Permission denied." }); return; } sendJson(res, 200, { ok: true, settings: settings }); return; }
+        if (asset === "access") { var bootstrap = pluginModule.getBootstrap(user); bootstrap.ui.showInMenu = false; sendJson(res, 200, { ok: true, access: bootstrap.access, ui: bootstrap.ui, config: pluginModule.getClientConfig() }); return; }
+        if (asset === "config") { var clientConfig = pluginModule.getClientConfig(); clientConfig.showInMenu = false; sendJson(res, 200, clientConfig); return; }
+        if (asset === "settings") { var settings = pluginModule.getSettings(user); if (!settings) { sendJson(res, 403, { ok: false, error: "Permission denied." }); return; } settings.showInMenu = false; sendJson(res, 200, { ok: true, settings: settings }); return; }
         if (asset === "catalog") { var catalog = pluginModule.getCatalog(user); if (!catalog) { sendJson(res, 403, { ok: false, error: "Permission denied." }); return; } sendJson(res, 200, { ok: true, catalog: catalog }); return; }
         if (asset === "scripts") { var scripts = pluginModule.getScripts(user); if (!scripts) { sendJson(res, 403, { ok: false, error: "Permission denied." }); return; } sendJson(res, 200, { ok: true, tree: scripts, ts: Date.now() }); return; }
         if (asset === "output") { var output = pluginModule.getOutput(user, req && req.query && req.query.responseid); if (!output) { sendJson(res, 403, { ok: false, error: "Permission denied." }); return; } sendJson(res, 200, { ok: true, ready: output.ready, output: output.output }); return; }
@@ -83,7 +83,7 @@ module.exports.mycommands = function (parent) {
     obj.handleAdminPostReq = function (req, res, user) {
         var asset = String(req && req.query && req.query.asset || ""), body = req && req.body || {};
         if (asset === "click") { auditLogger(user, body.target); sendJson(res, 200, { ok: true }); return; }
-        if (asset === "settings") { pluginModule.saveSettings(user, body, function (error) { if (error) sendJson(res, 400, { ok: false, error: error }); else sendJson(res, 200, { ok: true, config: pluginModule.getClientConfig() }); }); return; }
+        if (asset === "settings") { body.showInMenu = false; pluginModule.saveSettings(user, body, function (error) { if (error) sendJson(res, 400, { ok: false, error: error }); else { var clientConfig = pluginModule.getClientConfig(); clientConfig.showInMenu = false; sendJson(res, 200, { ok: true, config: clientConfig }); } }); return; }
         if (asset === "submit") { var values = {}; try { values = JSON.parse(String(body.variableValues || "{}")); } catch (error) { sendJson(res, 400, { ok: false, error: "Invalid variable data." }); return; } handlePromise(res, pluginModule.submitApproval(user, { nodeid: body.nodeid, pluginaction: body.pluginaction, commandId: body.commandId, scriptPath: body.scriptPath, type: body.type, runAsUser: body.runAsUser, cmds: body.cmds, variableValues: values }, body.note), function (request) { return { ok: true, request: request }; }); return; }
         if (asset === "direct") { var directValues = {}; try { directValues = JSON.parse(String(body.variableValues || "{}")); } catch (error) { sendJson(res, 400, { ok: false, error: "Invalid variable data." }); return; } handlePromise(res, pluginModule.executeDirect(user, { nodeid: body.nodeid, pluginaction: body.pluginaction, scriptPath: body.scriptPath, variableValues: directValues }), function (result) { return { ok: true, result: result }; }); return; }
         if (asset === "execute-many") { var request, nodeids; try { request = JSON.parse(String(body.request || "{}")); nodeids = JSON.parse(String(body.nodeids || "[]")); } catch (error) { sendJson(res, 400, { ok: false, error: "Invalid execution data." }); return; } request.nodeids = nodeids; handlePromise(res, pluginModule.executeMany(user, request), function (result) { return { ok: true, result: result }; }); return; }
