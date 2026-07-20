@@ -1,0 +1,18 @@
+[
+  {
+    "version": "0.1.1",
+    "date": "2026-07-20",
+    "changes": [
+      "Standalone MeshCentral plugin metadata",
+      "Unique view mode 106",
+      "Safe startup when migration source folders are absent"
+    ]
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-07-20",
+    "changes": [
+      "Initial modular migration scaffold"
+    ]
+  }
+]
