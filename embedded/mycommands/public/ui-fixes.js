@@ -8,6 +8,73 @@
     var originalRenderDevicePage = plugin.renderDevicePage;
     var originalRenderScriptTree = plugin.renderScriptTree;
 
+    function removeStandaloneMenuEntries() {
+        [
+            "MainMenuMyCommands",
+            "LeftMenuMyCommands",
+            "MainMenuMyCompany",
+            "LeftMenuMyCompany"
+        ].forEach(function (id) {
+            var element = document.getElementById(id);
+            if (element && element.parentNode) element.parentNode.removeChild(element);
+        });
+    }
+
+    function forceMenuDisabled() {
+        plugin.state.ui = plugin.state.ui || {};
+        plugin.state.ui.showInMenu = false;
+        removeStandaloneMenuEntries();
+    }
+
+    var originalEnsureMenus = plugin.ensureMenus;
+    plugin.ensureMenus = function () {
+        forceMenuDisabled();
+        return false;
+    };
+
+    var originalSyncIntegrations = plugin.syncIntegrations;
+    plugin.syncIntegrations = function () {
+        forceMenuDisabled();
+        var result = typeof originalSyncIntegrations === "function" ? originalSyncIntegrations.apply(plugin, arguments) : undefined;
+        forceMenuDisabled();
+        return result;
+    };
+
+    var originalBuildSettings = plugin.buildSettings;
+    plugin.buildSettings = function () {
+        var root = originalBuildSettings.apply(plugin, arguments);
+        var menuInput = root && root.querySelector("#MyCommandsShowInMenu");
+        if (menuInput) {
+            var menuLabel = menuInput.parentNode;
+            menuInput.checked = false;
+            menuInput.type = "hidden";
+            root.appendChild(menuInput);
+            if (menuLabel && menuLabel.parentNode) menuLabel.parentNode.removeChild(menuLabel);
+        }
+        return root;
+    };
+
+    var originalLoadSettings = plugin.loadSettings;
+    plugin.loadSettings = function () {
+        var result = originalLoadSettings.apply(plugin, arguments);
+        [0, 100, 500].forEach(function (delay) {
+            window.setTimeout(function () {
+                var menuInput = document.getElementById("MyCommandsShowInMenu");
+                if (menuInput) menuInput.checked = false;
+                forceMenuDisabled();
+            }, delay);
+        });
+        return result;
+    };
+
+    var originalSaveSettings = plugin.saveSettings;
+    plugin.saveSettings = function () {
+        var menuInput = document.getElementById("MyCommandsShowInMenu");
+        if (menuInput) menuInput.checked = false;
+        forceMenuDisabled();
+        return originalSaveSettings.apply(plugin, arguments);
+    };
+
     function findSearchToggle(toolbar) {
         if (!toolbar) return null;
         var buttons = toolbar.querySelectorAll("button.mycommands-toolbar-button");
@@ -88,4 +155,8 @@
         originalUpdateScriptToolbar.call(plugin);
         syncToolbarOrder();
     };
+
+    [0, 100, 500, 1500, 3000].forEach(function (delay) {
+        window.setTimeout(forceMenuDisabled, delay);
+    });
 }());
