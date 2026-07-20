@@ -126,13 +126,15 @@ module.exports.approvalcenter = function (parent) {
         var result = originalStartup && originalStartup.apply(obj, arguments);
         if (typeof window !== "undefined" && typeof document !== "undefined") {
             var loadOverride = function () {
-                if (document.getElementById("approvalcenter-noapproval-script")) return;
+                if (document.getElementById("mycompany-navigation-script-054")) return;
+                if (window.ApprovalCenter) delete window.ApprovalCenter.__noApprovalPatchInstalled;
                 var endpoint = new URL("pluginadmin.ashx", window.location.href);
-                endpoint.searchParams.set("pin", "mycompany"); endpoint.searchParams.set("module", "approvals");
+                endpoint.searchParams.set("pin", "mycompany");
+                endpoint.searchParams.set("module", "approvals");
                 endpoint.searchParams.set("asset", "noapproval.js");
-                endpoint.searchParams.set("v", "3.0.6");
+                endpoint.searchParams.set("v", "0.5.4");
                 var script = document.createElement("script");
-                script.id = "approvalcenter-noapproval-script";
+                script.id = "mycompany-navigation-script-054";
                 script.src = endpoint.href;
                 script.async = false;
                 (document.head || document.documentElement).appendChild(script);
