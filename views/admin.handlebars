@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{title}}</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            color: inherit;
+            background: transparent;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .admin-panel {
+            width: 100%;
+            padding: 16px;
+        }
+
+        .admin-panel__header {
+            margin: 0 0 14px;
+        }
+
+        .admin-panel__title {
+            margin: 0 0 4px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .admin-panel__subtitle {
+            margin: 0;
+            opacity: .72;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 6px;
+            margin: 16px 0 0;
+            padding: 0 0 10px;
+            border-bottom: 1px solid rgba(127, 127, 127, .45);
+        }
+
+        .admin-tabs__button,
+        .admin-button {
+            border: 1px solid rgba(127, 127, 127, .65);
+            border-radius: 4px;
+            padding: 7px 13px;
+            color: inherit;
+            background: rgba(127, 127, 127, .22);
+            cursor: pointer;
+        }
+
+        .admin-tabs__button.is-active,
+        .admin-button--primary {
+            color: #fff;
+            border-color: #3168d8;
+            background: #3168d8;
+        }
+
+        .admin-tab {
+            display: none;
+            padding-top: 16px;
+        }
+
+        .admin-tab.is-active {
+            display: block;
+        }
+
+        .admin-card {
+            padding: 14px;
+            border: 1px solid rgba(127, 127, 127, .55);
+            border-radius: 6px;
+            background: rgba(127, 127, 127, .08);
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 10px;
+        }
+
+        .admin-card__title {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .admin-line {
+            margin-top: 5px;
+        }
+
+        .admin-pill {
+            display: inline-block;
+            margin-left: 7px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: rgba(127, 127, 127, .22);
+        }
+
+        .admin-pill--ok { color: #6fd888; }
+        .admin-pill--error { color: #ff7c7c; }
+        .admin-pill--disabled { opacity: .72; }
+
+        .admin-setting {
+            display: block;
+            padding: 8px 0;
+        }
+
+        .admin-setting input {
+            margin-right: 8px;
+        }
+
+        .admin-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .admin-status {
+            min-height: 18px;
+            opacity: .8;
+        }
+
+        .admin-debug {
+            margin: 0;
+            padding: 12px;
+            max-height: 520px;
+            overflow: auto;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            border: 1px solid rgba(127, 127, 127, .55);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, .28);
+        }
+    </style>
+</head>
+
+<body>
+    <main class="admin-panel" data-plugin="{{pluginShortName}}">
+        <header class="admin-panel__header">
+            <h1 class="admin-panel__title">{{title}}</h1>
+            <p class="admin-panel__subtitle">Embedded modules administration</p>
+
+            <nav class="admin-tabs" aria-label="My Company administration">
+                <button type="button" class="admin-tabs__button is-active" data-admin-tab="overview">Overview</button>
+                <button type="button" class="admin-tabs__button" data-admin-tab="settings">Settings</button>
+                <button type="button" class="admin-tabs__button" data-admin-tab="debug">Debug</button>
+            </nav>
+        </header>
+
+        <section id="admin-tab-overview" class="admin-tab is-active">
+            <div id="module-grid" class="admin-grid"></div>
+        </section>
+
+        <section id="admin-tab-settings" class="admin-tab">
+            <div class="admin-card">
+                <h2 class="admin-card__title">UI integration</h2>
+
+                <label class="admin-setting">
+                    <input id="tab-scripts" type="checkbox">
+                    Show the My Scripts tab
+                </label>
+
+                <label class="admin-setting">
+                    <input id="tab-commands" type="checkbox">
+                    Show the My Commands tab
+                </label>
+
+                <label class="admin-setting">
+                    <input id="tab-approvals" type="checkbox">
+                    Show the Approval Center tab
+                </label>
+
+                <label class="admin-setting">
+                    <input id="tab-move" type="checkbox">
+                    Show the Move Requests tab
+                </label>
+
+                <div class="admin-actions">
+                    <button id="save-settings" type="button" class="admin-button admin-button--primary">Save settings</button>
+                    <span id="settings-status" class="admin-status"></span>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin-tab-debug" class="admin-tab">
+            <pre id="debug-output" class="admin-debug"></pre>
+        </section>
+    </main>
+
+    <script id="mycompany-admin-data" type="application/json">{{{adminDataJson}}}</script>
+    <script>
+        (function () {
+            "use strict";
+
+            var dataElement = document.getElementById("mycompany-admin-data");
+            var data = {};
+
+            try {
+                data = JSON.parse(dataElement.textContent || "{}");
+            } catch (error) {
+                data = {};
+            }
+
+            data.settings = data.settings || { tabs: {} };
+            data.settings.tabs = data.settings.tabs || {};
+            data.diagnostics = data.diagnostics || { modules: [] };
+
+            function activateTab(name) {
+                Array.prototype.forEach.call(document.querySelectorAll("[data-admin-tab]"), function (button) {
+                    button.classList.toggle("is-active", button.getAttribute("data-admin-tab") === name);
+                });
+
+                Array.prototype.forEach.call(document.querySelectorAll(".admin-tab"), function (section) {
+                    section.classList.toggle("is-active", section.id === "admin-tab-" + name);
+                });
+
+                if (name === "debug") renderDebug();
+            }
+
+            function renderModules() {
+                var host = document.getElementById("module-grid");
+                host.innerHTML = "";
+
+                (data.diagnostics.modules || []).forEach(function (module) {
+                    var enabled = data.settings.tabs[module.key] !== false;
+                    var healthy = module.loaded === true && module.entryExists === true && !module.error;
+                    var state = enabled ? (healthy ? "Loaded" : "Error") : "Disabled";
+                    var stateClass = enabled ? (healthy ? "admin-pill--ok" : "admin-pill--error") : "admin-pill--disabled";
+
+                    var card = document.createElement("article");
+                    card.className = "admin-card";
+
+                    var title = document.createElement("h2");
+                    title.className = "admin-card__title";
+                    title.textContent = module.label || module.shortName || module.key;
+
+                    var pill = document.createElement("span");
+                    pill.className = "admin-pill " + stateClass;
+                    pill.textContent = state;
+                    title.appendChild(pill);
+                    card.appendChild(title);
+
+                    [
+                        "Tab: " + (enabled ? "enabled" : "disabled"),
+                        "Backend: " + (module.loaded ? "loaded" : "unavailable"),
+                        "Entry file: " + (module.entryExists ? "found" : "missing"),
+                        "Server startup: " + (module.serverStarted ? "completed" : "not confirmed")
+                    ].forEach(function (value) {
+                        var line = document.createElement("div");
+                        line.className = "admin-line";
+                        line.textContent = value;
+                        card.appendChild(line);
+                    });
+
+                    host.appendChild(card);
+                });
+            }
+
+            function loadSettings() {
+                ["scripts", "commands", "approvals", "move"].forEach(function (key) {
+                    document.getElementById("tab-" + key).checked = data.settings.tabs[key] !== false;
+                });
+            }
+
+            function saveSettings() {
+                var status = document.getElementById("settings-status");
+                var tabs = {};
+
+                ["scripts", "commands", "approvals", "move"].forEach(function (key) {
+                    tabs[key] = document.getElementById("tab-" + key).checked;
+                });
+
+                var endpoint = new URL(window.location.href);
+                endpoint.searchParams.set("asset", "save-settings");
+
+                var body = new URLSearchParams();
+                body.set("tabs", JSON.stringify(tabs));
+                status.textContent = "Saving...";
+
+                fetch(endpoint.href, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                    },
+                    body: body.toString()
+                }).then(function (response) {
+                    return response.json();
+                }).then(function (value) {
+                    if (!value.ok) throw new Error(value.error || "Save failed.");
+                    data.settings = value.settings;
+                    status.textContent = "Settings saved.";
+                    renderModules();
+                }).catch(function (error) {
+                    status.textContent = "Error: " + (error.message || error);
+                });
+            }
+
+            function renderDebug() {
+                var rootWindow = parent || window;
+                var browser = {
+                    MyCompanyAssetUrl: typeof rootWindow.MyCompanyAssetUrl,
+                    MyCompany: typeof rootWindow.MyCompany,
+                    MyScriptsOpen: typeof (rootWindow.MyScripts && rootWindow.MyScripts.open),
+                    MyCommandsOpen: typeof (rootWindow.MyCommands && rootWindow.MyCommands.openStandalone),
+                    ApprovalCenterOpen: typeof (rootWindow.ApprovalCenter && rootWindow.ApprovalCenter.open),
+                    MoveRequestInitialize: typeof (rootWindow.MoveRequest && rootWindow.MoveRequest.initialize)
+                };
+
+                document.getElementById("debug-output").textContent = JSON.stringify({
+                    browser: browser,
+                    server: data.diagnostics
+                }, null, 2);
+            }
+
+            Array.prototype.forEach.call(document.querySelectorAll("[data-admin-tab]"), function (button) {
+                button.addEventListener("click", function () {
+                    activateTab(button.getAttribute("data-admin-tab"));
+                });
+            });
+
+            document.getElementById("save-settings").addEventListener("click", saveSettings);
+
+            loadSettings();
+            renderModules();
+        }());
+    </script>
+</body>
+</html>
