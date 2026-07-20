@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.7.0",
+    "date": "2026-07-20",
+    "changes": [
+      "Rebuilt the plugin entry using mycompany.js, admin.js and views/admin.handlebars",
+      "Moved visibility controls to the Settings admin tab",
+      "Separated Overview, Settings and Debug in the admin panel",
+      "Removed Settings from the embedded module navigation",
+      "Removed the My Company menu entry",
+      "Kept My Commands device-page integration without a main or side menu entry"
+    ]
+  },
+  {
     "version": "0.5.9",
     "date": "2026-07-20",
     "changes": [
