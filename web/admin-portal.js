@@ -153,7 +153,7 @@
                 data().moduleSettings.portal = state;
                 var module = moduleRecord();
                 module.enabled = state.enabled === true;
-                status.textContent = "Saved — reloading MeshCentral...";
+                status.textContent = "Saved — reload the MeshCentral tab...";
                 reloadMeshCentral();
             }).catch(function (error) {
                 status.className = "mc-admin-save-status mc-admin-error";
