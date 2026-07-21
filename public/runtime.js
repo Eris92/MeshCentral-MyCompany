@@ -55,7 +55,9 @@
             var module = window.MyCompanyModules[key];
             if (module && typeof module[method] === "function") {
                 try { module[method].apply(module, args); }
-                catch (error) { if (window.console) console.error("MyCompany " + key + " " + method + " failed", error); }
+                catch (error) {
+                    if (window.console) console.error("MyCompany " + key + " " + method + " failed", error);
+                }
             }
         });
     }
@@ -76,6 +78,11 @@
                 return core.loadScript(
                     "mycompany-shared-results-view",
                     core.assetUrl("", "shared-ui/results.js")
+                );
+            }).then(function () {
+                return core.loadScript(
+                    "mycompany-shared-result-layout",
+                    core.assetUrl("", "shared-ui/result-layout.js")
                 );
             }).then(function () {
                 return core.loadScript(
@@ -132,12 +139,16 @@
         notify("onNativePageStart", view);
     };
 
-    runtime.onNativePageEnd = function (view) { notify("onNativePageEnd", view); };
+    runtime.onNativePageEnd = function (view) {
+        notify("onNativePageEnd", view);
+    };
 
     runtime.onDeviceRefreshEnd = function (nodeId) {
         runtime.state.nodeId = String(nodeId || "");
         notify("onDeviceRefreshEnd", runtime.state.nodeId);
     };
 
-    runtime.commandResult = function (message) { notify("commandResult", message); };
+    runtime.commandResult = function (message) {
+        notify("commandResult", message);
+    };
 }());
