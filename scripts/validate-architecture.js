@@ -122,26 +122,29 @@ function validateArchitecture() {
         if (source.indexOf("tabs: []") < 0) {
             errors.push(name + " must not render top tabs.");
         }
-        [
-            "collapse",
-            "favorites",
-            "link",
-            "manage",
-            "search",
-            "refresh",
-            "clear",
-            "settings"
-        ].forEach(function (button) {
+        ["search", "collapse", "link"].forEach(function (button) {
+            if (source.indexOf(button + ": { side: \"left\"") < 0) {
+                errors.push(name + " must show the left toolbar button: " + button);
+            }
+        });
+        ["favorites", "manage", "refresh", "clear", "settings"].forEach(function (button) {
             if (source.indexOf(button + ": false") < 0) {
                 errors.push(name + " must disable top button: " + button);
             }
         });
+        if (source.indexOf("search: shell.state.search") < 0 ||
+            source.indexOf("q: shell.state.search") < 0) {
+            errors.push(name + " Search must filter folders and result tables.");
+        }
     });
 
     var catalogSource = read("public/shared-ui/catalog.js");
-    if (catalogSource.indexOf("mc-catalog-separator") < 0 ||
+    if (catalogSource.indexOf("mc-catalog-navigation") < 0 ||
         catalogSource.indexOf("▤ Results") < 0) {
-        errors.push("Shared catalog must place Results above folders with a separator.");
+        errors.push("Shared catalog must integrate Results with the folder navigation.");
+    }
+    if (catalogSource.indexOf("mc-catalog-separator") >= 0) {
+        errors.push("Shared catalog must not use the hard Results separator.");
     }
 
     if (errors.length) {
