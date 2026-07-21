@@ -6,12 +6,10 @@ var secretsFactory = require("./secret-store.js");
 var approvalFactory = require("./approval-service.js");
 var deviceFactory = require("./device-service.js");
 var integrationFactory = require("./integration-service.js");
-var migrationFactory = require("./legacy-migration.js");
 
-
-var VERSION = "1.2.2";
+var VERSION = "1.3.1";
 var DEFAULTS = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     modules: {
         myscripts: {
             enabled: true,
@@ -22,7 +20,7 @@ var DEFAULTS = {
             enabled: true,
             accessGroupIds: [],
             folderPermissions: {},
-            showInMenu: true,
+            showInMenu: false,
             showOnDevice: true,
             maxMultiHostNodes: 200,
             multiHostConcurrency: 8
@@ -99,64 +97,89 @@ module.exports.createRuntime = function (options) {
     var parent = options.parent;
     var pluginRoot = options.pluginRoot;
     var fs = parent.fs || require("fs");
-    var path = parent.path || require("path");
+    var nativePath = parent.path || require("path");
     var meshServer = parent.parent;
     var dataBase = meshServer && meshServer.datapath
         ? meshServer.datapath
-        : path.dirname(parent.pluginPath);
-    var dataRoot = path.join(dataBase, "mycompany-data");
-    fs.mkdirSync(dataRoot, { recursive: true });
+        : nativePath.dirname(parent.pluginPath);
+    var dataRoot = nativePath.join(dataBase, "mycompany-data");
+
+    if (!fs.existsSync(dataRoot)) {
+        fs.mkdirSync(dataRoot, { recursive: true });
+    }
+
+    var scriptRootAliases = Object.create(null);
+
+    function aliasKey(value) {
+        return nativePath.normalize(String(value || "")).toLowerCase();
+    }
+
+    scriptRootAliases[aliasKey(
+        nativePath.join(dataRoot, "myscripts", "scripts")
+    )] = nativePath.join(pluginRoot, "seed", "MyScripts");
+
+    scriptRootAliases[aliasKey(
+        nativePath.join(dataRoot, "scripts", "MyCommands")
+    )] = nativePath.join(pluginRoot, "seed", "MyCommands");
+
+    var modulePath = Object.create(nativePath);
+    modulePath.join = function () {
+        var joined = nativePath.join.apply(nativePath, arguments);
+        return scriptRootAliases[aliasKey(joined)] || joined;
+    };
 
     var settings = settingsFactory.createSettingsStore({
         fs: fs,
-        path: path,
-        filePath: path.join(dataRoot, "settings.json"),
+        path: nativePath,
+        filePath: nativePath.join(dataRoot, "settings.json"),
         defaults: DEFAULTS
     });
+
     var secrets = secretsFactory.createSecretStore({
         fs: fs,
-        path: path,
-        dataPath: path.join(dataRoot, "secrets.json"),
-        keyPath: path.join(dataRoot, ".secret.key")
+        path: nativePath,
+        dataPath: nativePath.join(dataRoot, "secrets.json"),
+        keyPath: nativePath.join(dataRoot, ".secret.key")
     });
+
     var integrations = integrationFactory.createIntegrationService({
         parent: parent,
         settings: settings,
         secrets: secrets
     });
+
     var context = {
         dataRoot: dataRoot,
         fs: fs,
         integrations: integrations,
         parent: parent,
-        path: path,
+        path: modulePath,
+        nativePath: nativePath,
         pluginRoot: pluginRoot,
+        scriptRoots: {
+            myscripts: nativePath.join(pluginRoot, "seed", "MyScripts"),
+            mycommands: nativePath.join(pluginRoot, "seed", "MyCommands")
+        },
         settings: settings,
         secrets: secrets,
         source: options.source
     };
+
     context.device = deviceFactory.createDeviceService({
         parent: parent,
         source: options.source
     });
+
     context.approval = approvalFactory.createApprovalService({
         fs: fs,
-        path: path,
+        path: nativePath,
         parent: parent,
         source: options.source,
         settings: settings,
-        databasePath: path.join(dataRoot, "requests.json")
+        databasePath: nativePath.join(dataRoot, "requests.json")
     });
-    context.isModuleEnabled = settings.isModuleEnabled;
 
-    var migration = migrationFactory.createLegacyMigration({
-        fs: fs,
-        path: path,
-        dataRoot: dataRoot,
-        pluginRoot: pluginRoot,
-        settings: settings,
-        integrations: integrations
-    });
+    context.isModuleEnabled = settings.isModuleEnabled;
 
     var modules = {};
     var moduleLoadErrors = {};
@@ -170,7 +193,11 @@ module.exports.createRuntime = function (options) {
     ];
 
     function errorText(error) {
-        return String(error && (error.stack || error.message) || error || "Unknown module load error.");
+        return String(
+            error && (error.stack || error.message) ||
+            error ||
+            "Unknown module load error."
+        );
     }
 
     function failedModule(descriptor, error) {
@@ -187,11 +214,21 @@ module.exports.createRuntime = function (options) {
                 };
             },
             getAccess: function () {
-                return { allowed: false, siteAdmin: false, error: message };
+                return {
+                    allowed: false,
+                    siteAdmin: false,
+                    error: message
+                };
             },
-            initialize: function () { return Promise.resolve(); },
-            apiGet: function () { throw new Error("Module failed to load: " + message); },
-            apiPost: function () { throw new Error("Module failed to load: " + message); }
+            initialize: function () {
+                return Promise.resolve();
+            },
+            apiGet: function () {
+                throw new Error("Module failed to load: " + message);
+            },
+            apiPost: function () {
+                throw new Error("Module failed to load: " + message);
+            }
         };
     }
 
@@ -214,32 +251,10 @@ module.exports.createRuntime = function (options) {
         }
     });
 
-    function seed(source, destination) {
-        if (!fs.existsSync(source)) return;
-        fs.mkdirSync(destination, { recursive: true });
-        fs.readdirSync(source, { withFileTypes: true }).forEach(function (entry) {
-            var from = path.join(source, entry.name);
-            var to = path.join(destination, entry.name);
-            if (entry.isDirectory()) seed(from, to);
-            else if (entry.isFile() && !fs.existsSync(to)) fs.copyFileSync(from, to);
-        });
-    }
-
     function initialize() {
-        seed(
-            path.join(pluginRoot, "seed", "MyScripts"),
-            path.join(dataRoot, "myscripts", "scripts")
-        );
-        seed(
-            path.join(pluginRoot, "seed", "MyCommands"),
-            path.join(dataRoot, "scripts", "MyCommands")
-        );
-
-        return migration.run().then(function () {
-            return Promise.all(Object.keys(modules).map(function (key) {
-                return Promise.resolve(modules[key].initialize());
-            }));
-        });
+        return Promise.all(Object.keys(modules).map(function (key) {
+            return Promise.resolve(modules[key].initialize());
+        }));
     }
 
     function diagnostics(user) {
@@ -291,6 +306,7 @@ module.exports.createRuntime = function (options) {
             });
             return;
         }
+
         if (module.__loadError) {
             shared.sendJson(res, 503, {
                 ok: false,
@@ -299,6 +315,7 @@ module.exports.createRuntime = function (options) {
             });
             return;
         }
+
         if (!settings.isModuleEnabled(module.key)) {
             shared.sendJson(res, 403, {
                 ok: false,
@@ -347,6 +364,7 @@ module.exports.createRuntime = function (options) {
         if (!shared.isSiteAdmin(user)) {
             return Promise.reject(new Error("Permission denied."));
         }
+
         payload = payload || {};
         var moduleValues = payload.modules || {};
         var moduleOptions = payload.moduleOptions || {};
@@ -360,6 +378,10 @@ module.exports.createRuntime = function (options) {
                     current.modules[key].enabled = moduleValues[key] === true;
                 }
             });
+
+            current.modules.mycommands.showInMenu = false;
+            current.modules.moverequests.menuEnabled = false;
+
             if (moduleOptions.myjira) {
                 current.modules.myjira.accessGroupIds = normalizeGroups(
                     moduleOptions.myjira.accessGroupIds,
@@ -387,7 +409,11 @@ module.exports.createRuntime = function (options) {
             modules: diagnostics(user),
             moduleSettings: settings.read().modules,
             integrations: integrations.publicSettings(user),
-            migration: migration.status(),
+            migration: {
+                completed: true,
+                disabled: true,
+                message: "Legacy migration is disabled. Script libraries are read directly from the MyCompany seed directory."
+            },
             moduleLoadErrors: shared.copy(moduleLoadErrors),
             generatedAt: new Date().toISOString()
         };
@@ -423,7 +449,11 @@ module.exports.createRuntime = function (options) {
         diagnostics: diagnostics,
         initialize: initialize,
         integrations: integrations,
-        migration: migration,
+        migration: {
+            status: function () {
+                return adminSnapshot({ siteadmin: 0xFFFFFFFF }).migration;
+            }
+        },
         moduleLoadErrors: moduleLoadErrors,
         modules: modules,
         request: request,
