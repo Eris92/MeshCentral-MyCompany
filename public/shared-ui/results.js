@@ -16,7 +16,7 @@
 
     function rawResult(row) {
         var result = row && row.result || {};
-        var value = result.output || result.message || result.rawOutput || row.output || row.rawOutput;
+        var value = result.output || result.rawOutput || result.message || row.output || row.rawOutput;
         if (value != null && value !== "") return typeof value === "string" ? value : JSON.stringify(value, null, 2);
         if (row.status === "pending") return "Waiting for approval.";
         if (row.status === "executing") return "Executing...";
@@ -37,17 +37,48 @@
         values.push(value.trim()); return values;
     }
 
+    function structuredFromParsed(parsed) {
+        var table = null, portal = null;
+        if (!parsed) return { table: null, portal: null };
+        if (parsed.meshPortal === true) portal = parsed;
+        else if (parsed.meshTable === true) table = parsed;
+        else if (parsed.data && parsed.data.meshTable === true) table = parsed.data;
+        else if (parsed.data && parsed.data.table) table = parsed.data.table;
+        else if (parsed.table && Array.isArray(parsed.table.rows)) table = parsed.table;
+        else if (Array.isArray(parsed)) table = { title: "Result", rows: parsed };
+        else if (Array.isArray(parsed.rows)) table = parsed;
+        return { table: table, portal: portal };
+    }
+
+    function parseJsonSuffix(raw) {
+        try { return JSON.parse(raw); } catch (error) {}
+        var lines = raw.split(/\r?\n/);
+        for (var index = 0; index < lines.length; index++) {
+            var candidate = lines.slice(index).join("\n").trim();
+            if (!candidate) continue;
+            try { return JSON.parse(candidate); } catch (error) {}
+        }
+        var ndjson = [];
+        for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            var line = lines[lineIndex].trim();
+            if (!line) continue;
+            try {
+                var item = JSON.parse(line);
+                if (!item || typeof item !== "object" || Array.isArray(item)) { ndjson = []; break; }
+                ndjson.push(item);
+            } catch (error) { ndjson = []; break; }
+        }
+        return ndjson.length > 1 ? ndjson : null;
+    }
+
     function parseStructured(value) {
         var raw = String(value == null ? "" : value).trim(), parsed = null, table = null, portal = null;
         if (!raw) return { raw: "", table: null, portal: null };
-        try { parsed = JSON.parse(raw); } catch (error) {}
+        parsed = parseJsonSuffix(raw);
         if (parsed) {
-            if (parsed.meshPortal === true) portal = parsed;
-            else if (parsed.meshTable === true) table = parsed;
-            else if (parsed.data && parsed.data.meshTable === true) table = parsed.data;
-            else if (parsed.data && parsed.data.table) table = parsed.data.table;
-            else if (Array.isArray(parsed)) table = { title: "Result", rows: parsed };
-            else if (Array.isArray(parsed.rows)) table = parsed;
+            var structured = structuredFromParsed(parsed);
+            table = structured.table;
+            portal = structured.portal;
         }
         if (!table && !portal) {
             var lines = raw.split(/\r?\n/).filter(function (line) { return line.trim(); });
@@ -81,7 +112,7 @@
 
     function renderStructured(host, data) {
         if (data.portal) {
-            var heading = document.createElement("h3"); heading.textContent = data.portal.title || "Portal"; host.appendChild(heading);
+            var portalHeading = document.createElement("h3"); portalHeading.textContent = data.portal.title || "Portal"; host.appendChild(portalHeading);
             if (data.portal.description) { var description = document.createElement("p"); description.textContent = data.portal.description; host.appendChild(description); }
             if (/^https:\/\//i.test(String(data.portal.url || ""))) { var link = document.createElement("a"); link.href = data.portal.url; link.target = "_blank"; link.rel = "noopener"; link.className = "btn btn-primary"; link.textContent = data.portal.buttonLabel || "Open"; host.appendChild(link); }
             return;
@@ -90,11 +121,23 @@
             var rows = data.table.rows, columns = Array.isArray(data.table.columns) ? data.table.columns.slice() : [];
             if (!columns.length && rows.length) columns = Object.keys(rows[0] || {});
             var heading = document.createElement("h3"); heading.textContent = data.table.title || "Result"; host.appendChild(heading);
-            var wrapper = document.createElement("div"); wrapper.className = "mc-results-table-wrap";
-            var table = document.createElement("table"); table.className = "style1 mc-results-table mc-results-structured-table";
-            var header = table.createTHead().insertRow(); columns.forEach(function (column) { var cell = document.createElement("th"); cell.textContent = column; header.appendChild(cell); });
-            var body = table.createTBody(); rows.forEach(function (source) { var row = body.insertRow(); columns.forEach(function (column) { appendValue(row.insertCell(), source && source[column]); }); });
-            wrapper.appendChild(table); host.appendChild(wrapper); return;
+            var filter = document.createElement("input"); filter.type = "search"; filter.className = "mc-results-filter"; filter.placeholder = "Filter result rows"; host.appendChild(filter);
+            var wrapper = document.createElement("div"); wrapper.className = "mc-results-table-wrap"; host.appendChild(wrapper);
+            function draw() {
+                wrapper.innerHTML = "";
+                var query = String(filter.value || "").trim().toLocaleLowerCase();
+                var visible = query ? rows.filter(function (row) {
+                    return columns.map(function (column) {
+                        var value = row && row[column];
+                        return value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value);
+                    }).join(" ").toLocaleLowerCase().indexOf(query) >= 0;
+                }) : rows;
+                var table = document.createElement("table"); table.className = "style1 mc-results-table mc-results-structured-table";
+                var header = table.createTHead().insertRow(); columns.forEach(function (column) { var cell = document.createElement("th"); cell.textContent = column; header.appendChild(cell); });
+                var body = table.createTBody(); visible.forEach(function (source) { var row = body.insertRow(); columns.forEach(function (column) { appendValue(row.insertCell(), source && source[column]); }); });
+                wrapper.appendChild(table);
+            }
+            var timer = 0; filter.oninput = function () { clearTimeout(timer); timer = setTimeout(draw, 100); }; draw(); return;
         }
         var output = document.createElement("pre"); output.className = "mc-results-viewer-output"; output.textContent = data.raw || "No output."; host.appendChild(output);
     }
@@ -109,22 +152,30 @@
         return copyText(output).then(function () { if (!button) return; button.textContent = "Copied"; setTimeout(function () { if (button.isConnected) button.textContent = "Copy"; }, 1200); });
     }
 
+    function appendResult(host, raw, options) {
+        options = options || {};
+        var data = parseStructured(raw);
+        var actions = document.createElement("div"); actions.className = "mc-results-viewer-actions mc-results-inline-actions";
+        var copy = document.createElement("button"); copy.type = "button"; copy.className = "btn btn-secondary btn-sm"; copy.textContent = "Copy"; copy.onclick = function () { copyResult(data, copy).catch(function () { copy.textContent = "Copy failed"; }); };
+        actions.appendChild(copy); host.appendChild(actions);
+        var content = document.createElement("div"); content.className = "mc-results-viewer-content mc-results-inline-content"; renderStructured(content, data);
+        var details = document.createElement("details"); details.className = "mc-results-debug";
+        var summary = document.createElement("summary"); summary.textContent = "Debug / raw output"; details.appendChild(summary);
+        var debug = document.createElement("pre"); debug.textContent = data.raw; details.appendChild(debug); content.appendChild(details); host.appendChild(content);
+        return data;
+    }
+
     function openViewer(row, options) {
         options = options || {};
         var raw = typeof options.resultValue === "function" ? options.resultValue(row) : rawResult(row);
-        var data = parseStructured(raw);
         var overlay = document.createElement("div"); overlay.className = "mc-results-viewer-overlay";
         var dialog = document.createElement("section"); dialog.className = "mc-results-viewer"; dialog.setAttribute("role", "dialog"); dialog.setAttribute("aria-modal", "true"); overlay.appendChild(dialog);
         var header = document.createElement("div"); header.className = "mc-results-viewer-header";
         var title = document.createElement("h3"); title.textContent = options.dialogTitle || row.title || "Result"; header.appendChild(title);
         var actions = document.createElement("div"); actions.className = "mc-results-viewer-actions";
-        var copy = document.createElement("button"); copy.type = "button"; copy.className = "btn btn-secondary btn-sm"; copy.textContent = "Copy"; copy.onclick = function () { copyResult(data, copy).catch(function () { copy.textContent = "Copy failed"; }); };
         var close = document.createElement("button"); close.type = "button"; close.className = "btn btn-secondary btn-sm"; close.textContent = "Close"; close.onclick = function () { overlay.remove(); };
-        actions.appendChild(copy); actions.appendChild(close); header.appendChild(actions); dialog.appendChild(header);
-        var content = document.createElement("div"); content.className = "mc-results-viewer-content"; renderStructured(content, data);
-        var details = document.createElement("details"); details.className = "mc-results-debug";
-        var summary = document.createElement("summary"); summary.textContent = "Debug / raw output"; details.appendChild(summary);
-        var debug = document.createElement("pre"); debug.textContent = data.raw; details.appendChild(debug); content.appendChild(details); dialog.appendChild(content);
+        actions.appendChild(close); header.appendChild(actions); dialog.appendChild(header);
+        appendResult(dialog, raw, options);
         overlay.onclick = function (event) { if (event.target === overlay) overlay.remove(); };
         document.body.appendChild(overlay); close.focus();
     }
@@ -155,6 +206,11 @@
         parseStructured: parseStructured,
         openViewer: openViewer,
         copyText: copyText,
+        rawResult: rawResult,
+        mountResult: function (host, value, options) {
+            host.innerHTML = "";
+            return appendResult(host, value, options);
+        },
         mountStatus: function (host, options) {
             options = options || {};
             window.SharedStatusNav.mount(host, { selected: options.selected || "", counts: options.counts, onSelect: options.onSelect });
