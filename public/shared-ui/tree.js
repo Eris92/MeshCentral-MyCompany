@@ -83,7 +83,6 @@
         var scripts = children.filter(function (item) {
             return item.type === "script";
         });
-
         if (scripts.length) {
             roots.unshift({
                 type: "directory",
@@ -93,7 +92,6 @@
                 children: scripts
             });
         }
-
         return roots;
     }
 
@@ -101,18 +99,50 @@
         if (!node) return null;
         if (text(node.path) === text(path)) return node;
         var children = node.children || [];
-
         for (var index = 0; index < children.length; index++) {
             var found = find(children[index], path);
             if (found) return found;
         }
-
         return null;
+    }
+
+    function renderActions(host, script, options) {
+        var definitions = typeof options.scriptActions === "function"
+            ? options.scriptActions(script) || []
+            : [];
+        if (!definitions.length) return;
+
+        var actions = document.createElement("span");
+        actions.className = "mc-tree-script-actions";
+        definitions.forEach(function (definition) {
+            if (!definition || definition.hidden === true) return;
+            var action = document.createElement("button");
+            action.type = "button";
+            action.className = "mc-tree-script-action";
+            if (definition.className) action.classList.add(definition.className);
+            action.classList.toggle("active", definition.active === true);
+            action.title = definition.title || definition.key || "Action";
+            action.setAttribute("aria-label", action.title);
+            action.textContent = definition.icon || "•";
+            action.onclick = function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (typeof definition.onClick === "function") {
+                    definition.onClick(script, event, action);
+                }
+            };
+            actions.appendChild(action);
+        });
+        if (actions.childNodes.length) host.appendChild(actions);
     }
 
     function renderScript(host, script, options) {
         var row = document.createElement("div");
         row.className = "mc-tree-script-row";
+        row.classList.toggle(
+            "active",
+            text(options.selectedScript) === text(script.path)
+        );
 
         var button = createButton({
             className: "mc-shared-nav-item mc-tree-script",
@@ -133,6 +163,7 @@
         }
 
         row.appendChild(button);
+        renderActions(row, script, options);
         host.appendChild(row);
     }
 
@@ -150,10 +181,8 @@
             var header = document.createElement("button");
             header.type = "button";
             header.className = "mc-tree-folder-header";
-
             var graphic = appendIcon(header, folder, "mc-tree-folder-icon");
             var arrow = null;
-
             if (!graphic) {
                 arrow = document.createElement("span");
                 arrow.className = "mc-tree-folder-arrow";
@@ -193,6 +222,7 @@
 
     window.SharedDirectoryTree = {
         find: find,
+        roots: rootNodes,
         mount: function (options) {
             options = options || {};
             var rootsHost = options.rootsContainer;
@@ -208,7 +238,6 @@
             var visibleRoots = roots.filter(function (root) {
                 return hasMatch(root, query, options);
             });
-
             if (!visibleRoots.length) {
                 treeHost.textContent = options.emptyText || "No scripts found.";
                 state.selectedRoot = "";
@@ -247,6 +276,7 @@
                 query: query,
                 selectedScript: state.selectedScript,
                 filterScript: options.filterScript,
+                scriptActions: options.scriptActions,
                 onScript: function (script) {
                     state.selectedScript = script.path;
                     if (typeof options.onScript === "function") {
@@ -259,7 +289,6 @@
             if (!treeHost.childNodes.length) {
                 treeHost.textContent = options.emptyFolderText || "This folder is empty.";
             }
-
             return state;
         }
     };
