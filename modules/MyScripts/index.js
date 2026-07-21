@@ -86,6 +86,7 @@ module.exports.createModule = function (context) {
         apiGet: function (asset, req, user) {
             if (!allowed(user)) throw new Error("Permission denied.");
             var q = req && req.query || {};
+
             if (asset === "tree" || asset === "scripts") {
                 return {
                     ok: true,
@@ -97,6 +98,18 @@ module.exports.createModule = function (context) {
                 var script = library.getScript(q.path, true);
                 if (!script) throw new Error("Script not found.");
                 return { ok: true, script: script };
+            }
+            if (asset === "results") {
+                return context.approval.list(user, {
+                    type: "myscripts",
+                    status: q.status || "",
+                    q: q.q || "",
+                    page: Number(q.page) || 1,
+                    perPage: Math.min(500, Number(q.perPage) || 100)
+                }).then(function (value) {
+                    value.ok = true;
+                    return value;
+                });
             }
             if (asset === "settings") {
                 return {
@@ -110,6 +123,7 @@ module.exports.createModule = function (context) {
         apiPost: function (asset, req, user) {
             if (!allowed(user)) throw new Error("Permission denied.");
             var value = req && req.body || {};
+
             if (asset === "refresh") {
                 library.invalidate();
                 return { ok: true, tree: library.getTree() };
