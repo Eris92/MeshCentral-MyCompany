@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1
+
+- Naprawiono zapis `settings.json` na Windows bez operacji `rename`, `copy` i `unlink` na plikach tymczasowych.
+- My Scripts czyta bibliotekę bezpośrednio z `seed/MyScripts`.
+- My Commands czyta bibliotekę bezpośrednio z `seed/MyCommands`.
+- Usunięto runtime seed migration do `mycompany-data/myscripts/scripts` i `mycompany-data/scripts/MyCommands`.
+- Approval Center nie używa już górnych zakładek.
+- Dodano stałe lewe menu: Overview, Move Request, Commands i Scripts wraz ze statusami.
+- Usunięto Settings z widoku My Scripts; konfiguracja pozostaje w panelu administratora.
+- Usunięto niepotrzebne ustawienia widoczności providerów Approval Center.
+
 ## 1.3.0
 
 - Added reusable shared-ui components based on Approval Center.
@@ -44,7 +55,6 @@
 - Added verified exports for `MyCompany` and `mycompany`.
 - Added deployment preflight validation.
 
-
 ## 1.2.2
 
 - Naprawiono `Unauthorized` po zmianie shortName między `mycompany` i `MyCompany`.
@@ -78,18 +88,3 @@
 - My Scripts nadal jest modułem wewnętrznym jednej wtyczki MyCompany.
 
 ## 1.1.0
-
-- Dodano wewnętrzny moduł My Jira i Jira Assets.
-- Dodano wewnętrzny moduł Microsoft Defender XDR.
-- Dodano wspólny Integration Service dla AD, Entra, Jira, Defender i Zabbix.
-- Dodano wspólny HTTP/HTTPS JSON client.
-- Dodano jednorazową migrację danych ze starych My Scripts, My Jira i DefenderTools.
-- Dodano filtrowanie Defender incidents i lazy report execution.
-- Dodano grupy dostępu per Defender tab i My Jira.
-- Sekrety są przechowywane wyłącznie w centralnym encrypted secret store.
-
-## 1.0.0
-
-- Utworzono jedną samodzielną wtyczkę MyCompany.
-- Wbudowano My Scripts, My Commands, Approval Center i Move Requests.
-- Usunięto loader zewnętrznych wtyczek i auto-download.
