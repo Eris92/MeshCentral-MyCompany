@@ -8,6 +8,22 @@
     var expanded = loadState();
     var scheduled = false;
 
+    function ensureStyle() {
+        if (document.getElementById("myCompanyPortalFolderCollapseStyle")) return;
+        var style = document.createElement("style");
+        style.id = "myCompanyPortalFolderCollapseStyle";
+        style.textContent = [
+            "#sirkPortalRoot .sirk-folder-heading{cursor:pointer;user-select:none;border-radius:7px;outline:0}",
+            "#sirkPortalRoot .sirk-folder-heading:hover,#sirkPortalRoot .sirk-folder-heading:focus-visible{background:rgba(96,165,250,.10)}",
+            "#sirkPortalRoot .sirk-folder-chevron{display:grid;place-items:center;flex:0 0 16px;width:16px;height:24px;color:var(--sirk-muted,#657187)}",
+            "#sirkPortalRoot .sirk-folder-chevron svg{display:block;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s ease}",
+            "#sirkPortalRoot .sirk-folder-heading.is-expanded>.sirk-folder-chevron svg{transform:rotate(90deg)}",
+            "#sirkPortalRoot .sirk-folder-heading.is-collapsed>.sirk-folder-chevron svg{transform:rotate(0deg)}",
+            "#sirkPortalRoot .is-folder-child-hidden{display:none!important}"
+        ].join("");
+        (document.head || document.documentElement).appendChild(style);
+    }
+
     function loadState() {
         try {
             var value = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
@@ -72,7 +88,6 @@
                 node.insertBefore(chevron(), node.firstChild);
             }
 
-            // New folders are expanded by default. Stored false means collapsed.
             var isExpanded = expanded[key] !== false;
             node.classList.toggle("is-expanded", isExpanded);
             node.classList.toggle("is-collapsed", !isExpanded);
@@ -100,6 +115,7 @@
 
     function enhance(shell) {
         if (!shell) return;
+        ensureStyle();
         var list = shell.querySelector('.sirk-management-workspace > .sirk-management-column:nth-child(2) > .sirk-management-list');
         if (!list) return;
         assignKeys(shell, list);
@@ -148,6 +164,7 @@
     function bind() {
         var portal = document.getElementById("sirkPortalRoot");
         if (!portal) return false;
+        ensureStyle();
         schedule(portal.querySelector(".sirk-management-shell"));
         if (!portal.__myCompanyFolderCollapseObserver) {
             portal.__myCompanyFolderCollapseObserver = new MutationObserver(function (records) {
