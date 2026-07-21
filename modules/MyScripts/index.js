@@ -1,7 +1,7 @@
 "use strict";
 
 var shared = require("../../core/shared.js");
-var libraryFactory = require("../../core/script-library.js");
+var libraryFactory = require("../../core/script-confirmation-library.js");
 var adminFactory = require("../../core/script-admin-service.js");
 var executorFactory = require("../../core/server-script-executor.js");
 
@@ -71,6 +71,7 @@ module.exports.createModule = function (context) {
             payload.variableValues = payload.variableValues && typeof payload.variableValues === "object" && !Array.isArray(payload.variableValues)
                 ? payload.variableValues
                 : {};
+            payload.confirmedExecution = payload.confirmedExecution === true;
             return payload;
         },
         getTitle: function (payload) { return payload.label || payload.scriptPath || "Script"; },
@@ -171,6 +172,9 @@ module.exports.createModule = function (context) {
             if (asset === "request") {
                 var requestedScript = library.getScript(value.scriptPath, false);
                 if (!requestedScript) throw new Error("Script not found.");
+                if (requestedScript.confirmExecution === true && value.confirmedExecution !== true) {
+                    throw new Error("Execution confirmation is required for this script.");
+                }
                 var levels = normalizeApprovalLevels(requestedScript.approvalLevels);
                 if (!levels.length && !allowNoApproval()) levels = [1];
 
@@ -180,6 +184,7 @@ module.exports.createModule = function (context) {
                     label: requestedScript.label || requestedScript.name,
                     description: requestedScript.description || "",
                     approvalLevels: levels,
+                    confirmedExecution: requestedScript.confirmExecution === true,
                     variableValues: value.variableValues && typeof value.variableValues === "object" && !Array.isArray(value.variableValues)
                         ? shared.copy(value.variableValues)
                         : {}
