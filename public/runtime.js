@@ -83,6 +83,11 @@
                     core.assetUrl("", "shared-ui/script-tools.js")
                 );
             }).then(function () {
+                return core.loadScript(
+                    "mycompany-shared-script-definition-form",
+                    core.assetUrl("", "shared-ui/script-definition-form.js")
+                );
+            }).then(function () {
                 installCredentialsActions();
             });
             order.forEach(function (key) {
