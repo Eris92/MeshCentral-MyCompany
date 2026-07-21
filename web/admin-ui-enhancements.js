@@ -112,7 +112,7 @@
             enabled: value.enabled,
             showTab: value.showTab,
             showOverview: value.showOverview,
-            allowNoApproval: type === "myscripts" ? true : value.allowNoApproval,
+            allowNoApproval: value.allowNoApproval === true,
             levels: value.levels
         }));
         return fetch(url.href, {
@@ -163,6 +163,15 @@
         checkField(card, "Provider enabled", state.enabled, function (value) { state.enabled = value; });
         checkField(card, "Show in Requests", state.showTab, function (value) { state.showTab = value; });
         checkField(card, "Show in Overview", state.showOverview, function (value) { state.showOverview = value; });
+        checkField(
+            card,
+            "No approval required",
+            state.allowNoApproval,
+            function (value) { state.allowNoApproval = value; },
+            definition.type === "myscripts"
+                ? "Allow immediate execution when the script does not declare Approval_1, Approval_2 or Approval_3. When disabled, Level 1 approval is required."
+                : "Explicitly allow immediate execution when the request does not declare approval levels."
+        );
         groupField(card, "Level 1 approvers", state.levels[1], function (value) { state.levels[1] = value; });
         groupField(card, "Level 2 approvers", state.levels[2], function (value) { state.levels[2] = value; });
         groupField(card, "Level 3 approvers", state.levels[3], function (value) { state.levels[3] = value; });
