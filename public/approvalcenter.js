@@ -14,14 +14,18 @@
 
     function orderedProviders(rows) {
         var map = Object.create(null);
-
         (rows || []).forEach(function (item) {
             map[item.type] = item;
         });
-
         return providerOrder.map(function (type) {
             return map[type];
         }).filter(Boolean);
+    }
+
+    function providerIcon(type) {
+        if (type === "moverequests") return "⇄";
+        if (type === "mycommands") return ">_";
+        return "▶";
     }
 
     function createNavButton(host, options) {
@@ -35,10 +39,31 @@
         return button;
     }
 
-    function renderPrimaryNavigation(shell) {
-        shell.state.page.primary.innerHTML = "";
+    function selectProvider(shell, type) {
+        selectedProvider = type;
+        selectedStatus = "";
+        shell.render();
+    }
 
-        createNavButton(shell.state.page.primary, {
+    function renderProviderButtons(host, shell) {
+        providers.forEach(function (provider) {
+            createNavButton(host, {
+                title: providerTitles[provider.type] || provider.tabTitle || provider.title,
+                icon: providerIcon(provider.type),
+                className: "mc-shared-nav-item mc-approval-provider",
+                active: selectedProvider === provider.type,
+                onClick: function () {
+                    selectProvider(shell, provider.type);
+                }
+            });
+        });
+    }
+
+    function renderPrimaryNavigation(shell) {
+        var host = shell.state.page.primary;
+        host.innerHTML = "";
+
+        createNavButton(host, {
             title: "Overview",
             icon: "▣",
             active: !selectedProvider,
@@ -48,50 +73,31 @@
                 shell.render();
             }
         });
+
+        if (selectedProvider) {
+            renderProviderButtons(host, shell);
+        }
     }
 
     function renderSecondaryNavigation(shell) {
         var host = shell.state.page.secondary;
         host.innerHTML = "";
 
-        providers.forEach(function (provider) {
-            var group = document.createElement("div");
-            group.className = "mc-approval-provider-group";
-            host.appendChild(group);
+        if (!selectedProvider) {
+            renderProviderButtons(host, shell);
+            return;
+        }
 
-            createNavButton(group, {
-                title: providerTitles[provider.type] || provider.tabTitle || provider.title,
-                icon: provider.type === "moverequests"
-                    ? "⇄"
-                    : provider.type === "mycommands"
-                        ? ">_"
-                        : "▶",
-                className: "mc-shared-nav-item mc-approval-provider",
-                active: selectedProvider === provider.type,
+        window.SharedStatusNav.list().forEach(function (status) {
+            createNavButton(host, {
+                title: status.title,
+                icon: status.icon,
+                className: "mc-shared-nav-item mc-approval-status",
+                active: selectedStatus === status.key,
                 onClick: function () {
-                    selectedProvider = provider.type;
-                    selectedStatus = "";
+                    selectedStatus = status.key;
                     shell.render();
                 }
-            });
-
-            if (selectedProvider !== provider.type) return;
-
-            var statuses = document.createElement("div");
-            statuses.className = "mc-approval-status-list";
-            group.appendChild(statuses);
-
-            window.SharedStatusNav.list().forEach(function (status) {
-                createNavButton(statuses, {
-                    title: status.title,
-                    icon: status.icon,
-                    className: "mc-shared-nav-item mc-approval-status",
-                    active: selectedStatus === status.key,
-                    onClick: function () {
-                        selectedStatus = status.key;
-                        shell.render();
-                    }
-                });
             });
         });
     }
@@ -203,7 +209,6 @@
 
     function loadRequests(shell, options) {
         options = options || {};
-
         return shell.api("requests", {
             type: options.type || "",
             status: options.status || "",
