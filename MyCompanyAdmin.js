@@ -46,6 +46,12 @@ module.exports.admin = function (plugin) {
         });
     }
 
+    function moduleObject(moduleName) {
+        return plugin.runtime &&
+            plugin.runtime.modules &&
+            plugin.runtime.modules[String(moduleName || "").toLowerCase()];
+    }
+
     obj.req = function (req, res, user) {
         var asset = String(req && req.query && req.query.asset || "");
         var moduleName = String(req && req.query && req.query.module || "");
@@ -104,6 +110,33 @@ module.exports.admin = function (plugin) {
             if (req && req.body && typeof req.body.payload === "string") {
                 req.body = shared.parseJsonObject(req.body.payload, {});
             }
+
+            var module = moduleObject(moduleName);
+            if (
+                asset === "settings" &&
+                shared.isSiteAdmin(user) &&
+                module &&
+                !module.__loadError &&
+                typeof module.apiPost === "function"
+            ) {
+                try {
+                    Promise.resolve(module.apiPost(asset, req, user)).then(function (value) {
+                        shared.sendJson(res, 200, value || { ok: true });
+                    }).catch(function (error) {
+                        shared.sendJson(res, 400, {
+                            ok: false,
+                            error: String(error && error.message || error)
+                        });
+                    });
+                } catch (error) {
+                    shared.sendJson(res, 400, {
+                        ok: false,
+                        error: String(error && error.message || error)
+                    });
+                }
+                return;
+            }
+
             plugin.runtime.request("POST", moduleName, asset, req, res, user);
             return;
         }
@@ -118,7 +151,10 @@ module.exports.admin = function (plugin) {
             plugin.runtime.saveAdminSettings(user, payload).then(function (snapshot) {
                 shared.sendJson(res, 200, { ok: true, snapshot: snapshot });
             }).catch(function (error) {
-                shared.sendJson(res, 403, { ok: false, error: String(error && error.message || error) });
+                shared.sendJson(res, 403, {
+                    ok: false,
+                    error: String(error && error.message || error)
+                });
             });
             return;
         }
