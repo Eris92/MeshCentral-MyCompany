@@ -7,6 +7,7 @@ var shared = require("../../core/shared.js");
 
 var VENDOR_VERSION = "0.3.17";
 var VENDOR_REF = "e894c444c9d7e2e1218642018bf9c14dfb99c957";
+var CUSTOM_FILES_KEY = "mycompany-sirk-portal";
 var VENDOR_FILES = [
     "sirk-portal.css",
     "sirk-preflight-0.3.13.js",
@@ -20,6 +21,17 @@ var VENDOR_FILES = [
     "sirk-device-layout-0.3.13.js",
     "sirk-controls-0.3.17.js"
 ];
+var EARLY_VENDOR_SCRIPTS = [
+    "sirk-preflight-0.3.13.js",
+    "sirk-portal.js",
+    "sirk-remote-modules-0.3.13.js",
+    "sirk-portal-patch-0.2.8.js",
+    "sirk-ui-icons-0.3.4.js",
+    "sirk-layout-0.3.1.js",
+    "sirk-ui-runtime-0.3.15.js",
+    "sirk-device-layout-0.3.13.js",
+    "sirk-controls-0.3.17.js"
+];
 
 module.exports.createModule = function (context) {
     var vendorState = {
@@ -28,7 +40,9 @@ module.exports.createModule = function (context) {
         ready: false,
         directory: "",
         missing: [],
-        error: ""
+        error: "",
+        earlyOverlay: false,
+        customFilesDomains: []
     };
 
     function settings() {
@@ -41,6 +55,10 @@ module.exports.createModule = function (context) {
 
     function requireAdmin(user) {
         if (!shared.isSiteAdmin(user)) throw new Error("Permission denied.");
+    }
+
+    function meshServer() {
+        return context.parent && context.parent.parent;
     }
 
     function standalonePortalActive() {
@@ -68,7 +86,7 @@ module.exports.createModule = function (context) {
         return new Promise(function (resolve, reject) {
             var request = https.get(url, {
                 headers: {
-                    "User-Agent": "MeshCentral-MyCompany/1.4.1",
+                    "User-Agent": "MeshCentral-MyCompany/1.4.9",
                     "Accept": "application/octet-stream"
                 }
             }, function (response) {
@@ -159,6 +177,109 @@ module.exports.createModule = function (context) {
         });
     }
 
+    function webPaths() {
+        var server = meshServer();
+        if (!server || !server.datapath) throw new Error("MeshCentral datapath is unavailable.");
+        var meshRoot = path.dirname(server.datapath);
+        return {
+            root: path.join(meshRoot, "meshcentral-web", "public"),
+            scripts: path.join(meshRoot, "meshcentral-web", "public", "scripts"),
+            styles: path.join(meshRoot, "meshcentral-web", "public", "styles")
+        };
+    }
+
+    function earlyScript() {
+        return [
+            "(function(){",
+            "if(window.__myCompanySirkEarlyLoaded)return;window.__myCompanySirkEarlyLoaded=true;",
+            "var root=document.documentElement;",
+            "var url=new URL(window.location.href);",
+            "if(url.searchParams.get('sirkNative')==='1'||url.searchParams.get('sirkremote39')==='1'){root.classList.add('sirk-native-embed');return;}",
+            "root.classList.add('mycompany-sirk-pending');",
+            "function ready(){if(document.getElementById('sirkPortalRoot')||document.getElementById('sirkLoginShell')||root.classList.contains('sirk-login-active')||root.classList.contains('sirk-portal-active'))root.classList.remove('mycompany-sirk-pending');}",
+            "if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else ready();",
+            "new MutationObserver(ready).observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});",
+            "setTimeout(function(){root.classList.remove('mycompany-sirk-pending');},8000);",
+            "})();"
+        ].join("");
+    }
+
+    function earlyStyle() {
+        return [
+            "html.mycompany-sirk-pending body{visibility:hidden!important;background:#0b1220!important}",
+            "html.sirk-login-active body,html.sirk-portal-active body,html.sirk-native-embed body{visibility:visible!important}",
+            "html.sirk-native-embed body{background:#fff!important}"
+        ].join("\n");
+    }
+
+    function copyEarlyAssets() {
+        var paths = webPaths();
+        fs.mkdirSync(paths.scripts, { recursive: true });
+        fs.mkdirSync(paths.styles, { recursive: true });
+        fs.writeFileSync(path.join(paths.scripts, "mycompany-sirk-early.js"), earlyScript(), "utf8");
+        fs.writeFileSync(path.join(paths.styles, "mycompany-sirk-early.css"), earlyStyle(), "utf8");
+        EARLY_VENDOR_SCRIPTS.forEach(function (name) {
+            fs.copyFileSync(path.join(vendorDirectory(), name), path.join(paths.scripts, name));
+        });
+        fs.copyFileSync(path.join(vendorDirectory(), "sirk-portal.css"), path.join(paths.styles, "sirk-portal.css"));
+        return paths;
+    }
+
+    function isPortalCustomEntry(entry) {
+        if (!entry || typeof entry !== "object") return false;
+        if (entry.name === CUSTOM_FILES_KEY || entry.myCompanyPortal === true) return true;
+        return entry.sirkPortal === true || entry.name === "sirk-portal";
+    }
+
+    function removePortalEntries(current) {
+        if (Array.isArray(current)) return current.filter(function (entry) { return !isPortalCustomEntry(entry); });
+        if (current && typeof current === "object") {
+            var result = Object.assign({}, current);
+            Object.keys(result).forEach(function (key) {
+                if (key === CUSTOM_FILES_KEY || isPortalCustomEntry(result[key])) delete result[key];
+            });
+            return result;
+        }
+        return {};
+    }
+
+    function portalCustomEntry() {
+        return {
+            name: CUSTOM_FILES_KEY,
+            myCompanyPortal: true,
+            css: ["mycompany-sirk-early.css", "sirk-portal.css"],
+            js: ["mycompany-sirk-early.js"].concat(EARLY_VENDOR_SCRIPTS),
+            scope: ["all"]
+        };
+    }
+
+    function setEarlyOverlay(enabled) {
+        var server = meshServer();
+        var config = server && server.config;
+        if (!config || !config.domains || typeof config.domains !== "object") throw new Error("MeshCentral config.domains is unavailable.");
+        if (enabled) copyEarlyAssets();
+
+        var domains = [];
+        Object.keys(config.domains).forEach(function (domainId) {
+            var domain = config.domains[domainId];
+            if (!domain || typeof domain !== "object") return;
+            var current = domain.customFiles != null ? domain.customFiles : domain.customfiles;
+            var cleaned = removePortalEntries(current);
+            if (enabled) {
+                if (Array.isArray(cleaned)) cleaned.push(portalCustomEntry());
+                else cleaned[CUSTOM_FILES_KEY] = portalCustomEntry();
+                domain.newAccounts = false;
+                domain.newaccounts = false;
+            }
+            domain.customFiles = cleaned;
+            domain.customfiles = cleaned;
+            domains.push(domainId || "<default>");
+        });
+        vendorState.earlyOverlay = !!enabled;
+        vendorState.customFilesDomains = domains;
+        return domains;
+    }
+
     return {
         key: "portal",
         clientConfig: function () {
@@ -174,7 +295,8 @@ module.exports.createModule = function (context) {
                 showLauncher: value.showLauncher !== false,
                 standaloneConflict: standalonePortalActive(),
                 vendorVersion: VENDOR_VERSION,
-                vendorReady: vendorState.ready
+                vendorReady: vendorState.ready,
+                earlyOverlay: vendorState.earlyOverlay
             };
         },
         getAccess: function (user) {
@@ -184,7 +306,12 @@ module.exports.createModule = function (context) {
             };
         },
         initialize: function () {
-            return ensureVendorAssets();
+            return ensureVendorAssets().then(function () {
+                var value = settings();
+                if (value.enabled === true && !standalonePortalActive()) setEarlyOverlay(true);
+                else setEarlyOverlay(false);
+                return vendorState;
+            });
         },
         apiGet: function (asset, req, user) {
             if (!allowed(user)) throw new Error("Permission denied.");
@@ -215,6 +342,8 @@ module.exports.createModule = function (context) {
                 current.modules.portal.showLauncher = value.showLauncher !== false;
                 return current;
             }).then(function () {
+                var enabled = settings().enabled === true && !standalonePortalActive();
+                setEarlyOverlay(enabled);
                 return { ok: true, module: settings(), reloadRequired: true, vendor: vendorState };
             });
         }
