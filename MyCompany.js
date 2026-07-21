@@ -90,7 +90,7 @@ function fallbackPlugin(parent, shortName, error) {
             "pre{white-space:pre-wrap;border:1px solid #999;padding:12px}",
             "</style></head><body>",
             "<h2>MyCompany failed to initialize</h2>",
-            "<div>Version: 1.2.7</div>",
+            "<div>Version: 1.4.0</div>",
             "<div>Loaded shortName: ",
             escapeHtml(shortName),
             "</div>",
@@ -167,14 +167,14 @@ function create(parent, shortName) {
     var plugin;
 
     try {
-        var implementation = require("./plugin-main.js");
+        var implementation = require("./plugin-main-1.4.0.js");
 
         if (
             !implementation ||
             typeof implementation.createPlugin !== "function"
         ) {
             throw new Error(
-                "plugin-main.js does not export createPlugin()."
+                "plugin-main-1.4.0.js does not export createPlugin()."
             );
         }
 
