@@ -34,7 +34,7 @@
             host.appendChild(roots);
 
             var treeContainer = options.treeContainer || document.createElement("div");
-            return window.SharedDirectoryTree.mount({
+            var state = window.SharedDirectoryTree.mount({
                 rootsContainer: roots,
                 treeContainer: treeContainer,
                 tree: options.tree,
@@ -54,6 +54,14 @@
                     }
                 }
             });
+
+            if (options.resultsActive) {
+                roots.querySelectorAll(".mc-tree-root.active").forEach(function (button) {
+                    button.classList.remove("active");
+                });
+            }
+
+            return state;
         }
     };
 }());
