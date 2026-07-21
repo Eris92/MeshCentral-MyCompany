@@ -1,5 +1,17 @@
 [
   {
+    "version": "1.3.5",
+    "date": "2026-07-21",
+    "changes": [
+      "Execute MyScripts PowerShell and CMD files instead of returning a synthetic completed result",
+      "Store real stdout, stderr, raw output and exit status in Approval Center results",
+      "Render JSON, meshTable, row arrays, CSV, TSV and semicolon-delimited output as filterable tables",
+      "Add inline Copy and collapsible Debug / raw output to script results",
+      "Send shared module POST requests through a parsed JSON payload envelope",
+      "Pass declared variable values, encrypted per-script secrets and assigned system integration profiles to executions"
+    ]
+  },
+  {
     "version": "1.3.0",
     "date": "2026-07-21",
     "changes": [
