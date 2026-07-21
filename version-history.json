@@ -1,5 +1,18 @@
 [
   {
+    "version": "1.3.8",
+    "date": "2026-07-21",
+    "changes": [
+      "Run My Commands and My Scripts entries without declared variables immediately when clicked",
+      "Keep the variable form for scripts and commands that require user input",
+      "Add Confirm execution before running to the shared script Edit Mode",
+      "Persist the policy as # ConfirmExecution: true in the script header",
+      "Require browser confirmation before submission or execution",
+      "Reject unconfirmed requests server-side in My Commands and My Scripts",
+      "Apply confirmation to multi-device script execution"
+    ]
+  },
+  {
     "version": "1.3.7",
     "date": "2026-07-21",
     "changes": [
