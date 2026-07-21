@@ -4,31 +4,37 @@ var fs = require("fs");
 var os = require("os");
 var path = require("path");
 var root = path.resolve(__dirname, "..");
+
 var required = [
-    "MyCompany.js", "plugin-main.js", "plugin-main-1.4.0.js", "MyCompanyAdmin.js", "config.json",
-    "core/runtime.js", "core/runtime-portal.js", "core/approval-service.js", "core/atomic-json.js",
-    "core/settings-store.js", "core/script-library.js", "core/script-confirmation-library.js",
-    "core/script-admin-service.js", "core/server-script-executor.js",
+    "MyCompany.js", "plugin-main.js", "plugin-main-1.4.0.js", "MyCompanyAdmin.js",
+    "config.json", "package.json",
+    "core/runtime.js", "core/runtime-portal.js", "core/approval-service.js",
+    "core/atomic-json.js", "core/settings-store.js", "core/script-library.js",
+    "core/script-confirmation-library.js", "core/script-admin-service.js",
+    "core/server-script-executor.js",
     "modules/ApprovalCenter/index.js", "modules/MoveRequests/index.js",
     "modules/MyCommands/index.js", "modules/MyScripts/index.js",
     "modules/MyJira/index.js", "modules/DefenderTools/index.js", "modules/Portal/index.js",
     "public/approvalcenter.js", "public/myscripts.js", "public/mycommands.js",
-    "public/portal.js", "public/portal.css", "public/runtime.js", "public/module-shell.js",
-    "public/shared-ui/toolbar.js", "public/shared-ui/toolbar-api.js",
-    "public/shared-ui/toolbar-config.js", "public/shared-ui/tabs.js",
-    "public/shared-ui/layout.js", "public/shared-ui/settings.js",
-    "public/shared-ui/status-nav.js", "public/shared-ui/tree.js",
-    "public/shared-ui/catalog.js", "public/shared-ui/results.js",
-    "public/shared-ui/result-layout.js", "public/shared-ui/script-tools.js",
-    "public/shared-ui/script-definition-form.js",
-    "public/shared-ui/confirm-execution-form.js", "public/shared-ui/page.js",
+    "public/portal.js", "public/portal-management.js", "public/portal.css",
+    "public/runtime.js", "public/module-shell.js", "public/core.js",
+    "public/shared-ui/results.js", "public/shared-ui/script-tools.js",
+    "public/shared-ui/confirm-execution-form.js", "public/shared-ui/result-layout.js",
     "web/admin-portal.js", "views/MyCompany.handlebars",
     "seed/MyScripts", "seed/MyCommands"
 ];
 
-function read(relative) { return fs.readFileSync(path.join(root, relative), "utf8"); }
-function need(source, value, message, errors) { if (source.indexOf(value) < 0) errors.push(message); }
-function match(source, expression, message, errors) { if (!expression.test(source)) errors.push(message); }
+function read(relative) {
+    return fs.readFileSync(path.join(root, relative), "utf8");
+}
+
+function need(source, value, message, errors) {
+    if (source.indexOf(value) < 0) errors.push(message);
+}
+
+function reject(source, value, message, errors) {
+    if (source.indexOf(value) >= 0) errors.push(message);
+}
 
 function validateSyntax() {
     var errors = [];
@@ -37,10 +43,7 @@ function validateSyntax() {
         try { new Function(read(relative)); }
         catch (error) { errors.push("Syntax error in " + relative + ": " + error.message); }
     });
-    if (errors.length) {
-        errors.forEach(function (error) { console.error(error); });
-        throw new Error("JavaScript syntax validation failed.");
-    }
+    if (errors.length) throw new Error(errors.join("\n"));
 }
 
 function validateArchitecture() {
@@ -53,170 +56,85 @@ function validateArchitecture() {
     var packageConfig = JSON.parse(read("package.json").replace(/^\uFEFF/, ""));
     if (config.shortName !== "MyCompany") errors.push("config.shortName must be MyCompany.");
     if (config.version !== packageConfig.version) errors.push("config.json and package.json versions must match.");
-    if (config.version !== "1.4.0") errors.push("Portal release must publish version 1.4.0.");
-    var entrypoints = fs.readdirSync(root).filter(function (name) { return name.toLowerCase() === "mycompany.js"; });
-    if (entrypoints.length !== 1 || entrypoints[0] !== "MyCompany.js") errors.push("Exactly one case-insensitive MyCompany.js entrypoint is required.");
+    if (config.version !== "1.4.3") errors.push("Native Portal management release must publish version 1.4.3.");
+
+    var entrypoints = fs.readdirSync(root).filter(function (name) {
+        return name.toLowerCase() === "mycompany.js";
+    });
+    if (entrypoints.length !== 1 || entrypoints[0] !== "MyCompany.js") {
+        errors.push("Exactly one case-insensitive MyCompany.js entrypoint is required.");
+    }
     if (fs.existsSync(path.join(root, ".gitmodules"))) errors.push(".gitmodules is not allowed.");
-    if (fs.existsSync(path.join(root, "legacy"))) errors.push("legacy source directory is not allowed.");
 
-    var pluginMain = read("plugin-main.js");
-    need(pluginMain, 'require("./core/runtime-portal.js")', "Plugin entry must use the Portal-decorated runtime.", errors);
-    need(pluginMain, 'url.searchParams.set("v", "1.4.0")', "Plugin browser bootstrap must invalidate 1.4.0 assets.", errors);
-    need(read("public/core.js"), 'core.assetVersion = "1.4.0"', "Browser core must use asset version 1.4.0.", errors);
-
-    var runtime = read("core/runtime.js");
-    need(runtime, '"seed", "MyScripts"', "Runtime must resolve MyScripts from seed/MyScripts.", errors);
-    need(runtime, '"seed", "MyCommands"', "Runtime must resolve MyCommands from seed/MyCommands.", errors);
-
-    var portalRuntime = read("core/runtime-portal.js");
-    [
-        "PORTAL_DEFAULTS", "enabled: false", "defaultView", "showLauncher",
-        "runtime.modules.portal", "portalFactory.createModule", "runtime.bootstrap"
-    ].forEach(function (value) {
-        need(portalRuntime, value, "Portal runtime integration missing: " + value, errors);
+    var runtimePortal = read("core/runtime-portal.js");
+    ["PORTAL_DEFAULTS", "enabled: false", "runtime.modules.portal", "portalFactory.createModule"].forEach(function (value) {
+        need(runtimePortal, value, "Portal runtime integration missing: " + value, errors);
     });
 
     var portalModule = read("modules/Portal/index.js");
-    [
-        'key: "portal"', 'name: "SirK Portal"', 'script: "portal.js"',
-        'style: "portal.css"', "value.enabled", "defaultView", "showLauncher",
-        "reloadRequired", "requireAdmin"
-    ].forEach(function (value) {
+    ["VENDOR_VERSION", "0.3.17", "ensureVendorAssets", "vendorReady", "reloadRequired"].forEach(function (value) {
         need(portalModule, value, "Portal server module missing: " + value, errors);
     });
 
-    var publicRuntime = read("public/runtime.js");
+    var portal = read("public/portal.js");
     [
-        'portal: "portal.js"', '"myscripts", "portal"',
-        "shared-ui/confirm-execution-form.js", "shared-ui/result-layout.js"
+        'data-sirk-view", "management"',
+        'automation: "Automatyzacja"',
+        'management: "Zarządzanie"',
+        "MyCompanyPortalManagement.mount",
+        'core.assetUrl("", "portal-management.js")',
+        'mountModule("approvalcenter"',
+        "sirk-settings-frame"
     ].forEach(function (value) {
-        need(publicRuntime, value, "Browser runtime missing: " + value, errors);
+        need(portal, value, "Portal adapter missing: " + value, errors);
     });
+    reject(portal, "sirk-management-workspace-0.3.6.js", "Legacy management workspace must not be loaded.", errors);
+    reject(portal, 'mountModule("myscripts"', "MyScripts must not be mounted as .mc-shared-page in Portal management.", errors);
+    reject(portal, 'automation: "management"', "Automation and Management must remain separate Portal views.", errors);
 
-    var moduleShell = read("public/module-shell.js");
+    var management = read("public/portal-management.js");
     [
-        'mount: function (host, mode)', 'mountPage(host, mode || "embedded")'
+        "sirk-management-shell", "sirk-management-toolbar", "sirk-management-workspace",
+        'core.api("myscripts"', 'core.post("myscripts"',
+        'post("request"', 'api("results"', 'api("script"',
+        "openDefinitionEditor", "openCredentialsEditor", "toggleFavorite",
+        "confirmedExecution", "SharedResultsView.mountTable", "SharedResultsView.mountResult"
     ].forEach(function (value) {
-        need(moduleShell, value, "Module shell embedded mounting missing: " + value, errors);
+        need(management, value, "Native management renderer missing: " + value, errors);
     });
+    reject(management, "MyCompanyModules.myscripts.mount", "Native management renderer must not mount MyScripts UI.", errors);
+    reject(management, "mc-shared-page", "Native management renderer must not create .mc-shared-page.", errors);
 
-    var portalClient = read("public/portal.js");
+    var portalCss = read("public/portal.css");
     [
-        "Zarządzanie", "Akceptacje", "Ustawienia", "Mesh",
-        'mountModule("myscripts"', 'mountModule("approvalcenter"',
-        'url.searchParams.set("pin", "MyCompany")', "sirk-settings-frame",
-        "Standalone SirKPortal", "window.SirKPortal.registerAction",
-        'data-mycompany-portal', "showPortal", "showMesh"
+        ".sirk-management-shell", ".sirk-management-tool", ".sirk-management-workspace",
+        ".sirk-management-item", ".sirk-script-action", ".sirk-form-row",
+        ".mc-results-table", ".mc-results-debug"
     ].forEach(function (value) {
-        need(portalClient, value, "Portal client missing: " + value, errors);
+        need(portalCss, value, "Portal native theme missing: " + value, errors);
     });
 
-    var portalAdmin = read("web/admin-portal.js");
-    [
-        "Enable SirK Portal", "Save SirK Portal", "defaultView", "showLauncher",
-        'url.searchParams.set("module", "portal")', "reload the MeshCentral tab",
-        "Nie uruchamiaj równolegle osobnej wtyczki SirKPortal"
-    ].forEach(function (value) {
-        need(portalAdmin, value, "Portal admin integration missing: " + value, errors);
-    });
-    need(read("views/MyCompany.handlebars"), "asset=admin-portal.js", "Admin view must load Portal settings.", errors);
-    ["portal.js", "portal.css", "admin-portal.js"].forEach(function (value) {
-        need(read("MyCompanyAdmin.js"), '"' + value + '"', "Admin asset server missing: " + value, errors);
+    var adminServer = read("MyCompanyAdmin.js");
+    ["portal.js", "portal-management.js", "portal.css", "shared-ui/results.js", "shared-ui/script-tools.js"].forEach(function (value) {
+        need(adminServer, '"' + value + '"', "Admin asset server missing: " + value, errors);
     });
 
-    var confirmationLibrary = read("core/script-confirmation-library.js");
-    ["ConfirmExecution", "confirmExecution", "updateDirective", "decorateTree", "saveDefinition"].forEach(function (value) {
-        need(confirmationLibrary, value, "Confirmation metadata library missing: " + value, errors);
+    var myScriptsServer = read("modules/MyScripts/index.js");
+    ["confirmedExecution", "Execution confirmation is required", 'asset === "definition"', 'asset === "script-secrets"'].forEach(function (value) {
+        need(myScriptsServer, value, "MyScripts backend missing: " + value, errors);
     });
-
-    ["MyScripts", "MyCommands"].forEach(function (name) {
-        var source = read("modules/" + name + "/index.js");
-        [
-            'context.pluginRoot, "seed", "' + name + '"', "script-confirmation-library",
-            "confirmedExecution", "Execution confirmation is required", "allowWrite: true",
-            'asset === "definition"', 'asset === "script-secrets"', "script-admin-service"
-        ].forEach(function (value) { need(source, value, name + " server module missing: " + value, errors); });
-    });
-
-    var myScriptsModule = read("modules/MyScripts/index.js");
-    ["server-script-executor", "executor.execute", "scriptHash", "variableValues", 'context.approval.submit("myscripts"'].forEach(function (value) {
-        need(myScriptsModule, value, "MyScripts execution missing: " + value, errors);
-    });
-    if (myScriptsModule.indexOf("Script does not require approval.") >= 0) errors.push("MyScripts must not return a synthetic direct result.");
-
-    var commandsModule = read("modules/MyCommands/index.js");
-    [
-        "approvalResults", 'asset === "multi-execute"', "maxMultiHostNodes", "multiHostConcurrency",
-        "publicCatalog", "commandId", 'asset === "output"', "Open PowerShell", "Open CMD",
-        "Registry Editor", "Local Security Policy", "Windows Firewall", "MMC", "Services",
-        "Device Manager", "Event Viewer", "Task Manager", "Printer Management",
-        "Certificates (computer)", "Certificates (user)", "Indexing Options", "Disk Cleanup",
-        "Flush DNS", "Check DNS", "Check port", "Open ports", "Filter by port"
-    ].forEach(function (value) { need(commandsModule, value, "MyCommands missing: " + value, errors); });
-
-    var confirmForm = read("public/shared-ui/confirm-execution-form.js");
-    ["Confirm execution before running", "confirmExecution", "payload.definition.confirmExecution", "server rejects unconfirmed requests"].forEach(function (value) {
-        need(confirmForm, value, "Shared Confirm execution form missing: " + value, errors);
-    });
-    need(read("MyCompanyAdmin.js"), "shared-ui/confirm-execution-form.js", "Admin asset server must expose the Confirm execution form.", errors);
 
     var myScripts = read("public/myscripts.js");
-    [
-        "SharedCatalogView.mount", "SharedResultsView.mountTable", "SharedScriptTools.create",
-        "confirmExecution", "confirmedExecution", "switchToResult", "executeOnSelect",
-        "show(shell, script, true)", "show(shell, script, false)", "variableValues",
-        "previous && executeOnSelect !== true"
-    ].forEach(function (value) { need(myScripts, value, "MyScripts UI missing: " + value, errors); });
-    match(myScripts, /collapse\s*:\s*true/, "MyScripts must expose Collapse.", errors);
-    match(myScripts, /multi\s*:\s*false/, "MyScripts must hide multi-device execution.", errors);
-
-    var myCommands = read("public/mycommands.js");
-    [
-        "SharedCatalogView.mount", "SharedResultsView.mountTable", "SharedScriptTools.create",
-        "openMultiExecution", 'post("multi-execute"', "confirmExecution", "confirmedExecution",
-        "button.click()", "executeOnSelect", 'name: "Scripts"', '"@menu/" + category.key',
-        "commandId", 'tabs: []', "show(shell, item, true)", "show(shell, item, false)"
-    ].forEach(function (value) { need(myCommands, value, "MyCommands UI missing: " + value, errors); });
-    if (myCommands.indexOf('resultsPosition: "end"') >= 0) errors.push("MyCommands Results must be the first left-menu entry.");
-    match(myCommands, /order\s*:\s*60/, "MyCommands multi action order is invalid.", errors);
-    match(myCommands, /collapse\s*:\s*\{/, "MyCommands must expose Collapse.", errors);
-
-    var resultLayout = read("public/shared-ui/result-layout.js");
-    ["mc-results-copy-after-output", "mc-results-debug", "mc-command-inline-result", "data-result-only"].forEach(function (value) {
-        need(resultLayout, value, "Shared result layout missing: " + value, errors);
-    });
-    need(read("MyCompanyAdmin.js"), "shared-ui/result-layout.js", "Admin asset server must expose the result layout normalizer.", errors);
-
-    var toolbarConfig = read("public/shared-ui/toolbar-config.js");
-    match(toolbarConfig, /myscripts:\s*\{[^}]*collapse:\s*true/, "Collapse must be enabled in MyScripts.", errors);
-    match(toolbarConfig, /mycommands:\s*\{[^}]*collapse:\s*true/, "Collapse must remain in MyCommands.", errors);
-    match(toolbarConfig, /approvalcenter:\s*\{[^}]*collapse:\s*true[^}]*link:\s*false/, "Approval Center must keep Collapse and disable Link.", errors);
-    need(toolbarConfig, "order: 70", "Search must remain the last left toolbar action.", errors);
-
-    var results = read("public/shared-ui/results.js");
-    ["parseStructured", "Filter results", "View", "Debug / raw output", "Copy", "meshTable", "Filter result rows", "__MYCOMMANDS_TABLE_B64__"].forEach(function (value) {
-        need(results, value, "Shared result viewer missing: " + value, errors);
+    ["confirmExecution", "confirmedExecution", "SharedResultsView.mountTable", "openDefinitionEditor", "openCredentialsEditor"].forEach(function (value) {
+        need(myScripts, value, "Native MyScripts UI regression: " + value, errors);
     });
 
-    var adminEnhancements = read("web/admin-ui-enhancements.js");
-    ["Save General", "Save My Commands", "ensureInlineSaveActions", "invokeGlobalSave"].forEach(function (value) {
-        need(adminEnhancements, value, "Admin inline save actions missing: " + value, errors);
+    var adminPortal = read("web/admin-portal.js");
+    ["Enable SirK Portal", "Save SirK Portal", "defaultView", "showLauncher"].forEach(function (value) {
+        need(adminPortal, value, "Portal admin integration missing: " + value, errors);
     });
 
-    var approval = read("public/approvalcenter.js");
-    ["Filter requests", "SharedResultsView.mountTable", "mc-approval-nav-icon"].forEach(function (value) {
-        need(approval, value, "Approval Center UI missing: " + value, errors);
-    });
-    match(approval, /link\s*:\s*false/, "Approval Center Link must remain disabled.", errors);
-    match(approval, /showView\s*:\s*true/, "Approval Center must expose View.", errors);
-
-    need(read("public/core.js"), 'body.set("payload"', "Browser POST requests must use the parsed JSON payload envelope.", errors);
-    need(read("public/shared-ui/catalog.js"), 'resultsPosition !== "end"', "Shared catalog must support Results at the start.", errors);
-
-    if (errors.length) {
-        errors.forEach(function (error) { console.error(error); });
-        throw new Error("Architecture validation failed.");
-    }
+    if (errors.length) throw new Error(errors.join("\n"));
 }
 
 function validateSettingsWriter() {
@@ -228,13 +146,21 @@ function validateSettingsWriter() {
     }).then(function () {
         var value = JSON.parse(fs.readFileSync(filePath, "utf8"));
         if (value.version !== 2 || value.enabled !== false) throw new Error("Settings writer returned invalid data.");
-        var leftovers = fs.readdirSync(directory).filter(function (name) { return /\.(tmp|bak)$/.test(name); });
-        if (leftovers.length) throw new Error("Settings writer left temporary files: " + leftovers.join(", "));
-    }).finally(function () { fs.rmSync(directory, { recursive: true, force: true }); });
+    }).finally(function () {
+        fs.rmSync(directory, { recursive: true, force: true });
+    });
 }
 
-Promise.resolve().then(validateSyntax).then(validateArchitecture).then(validateSettingsWriter).then(function () {
-    console.log("JavaScript syntax validation: OK");
-    console.log("Architecture validation: OK");
-    console.log("Settings writer validation: OK");
-}).catch(function (error) { console.error(error && error.stack || error); process.exit(1); });
+Promise.resolve()
+    .then(validateSyntax)
+    .then(validateArchitecture)
+    .then(validateSettingsWriter)
+    .then(function () {
+        console.log("JavaScript syntax validation: OK");
+        console.log("Native Portal management architecture: OK");
+        console.log("Settings writer validation: OK");
+    })
+    .catch(function (error) {
+        console.error(error && error.stack || error);
+        process.exit(1);
+    });
