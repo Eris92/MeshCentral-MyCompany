@@ -31,6 +31,20 @@ module.exports.createModule = function (context) {
         if (!shared.isSiteAdmin(user)) throw new Error("Permission denied.");
     }
 
+    function approvalLevels(payload) {
+        var levels = Array.isArray(payload && payload.approvalLevels)
+            ? payload.approvalLevels.map(Number).filter(function (level) {
+                return level >= 1 && level <= 3;
+            })
+            : [];
+        if (levels.length) return levels;
+        var settings = context.settings.read();
+        var provider = settings.modules && settings.modules.approvalcenter &&
+            settings.modules.approvalcenter.providers &&
+            settings.modules.approvalcenter.providers.myscripts || {};
+        return provider.allowNoApproval === true ? [] : [1];
+    }
+
     var provider = {
         type: "myscripts",
         moduleKey: "myscripts",
@@ -38,18 +52,10 @@ module.exports.createModule = function (context) {
         tabTitle: "Scripts",
         description: "Approval workflow for My Scripts executions.",
         columns: ["createdAt", "title", "requester", "status"],
-        normalizePayload: function (payload) {
-            return shared.copy(payload || {});
-        },
-        getTitle: function (payload) {
-            return payload.label || payload.scriptPath || "Script";
-        },
-        getSummary: function (payload) {
-            return payload.description || payload.scriptPath || "My Scripts request";
-        },
-        getApprovalLevels: function (payload) {
-            return payload.approvalLevels || [1];
-        },
+        normalizePayload: function (payload) { return shared.copy(payload || {}); },
+        getTitle: function (payload) { return payload.label || payload.scriptPath || "Script"; },
+        getSummary: function (payload) { return payload.description || payload.scriptPath || "My Scripts request"; },
+        getApprovalLevels: approvalLevels,
         canSubmit: allowed,
         execute: function (payload) {
             return Promise.resolve({
@@ -81,10 +87,7 @@ module.exports.createModule = function (context) {
             };
         },
         getAccess: function (user) {
-            return {
-                allowed: allowed(user),
-                siteAdmin: shared.isSiteAdmin(user)
-            };
+            return { allowed: allowed(user), siteAdmin: shared.isSiteAdmin(user) };
         },
         initialize: function () {
             library.ensure();
@@ -97,13 +100,8 @@ module.exports.createModule = function (context) {
         apiGet: function (asset, req, user) {
             if (!allowed(user)) throw new Error("Permission denied.");
             var q = req && req.query || {};
-
             if (asset === "tree" || asset === "scripts") {
-                return {
-                    ok: true,
-                    tree: library.getTree(),
-                    scriptsRoot: shared.isSiteAdmin(user) ? root : ""
-                };
+                return { ok: true, tree: library.getTree(), scriptsRoot: shared.isSiteAdmin(user) ? root : "" };
             }
             if (asset === "script") {
                 var script = library.getScript(q.path, true);
@@ -116,12 +114,8 @@ module.exports.createModule = function (context) {
                 if (!source) throw new Error("Script not found.");
                 return { ok: true, source: source };
             }
-            if (asset === "definition") {
-                return { ok: true, definition: admin.getDefinition(user, q.path) };
-            }
-            if (asset === "script-secrets") {
-                return { ok: true, secrets: admin.getSecretState(user, q.path) };
-            }
+            if (asset === "definition") return { ok: true, definition: admin.getDefinition(user, q.path) };
+            if (asset === "script-secrets") return { ok: true, secrets: admin.getSecretState(user, q.path) };
             if (asset === "results") {
                 return context.approval.list(user, {
                     type: "myscripts",
@@ -129,35 +123,23 @@ module.exports.createModule = function (context) {
                     q: q.q || "",
                     page: Number(q.page) || 1,
                     perPage: Math.min(500, Number(q.perPage) || 100)
-                }).then(function (value) {
-                    value.ok = true;
-                    return value;
-                });
+                }).then(function (value) { value.ok = true; return value; });
             }
             if (asset === "settings") {
-                return {
-                    ok: true,
-                    settings: context.settings.read().modules.myscripts || {},
-                    scriptsRoot: root
-                };
+                return { ok: true, settings: context.settings.read().modules.myscripts || {}, scriptsRoot: root };
             }
             throw new Error("Unknown My Scripts action.");
         },
         apiPost: function (asset, req, user) {
             if (!allowed(user)) throw new Error("Permission denied.");
             var value = req && req.body || {};
-
             if (asset === "refresh") {
                 library.invalidate();
                 return { ok: true, tree: library.getTree() };
             }
             if (asset === "source") {
                 requireAdmin(user);
-                return {
-                    ok: true,
-                    script: library.saveSource(value.path, value.text),
-                    tree: library.getTree()
-                };
+                return { ok: true, script: library.saveSource(value.path, value.text), tree: library.getTree() };
             }
             if (asset === "definition") {
                 var saved = admin.saveDefinition(user, value.path, value.definition);
@@ -166,21 +148,11 @@ module.exports.createModule = function (context) {
                 return saved;
             }
             if (asset === "script-secrets") {
-                return {
-                    ok: true,
-                    secrets: admin.saveSecrets(
-                        user,
-                        value.path,
-                        value.values,
-                        value.clearNames
-                    )
-                };
+                return { ok: true, secrets: admin.saveSecrets(user, value.path, value.values, value.clearNames) };
             }
             if (asset === "request") {
                 return context.approval.submit("myscripts", user, value, value.note)
-                    .then(function (request) {
-                        return { ok: true, request: request };
-                    });
+                    .then(function (request) { return { ok: true, request: request }; });
             }
             if (asset === "settings") {
                 requireAdmin(user);
