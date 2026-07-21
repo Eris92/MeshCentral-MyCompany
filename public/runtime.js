@@ -132,6 +132,9 @@
                             module.onDeviceRefreshEnd(runtime.state.nodeId);
                         }
                     });
+                }).then(function () {
+                    if (key !== "portal") return null;
+                    return core.loadScript("mycompany-portal-final-fix", core.assetUrl("", "portal-fix.js"));
                 });
             });
             return chain;
