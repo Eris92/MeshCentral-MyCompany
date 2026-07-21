@@ -10,15 +10,19 @@
 - Dodano stałe lewe menu: Overview, Move Request, Commands i Scripts wraz ze statusami.
 - Usunięto Settings z widoku My Scripts; konfiguracja pozostaje w panelu administratora.
 - Usunięto niepotrzebne ustawienia widoczności providerów Approval Center.
+- Toolbar My Scripts i My Commands ma wspólny układ: Collapse, Favorites, Copy link, Edit, Refresh, opcjonalnie Multi i Search.
+- Search jest zawsze ostatnim przyciskiem po lewej, a pusta prawa grupa toolbara jest usuwana.
+- Favorites, Copy link i Edit odtwarzają zachowanie oryginalnego MyScripts: tryb filtrowania, ikony przy skryptach i edycję źródła dla Site Admin.
+- Multi-device jest dostępne wyłącznie w My Commands i dodaje ikonę `⟳` przy skryptach.
+- Multi-device respektuje `maxMultiHostNodes`, `multiHostConcurrency`, uprawnienia urządzeń oraz Approval Center.
+- Dodano walidację architektury i składni JavaScript w GitHub Actions.
 
 ## 1.3.0
 
 - Added reusable shared-ui components based on Approval Center.
-- Unified toolbar, tabs, layout, status navigation and settings structure.
-- Moved My Commands actions to the right toolbar group.
-- Approval Center Requests now shows workflows on the left and statuses in the next pane.
-- Added direct Git installer with exact checkout and atomic service restart.
-- Repository reset removes legacy code and keeps one MyCompany entrypoint.
+- Unified module toolbars and settings.
+- Approval request provider/status navigation.
+- Direct Git installer and clean repository reset.
 
 ## 1.2.7
 
