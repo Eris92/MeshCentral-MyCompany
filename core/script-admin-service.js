@@ -98,17 +98,46 @@ module.exports.createScriptAdminService = function (options) {
         return result;
     }
 
+    function getDefinition(user, relativePath) {
+        requireAdmin(user);
+        var definition = library.getDefinition(relativePath);
+        var value = library.getScript(relativePath, true);
+        if (!definition || !value) throw new Error("Script not found.");
+        definition.body = String(value.body || "");
+        definition.shell = value.shell || "";
+        return definition;
+    }
+
+    function saveDefinition(user, relativePath, definition) {
+        requireAdmin(user);
+        definition = definition && typeof definition === "object" ? definition : {};
+        var requestedBody = Object.prototype.hasOwnProperty.call(definition, "body")
+            ? String(definition.body == null ? "" : definition.body).replace(/^\uFEFF/, "")
+            : null;
+        var result = library.saveDefinition(relativePath, definition);
+
+        if (requestedBody !== null) {
+            var source = library.getSource(relativePath);
+            var generatedBody = String(result.script && result.script.body || "");
+            var text = String(source && source.text || "");
+            var prefix = generatedBody && text.slice(-generatedBody.length) === generatedBody
+                ? text.slice(0, text.length - generatedBody.length)
+                : text;
+            prefix = prefix.replace(/[\t ]+$/gm, "").replace(/(?:\r?\n)+$/, "\n\n");
+            library.saveSource(relativePath, prefix + requestedBody.replace(/^\s*\r?\n/, ""));
+            result = {
+                script: library.getScript(relativePath, true),
+                definition: library.getDefinition(relativePath)
+            };
+            result.definition.body = String(result.script.body || "");
+            result.definition.shell = result.script.shell || "";
+        }
+        return result;
+    }
+
     return {
-        getDefinition: function (user, relativePath) {
-            requireAdmin(user);
-            var definition = library.getDefinition(relativePath);
-            if (!definition) throw new Error("Script not found.");
-            return definition;
-        },
-        saveDefinition: function (user, relativePath, definition) {
-            requireAdmin(user);
-            return library.saveDefinition(relativePath, definition);
-        },
+        getDefinition: getDefinition,
+        saveDefinition: saveDefinition,
         getSecretState: getSecretState,
         saveSecrets: saveSecrets,
         secretValues: secretValues
