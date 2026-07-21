@@ -54,26 +54,38 @@
         return !!(bootstrapState && bootstrapState.access && bootstrapState.access.siteAdmin);
     }
 
+    function moduleError(host, title, message) {
+        if (!host) return;
+        host.innerHTML = '<div class="sirk-card"><h3>' + title + '</h3><p>' + message + '</p></div>';
+    }
+
     function mountModule(key, host, title) {
         if (!host) return;
+        host.classList.add("mycompany-portal-module-host", "mycompany-portal-module-" + key);
         if (!moduleEnabled(key)) {
-            host.innerHTML = '<div class="sirk-card"><h3>' + title + '</h3><p>Moduł jest wyłączony albo użytkownik nie ma dostępu.</p></div>';
+            moduleError(host, title, "Moduł jest wyłączony albo użytkownik nie ma dostępu.");
             return;
         }
         var module = window.MyCompanyModules && window.MyCompanyModules[key];
         if (!module || typeof module.mount !== "function") {
-            host.innerHTML = '<div class="sirk-card"><h3>' + title + '</h3><p>Moduł nie udostępnia punktu montowania.</p></div>';
+            moduleError(host, title, "Moduł nie udostępnia punktu montowania.");
             return;
         }
-        if (host.getAttribute("data-mycompany-mounted") === key) return;
+        if (host.getAttribute("data-mycompany-mounted") === key && host.querySelector(".mc-shared-page")) return;
+        host.innerHTML = "";
         host.setAttribute("data-mycompany-mounted", key);
         module.mount(host, "sirk-portal-" + key);
+        var page = host.querySelector(".mc-shared-page");
+        if (page) {
+            page.classList.add("sirk-mycompany-module", "sirk-mycompany-module-" + key);
+            page.setAttribute("data-sirk-module", key);
+        }
     }
 
     function mountSettings(host) {
         if (!host) return;
         if (!siteAdmin()) {
-            host.innerHTML = '<div class="sirk-card"><h3>Ustawienia</h3><p>Panel administracyjny jest dostępny tylko dla Site Admin.</p></div>';
+            moduleError(host, "Ustawienia", "Panel administracyjny jest dostępny tylko dla Site Admin.");
             return;
         }
         if (host.querySelector("iframe.sirk-settings-frame")) return;
@@ -87,31 +99,82 @@
         host.appendChild(frame);
     }
 
-    function renameNavigation(root) {
+    function buttonLabel(button, text) {
+        if (!button) return;
+        var label = button.querySelector(".sirk-menu-label");
+        if (!label) {
+            var spans = button.querySelectorAll("span");
+            if (spans.length) label = spans[spans.length - 1];
+        }
+        if (label) {
+            label.textContent = text;
+            return;
+        }
+        var icon = button.querySelector("svg,.sirk-nav-icon,.sirk-menu-icon");
+        button.textContent = "";
+        if (icon) button.appendChild(icon);
+        var created = document.createElement("span");
+        created.className = "sirk-menu-label";
+        created.textContent = text;
+        button.appendChild(created);
+    }
+
+    function firstButton(root, view) {
+        var buttons = root.querySelectorAll('[data-sirk-view="' + view + '"]');
+        return buttons.length ? buttons[0] : null;
+    }
+
+    function hideDuplicateButtons(root, view, keep) {
+        root.querySelectorAll('[data-sirk-view="' + view + '"]').forEach(function (button) {
+            if (button !== keep) button.hidden = true;
+        });
+    }
+
+    function normalizeNavigation(root) {
         var labels = {
             overview: "Przegląd",
             devices: "Urządzenia",
             approvals: "Akceptacje",
-            automation: "Zarządzanie",
+            management: "Zarządzanie",
             monitoring: "Monitoring",
             mesh: "Mesh",
             administration: "Ustawienia"
         };
+
         Object.keys(labels).forEach(function (view) {
-            var button = root.querySelector('[data-sirk-view="' + view + '"]');
+            var button = firstButton(root, view);
             if (!button) return;
-            var span = button.querySelector("span");
-            if (span) span.textContent = labels[view];
-            else button.textContent = labels[view];
+            buttonLabel(button, labels[view]);
+            hideDuplicateButtons(root, view, button);
             if (view === "administration" && !siteAdmin()) button.hidden = true;
         });
+
+        root.querySelectorAll('[data-sirk-view="automation"]').forEach(function (button) {
+            button.hidden = true;
+            button.setAttribute("aria-hidden", "true");
+        });
+    }
+
+    function managementHost(root) {
+        var host = root.querySelector('[data-view="management"]');
+        if (!host) {
+            var main = root.querySelector(".sirk-main");
+            if (!main) return null;
+            host = document.createElement("section");
+            host.className = "sirk-view";
+            host.setAttribute("data-view", "management");
+            main.appendChild(host);
+        }
+        host.classList.add("mycompany-management-host");
+        host.setAttribute("data-sirk-management-version", "mycompany");
+        return host;
     }
 
     function mountView(view) {
         var root = document.getElementById("sirkPortalRoot");
         if (!root) return;
-        if (view === "automation") {
-            mountModule("myscripts", root.querySelector('[data-view="automation"]'), "Zarządzanie");
+        if (view === "management" || view === "automation") {
+            mountModule("myscripts", managementHost(root), "Zarządzanie");
         } else if (view === "approvals") {
             mountModule("approvalcenter", root.querySelector('[data-view="approvals"]'), "Akceptacje");
         } else if (view === "administration") {
@@ -119,12 +182,17 @@
         }
     }
 
+    function selectedView(root) {
+        var selected = root.querySelector("[data-sirk-view].is-active");
+        return selected && selected.getAttribute("data-sirk-view") || "";
+    }
+
     function adaptPortal() {
         var root = document.getElementById("sirkPortalRoot");
         if (!root) return false;
         root.setAttribute("data-mycompany-portal", "1");
         root.setAttribute("data-sirk-vendor-version", vendorVersion);
-        renameNavigation(root);
+        normalizeNavigation(root);
 
         if (!root.__myCompanyPortalAdapterBound) {
             root.__myCompanyPortalAdapterBound = true;
@@ -132,12 +200,25 @@
                 var button = event.target.closest("[data-sirk-view]");
                 if (!button) return;
                 var view = button.getAttribute("data-sirk-view");
-                window.setTimeout(function () { mountView(view); }, 0);
+                window.setTimeout(function () {
+                    normalizeNavigation(root);
+                    mountView(view);
+                }, 0);
             });
+
+            var pending = 0;
+            new MutationObserver(function () {
+                window.clearTimeout(pending);
+                pending = window.setTimeout(function () {
+                    normalizeNavigation(root);
+                    var view = selectedView(root);
+                    if (view) mountView(view);
+                }, 40);
+            }).observe(root, { childList: true, subtree: true });
         }
 
-        var selected = root.querySelector("[data-sirk-view].is-active");
-        if (selected) mountView(selected.getAttribute("data-sirk-view"));
+        var active = selectedView(root);
+        if (active) mountView(active);
         return true;
     }
 
@@ -157,15 +238,22 @@
         });
     }
 
+    function normalizeView(view) {
+        var map = { automation: "management", settings: "administration" };
+        return map[view] || view || "overview";
+    }
+
     function initialize(state) {
         bootstrapState = state || {};
         if (window.top !== window.self) return Promise.resolve();
         return loadVendor().then(waitForPortal).then(function () {
             if (window.SirKPortal && typeof window.SirKPortal.open === "function") {
-                var preferred = bootstrapState.config && bootstrapState.config.defaultView || "overview";
-                var map = { management: "automation", settings: "administration" };
-                window.SirKPortal.open(map[preferred] || preferred);
-                window.setTimeout(function () { mountView(map[preferred] || preferred); }, 0);
+                var preferred = normalizeView(bootstrapState.config && bootstrapState.config.defaultView || "overview");
+                window.SirKPortal.open(preferred);
+                window.setTimeout(function () {
+                    adaptPortal();
+                    mountView(preferred);
+                }, 0);
             }
         });
     }
@@ -173,10 +261,13 @@
     window.MyCompanyModules.portal = {
         initialize: initialize,
         open: function (view) {
-            var map = { management: "automation", settings: "administration" };
+            var target = normalizeView(view);
             if (window.SirKPortal && typeof window.SirKPortal.open === "function") {
-                window.SirKPortal.open(map[view] || view || "overview");
-                window.setTimeout(function () { mountView(map[view] || view || "overview"); }, 0);
+                window.SirKPortal.open(target);
+                window.setTimeout(function () {
+                    adaptPortal();
+                    mountView(target);
+                }, 0);
             }
         },
         openMesh: function () {
