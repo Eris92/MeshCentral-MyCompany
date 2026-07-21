@@ -1,0 +1,13 @@
+<div id="mycompany-admin" class="mc-admin" data-plugin="{{pluginShortName}}">
+    <h2>My Company</h2>
+    <div class="mc-admin-subtitle">Consolidated plugin administration</div>
+    <div class="mc-admin-tabs">
+        <button type="button" data-tab="overview" class="active">Overview</button>
+        <button type="button" data-tab="settings">Settings</button>
+        <button type="button" data-tab="debug">Debug</button>
+    </div>
+    <div id="mycompany-admin-content"></div>
+</div>
+<script>window.MyCompanyAdminData={{{adminDataJson}}};</script>
+<link rel="stylesheet" href="pluginadmin.ashx?pin={{pluginShortName}}&asset=admin.css">
+<script src="pluginadmin.ashx?pin={{pluginShortName}}&asset=admin.js"></script>

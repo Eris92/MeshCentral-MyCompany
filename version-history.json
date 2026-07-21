@@ -1,64 +1,122 @@
 [
   {
-    "version": "0.7.0",
-    "date": "2026-07-20",
+    "version": "1.3.0",
+    "date": "2026-07-21",
     "changes": [
-      "Rebuilt the plugin entry using mycompany.js, admin.js and views/admin.handlebars",
-      "Moved visibility controls to the Settings admin tab",
-      "Separated Overview, Settings and Debug in the admin panel",
-      "Removed Settings from the embedded module navigation",
-      "Removed the My Company menu entry",
-      "Kept My Commands device-page integration without a main or side menu entry"
+      "Shared UI architecture based on Approval Center",
+      "Unified module toolbars and settings",
+      "Approval request provider/status navigation",
+      "Direct Git installer and clean repository reset"
     ]
   },
   {
-    "version": "0.5.9",
-    "date": "2026-07-20",
+    "version": "1.2.7",
+    "date": "2026-07-21",
     "changes": [
-      "Removed configurable tab visibility introduced in 0.5.8",
-      "Restored the previous stable navigation behavior",
-      "Restored the My Company menu entry",
-      "Kept the native admin Debug panel"
+      "Copy original MyScripts and MyCommands libraries to both seed and runtime paths",
+      "Detect active and disabled legacy plugin directories",
+      "Add Sync-Installed-Seeds.ps1 for manual synchronization"
     ]
   },
   {
-    "version": "0.5.7",
-    "date": "2026-07-20",
+    "version": "1.2.6",
+    "date": "2026-07-21",
     "changes": [
-      "Added native My Company admin panel",
-      "Added module and log diagnostics",
-      "Fixed empty admin module routing"
+      "Removed lowercase mycompany.js because it overwrote MyCompany.js on Windows",
+      "Kept MyCompany and mycompany factories in the single MyCompany.js entrypoint",
+      "Added case-insensitive path collision validation"
     ]
   },
   {
-    "version": "0.5.5",
-    "date": "2026-07-20",
+    "version": "1.2.5",
+    "date": "2026-07-21",
     "changes": [
-      "Fixed serialized startup functions",
-      "Fixed Approval Center initialization"
+      "Moved plugin-main require inside a protected factory",
+      "Added a fallback administrative diagnostic panel",
+      "Added bootstrap stage logging",
+      "Added factory invocation validation to the installer"
     ]
   },
   {
-    "version": "0.5.0",
-    "date": "2026-07-20",
+    "version": "1.2.4",
+    "date": "2026-07-21",
     "changes": [
-      "Published the complete standalone package on main"
+      "Restored MyCommands script folder navigation",
+      "Added folder graphics using the MyScripts icon convention",
+      "Fixed MyCommands tabs spacing and toolbar overflow",
+      "Made custom, multi-host and refresh actions visible",
+      "Added scripts root path to MyCommands settings",
+      "Retried legacy CommandTabs/MyCommands migration including disabled directories"
     ]
   },
   {
-    "version": "0.1.1",
-    "date": "2026-07-20",
+    "version": "1.2.3",
+    "date": "2026-07-21",
     "changes": [
-      "Standalone MeshCentral plugin metadata",
-      "Unique view mode 106",
-      "Safe startup when migration source folders are absent"
+      "Replaced the main entrypoint with a minimal deterministic bootstrap",
+      "Moved plugin implementation to plugin-main.js",
+      "Verified both MyCompany and mycompany exports before service startup",
+      "Added deployment preflight checks"
     ]
   },
   {
-    "version": "0.1.0",
+    "version": "1.2.2",
+    "date": "2026-07-21",
+    "changes": [
+      "Fixed admin Unauthorized caused by shortName case transition",
+      "Added admin-only MyCompany/mycompany alias without duplicate hooks",
+      "Preserved the active pin in admin asset URLs"
+    ]
+  },
+  {
+    "version": "1.2.1",
+    "date": "2026-07-21",
+    "changes": [
+      "Lowercase shortName compatibility",
+      "Module load isolation",
+      "Admin diagnostics"
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-07-21",
+    "changes": [
+      "Migrated full My Commands workflows, multi-host execution, structured results and script metadata",
+      "Expanded Approval Center provider tabs, visibility, API tokens and idempotency",
+      "Expanded Move Requests history and settings",
+      "Rebuilt My Jira and Defender XDR interfaces using the MyScripts shell",
+      "Made MyScripts the shared UI standard for all modules"
+    ]
+  },
+  {
+    "version": "1.1.1",
     "date": "2026-07-20",
     "changes": [
-      "Initial modular migration scaffold"
+      "Restored the complete My Scripts 1.9.7 browser interface inside MyCompany",
+      "Restored folder tree, folder icons, search, output pane, results and settings",
+      "Restored user selection, Jira Assets wizard and per-script secret dialogs",
+      "Added one-time copy of the legacy My Scripts library and local settings",
+      "Kept My Scripts as an internal MyCompany module with no external plugin loading"
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2026-07-20",
+    "changes": [
+      "Migrated My Jira and Jira Assets into the consolidated runtime",
+      "Migrated Defender XDR incidents into the consolidated runtime",
+      "Added shared integration settings and encrypted secrets",
+      "Added one-time legacy configuration migration",
+      "Added shared HTTP client and lazy specialist integrations"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-07-20",
+    "changes": [
+      "Consolidated four modules into one self-contained plugin",
+      "Removed all external plugin loading and downloading",
+      "Added shared settings, secrets, approval, device and script services"
     ]
   }
 ]

@@ -1,0 +1,24 @@
+(function () {
+    "use strict";
+    window.SharedTabs = {
+        mount: function (options) {
+            options = options || {};
+            var host = typeof options.container === "string" ? document.querySelector(options.container) : options.container;
+            var root = document.createElement("div"); root.className = "mc-shared-tabs";
+            var state = { active: options.active || "" }, buttons = {};
+            function select(key, notify) {
+                state.active = key;
+                Object.keys(buttons).forEach(function (name) { buttons[name].classList.toggle("active", name === key); });
+                if (notify !== false && typeof options.onSelect === "function") options.onSelect(key, api);
+            }
+            (options.tabs || []).forEach(function (tab) {
+                if (tab.visible === false) return;
+                var item = document.createElement("button"); item.type = "button"; item.className = "btn btn-secondary btn-sm mc-shared-tab"; item.textContent = tab.title || tab.key;
+                item.onclick = function () { select(tab.key, true); }; buttons[tab.key] = item; root.appendChild(item);
+            });
+            host.appendChild(root);
+            var api = { root: root, buttons: buttons, state: state, select: select, setVisible: function (key, value) { if (buttons[key]) buttons[key].hidden = value === false; } };
+            select(state.active || Object.keys(buttons)[0] || "", false); return api;
+        }
+    };
+}());

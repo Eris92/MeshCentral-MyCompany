@@ -1,17 +1,15 @@
 {
   "name": "My Company",
-  "shortName": "mycompany",
-  "viewmode": 106,
-  "pageText": "My Company",
-  "version": "0.7.0",
+  "shortName": "MyCompany",
+  "version": "1.3.0",
   "author": "Eris92",
-  "description": "Standalone MeshCentral plugin embedding My Scripts, My Commands, Approval Center and Move Requests.",
+  "description": "One consolidated MeshCentral plugin with full migrated MyScripts, MyCommands, Approval Center, Move Requests, My Jira and Defender XDR modules.",
   "hasAdminPanel": true,
   "homepage": "https://github.com/Eris92/MeshCentral-MyCompany",
-  "changelogUrl": "https://raw.githubusercontent.com/Eris92/MeshCentral-MyCompany/main/changelog.md?v=0.7.0",
+  "changelogUrl": "https://raw.githubusercontent.com/Eris92/MeshCentral-MyCompany/main/changelog.md",
   "configUrl": "https://raw.githubusercontent.com/Eris92/MeshCentral-MyCompany/main/config.json",
-  "downloadUrl": "https://codeload.github.com/Eris92/MeshCentral-MyCompany/zip/refs/heads/main?v=0.7.0",
-  "versionHistoryUrl": "https://raw.githubusercontent.com/Eris92/MeshCentral-MyCompany/main/version-history.json?v=0.7.0",
+  "downloadUrl": "https://codeload.github.com/Eris92/MeshCentral-MyCompany/zip/refs/heads/main",
+  "versionHistoryUrl": "https://raw.githubusercontent.com/Eris92/MeshCentral-MyCompany/main/version-history.json",
   "repository": {
     "type": "git",
     "url": "https://github.com/Eris92/MeshCentral-MyCompany.git"

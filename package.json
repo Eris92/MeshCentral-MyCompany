@@ -1,13 +1,10 @@
 {
   "name": "meshcentral-mycompany",
-  "version": "0.1.1",
+  "version": "1.3.0",
   "private": true,
-  "main": "mycompany.js",
   "scripts": {
-    "test": "node test/structure.test.js",
-    "sync:legacy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-legacy.ps1",
-    "sync:files": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sync-module-files.ps1 -Force",
-    "prepare:test": "npm run sync:files && npm test"
+    "test": "node scripts/validate-architecture.js",
+    "check": "node scripts/validate-architecture.js"
   },
   "engines": {
     "node": ">=20"
