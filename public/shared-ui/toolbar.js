@@ -26,7 +26,6 @@
 
             var root = document.createElement("div");
             root.className = "mc-shared-toolbar";
-
             var left = document.createElement("div");
             left.className = "mc-shared-toolbar-group mc-shared-toolbar-left";
             var center = document.createElement("div");
@@ -47,18 +46,11 @@
 
             var context = {
                 root: root,
-                groups: {
-                    left: left,
-                    center: center,
-                    right: right
-                },
+                groups: { left: left, center: center, right: right },
                 buttons: {},
                 searchWrap: searchWrap,
                 searchInput: searchInput,
-                state: {
-                    search: "",
-                    searchVisible: false
-                },
+                state: { search: "", searchVisible: false },
                 onSearch: options.handlers && options.handlers.onSearch
             };
             var api = window.SharedToolbarApi.create(context);
@@ -87,14 +79,16 @@
                 options.buttons
             ).forEach(add);
 
-            (options.customButtons || []).forEach(function (definition) {
+            (options.customButtons || []).sort(function (a, b) {
+                return Number(a.order || 500) - Number(b.order || 500);
+            }).forEach(function (definition) {
                 definition.side = definition.side || "right";
                 definition.key = definition.key ||
                     ("custom-" + Object.keys(context.buttons).length);
                 add(definition);
             });
 
-            left.appendChild(searchWrap);
+            if (context.buttons.search) left.appendChild(searchWrap);
             api.addButton = add;
 
             var timer = 0;
@@ -117,6 +111,8 @@
                 };
             }
 
+            center.hidden = center.childNodes.length === 0;
+            right.hidden = right.childNodes.length === 0;
             root.hidden = Object.keys(context.buttons).length === 0;
             host.appendChild(root);
             return api;
