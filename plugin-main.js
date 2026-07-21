@@ -33,7 +33,7 @@ function createFallbackRuntime(error) {
         },
         adminSnapshot: function () {
             return {
-                plugin: { name: "My Company", version: "1.4.0" },
+                plugin: { name: "My Company", version: "1.4.5" },
                 modules: [],
                 moduleSettings: {},
                 integrations: {},
@@ -132,7 +132,7 @@ function createPlugin(parent, shortName) {
             var url = new URL("pluginadmin.ashx", window.location.href);
             url.searchParams.set("pin", obj.shortName || "MyCompany");
             url.searchParams.set("asset", name);
-            url.searchParams.set("v", "1.4.0");
+            url.searchParams.set("v", "1.4.5");
             return url.href;
         }
 
