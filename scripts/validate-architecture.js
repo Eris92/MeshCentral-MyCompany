@@ -28,6 +28,7 @@ var required = [
     "public/shared-ui/layout.js",
     "public/shared-ui/settings.js",
     "public/shared-ui/status-nav.js",
+    "public/shared-ui/tree.js",
     "public/shared-ui/page.js",
     "seed/MyScripts",
     "seed/MyCommands"
@@ -85,6 +86,17 @@ function validateArchitecture() {
     );
     if (myScriptsSource.indexOf('context.pluginRoot, "seed", "MyScripts"') < 0) {
         errors.push("MyScripts must read directly from seed/MyScripts.");
+    }
+
+    var treeSource = fs.readFileSync(
+        path.join(root, "public", "shared-ui", "tree.js"),
+        "utf8"
+    );
+    if (treeSource.indexOf("iconData") < 0) {
+        errors.push("Shared directory tree must render embedded folder icons.");
+    }
+    if (treeSource.indexOf("mc-tree-folder-body") < 0) {
+        errors.push("Shared directory tree must expand folders in the middle column.");
     }
 
     if (errors.length) {
