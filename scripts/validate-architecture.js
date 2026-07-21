@@ -21,6 +21,7 @@ var required = [
     "modules/MyJira/index.js",
     "modules/DefenderTools/index.js",
     "public/approvalcenter.js",
+    "public/myscripts.js",
     "public/shared-ui/toolbar.js",
     "public/shared-ui/toolbar-api.js",
     "public/shared-ui/toolbar-config.js",
@@ -80,11 +81,11 @@ function validateArchitecture() {
         errors.push("Runtime must resolve MyCommands from seed/MyCommands.");
     }
 
-    var myScriptsSource = fs.readFileSync(
+    var myScriptsModuleSource = fs.readFileSync(
         path.join(root, "modules", "MyScripts", "index.js"),
         "utf8"
     );
-    if (myScriptsSource.indexOf('context.pluginRoot, "seed", "MyScripts"') < 0) {
+    if (myScriptsModuleSource.indexOf('context.pluginRoot, "seed", "MyScripts"') < 0) {
         errors.push("MyScripts must read directly from seed/MyScripts.");
     }
 
@@ -98,6 +99,36 @@ function validateArchitecture() {
     if (treeSource.indexOf("mc-tree-folder-body") < 0) {
         errors.push("Shared directory tree must expand folders in the middle column.");
     }
+    if (treeSource.indexOf("if (!graphic)") < 0) {
+        errors.push("Folder expand arrows must be hidden when a folder graphic exists.");
+    }
+
+    var toolbarConfigSource = fs.readFileSync(
+        path.join(root, "public", "shared-ui", "toolbar-config.js"),
+        "utf8"
+    );
+    if (!/manage:\s*\{[^}]*side:\s*"left"/.test(toolbarConfigSource)) {
+        errors.push("Manage must be in the left toolbar group.");
+    }
+    if (!/search:\s*\{[^}]*side:\s*"left"/.test(toolbarConfigSource)) {
+        errors.push("Search must be in the left toolbar group.");
+    }
+
+    var myScriptsClientSource = fs.readFileSync(
+        path.join(root, "public", "myscripts.js"),
+        "utf8"
+    );
+    [
+        "refreshScripts",
+        "clearView",
+        "copySelectedLink",
+        "toggleManage",
+        "toggleFavorites"
+    ].forEach(function (functionName) {
+        if (myScriptsClientSource.indexOf("function " + functionName) < 0) {
+            errors.push("MyScripts toolbar handler is missing: " + functionName);
+        }
+    });
 
     if (errors.length) {
         errors.forEach(function (error) {
