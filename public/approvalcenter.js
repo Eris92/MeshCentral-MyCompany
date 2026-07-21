@@ -3,6 +3,7 @@
 
     var selectedProvider = "";
     var selectedStatus = "";
+    var overviewFilter = "";
     var providers = [];
     var requests = [];
     var providerOrder = ["moverequests", "mycommands", "myscripts"];
@@ -32,7 +33,9 @@
         var button = document.createElement("button");
         button.type = "button";
         button.className = options.className || "mc-shared-nav-item";
-        button.textContent = (options.icon ? options.icon + " " : "") + options.title;
+        button.textContent = (options.icon ? options.icon + " " : "") +
+            options.title +
+            (options.count == null ? "" : " - " + options.count);
         button.classList.toggle("active", options.active === true);
         button.onclick = options.onClick;
         host.appendChild(button);
@@ -74,19 +77,59 @@
             }
         });
 
-        if (selectedProvider) {
-            renderProviderButtons(host, shell);
-        }
+        renderProviderButtons(host, shell);
     }
 
-    function renderSecondaryNavigation(shell) {
+    function requestCounts(rows) {
+        var counts = {
+            all: rows.length,
+            moverequests: 0,
+            mycommands: 0,
+            myscripts: 0
+        };
+
+        rows.forEach(function (request) {
+            if (Object.prototype.hasOwnProperty.call(counts, request.type)) {
+                counts[request.type]++;
+            }
+        });
+
+        return counts;
+    }
+
+    function renderOverviewFilters(shell, rows) {
         var host = shell.state.page.secondary;
+        var counts = requestCounts(rows);
         host.innerHTML = "";
 
-        if (!selectedProvider) {
-            renderProviderButtons(host, shell);
-            return;
-        }
+        createNavButton(host, {
+            title: "All",
+            icon: "▤",
+            count: counts.all,
+            active: !overviewFilter,
+            onClick: function () {
+                overviewFilter = "";
+                shell.render();
+            }
+        });
+
+        providers.forEach(function (provider) {
+            createNavButton(host, {
+                title: providerTitles[provider.type] || provider.title,
+                icon: providerIcon(provider.type),
+                count: counts[provider.type] || 0,
+                active: overviewFilter === provider.type,
+                onClick: function () {
+                    overviewFilter = provider.type;
+                    shell.render();
+                }
+            });
+        });
+    }
+
+    function renderStatusNavigation(shell) {
+        var host = shell.state.page.secondary;
+        host.innerHTML = "";
 
         window.SharedStatusNav.list().forEach(function (status) {
             createNavButton(host, {
@@ -102,9 +145,10 @@
         });
     }
 
-    function renderRequestCards(shell, title, emptyText) {
+    function renderRequestCards(shell, title, emptyText, rows) {
         var host = shell.state.page.details;
         host.innerHTML = "";
+        rows = rows || requests;
 
         if (title) {
             host.appendChild(shell.element(
@@ -114,7 +158,7 @@
             ));
         }
 
-        if (!requests.length) {
+        if (!rows.length) {
             host.appendChild(shell.card(
                 "No requests",
                 emptyText || "No requests match the selected provider and status."
@@ -126,7 +170,7 @@
         grid.className = "mc-approval-card-grid";
         host.appendChild(grid);
 
-        requests.forEach(function (request) {
+        rows.forEach(function (request) {
             var card = shell.card(
                 request.title || request.type,
                 (request.requester && request.requester.name || "") +
@@ -217,7 +261,11 @@
             perPage: 100
         }).then(function (result) {
             requests = result.rows || [];
-            renderRequestCards(shell, options.title, options.emptyText);
+            if (typeof options.afterLoad === "function") {
+                options.afterLoad(requests);
+            } else {
+                renderRequestCards(shell, options.title, options.emptyText);
+            }
         });
     }
 
@@ -238,16 +286,31 @@
             return shell.api("providers").then(function (result) {
                 providers = orderedProviders(result.providers || []);
                 renderPrimaryNavigation(shell);
-                renderSecondaryNavigation(shell);
 
                 if (!selectedProvider) {
                     return loadRequests(shell, {
                         status: "pending",
-                        title: "Requests awaiting approval",
-                        emptyText: "There are no pending requests awaiting approval."
+                        afterLoad: function (rows) {
+                            renderOverviewFilters(shell, rows);
+                            var filtered = overviewFilter
+                                ? rows.filter(function (request) {
+                                    return request.type === overviewFilter;
+                                })
+                                : rows;
+                            var title = overviewFilter
+                                ? (providerTitles[overviewFilter] || overviewFilter) + " awaiting approval"
+                                : "Requests awaiting approval";
+                            renderRequestCards(
+                                shell,
+                                title,
+                                "There are no pending requests for the selected filter.",
+                                filtered
+                            );
+                        }
                     });
                 }
 
+                renderStatusNavigation(shell);
                 return loadRequests(shell, {
                     type: selectedProvider,
                     status: selectedStatus,
