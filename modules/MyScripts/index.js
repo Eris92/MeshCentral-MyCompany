@@ -43,6 +43,14 @@ module.exports.createModule = function (context) {
         return normalizeApprovalLevels(payload && payload.approvalLevels);
     }
 
+    function allowNoApproval() {
+        var current = context.settings.read();
+        var provider = current.modules && current.modules.approvalcenter &&
+            current.modules.approvalcenter.providers &&
+            current.modules.approvalcenter.providers.myscripts || {};
+        return provider.allowNoApproval === true;
+    }
+
     function directResult(script, user) {
         var now = Date.now();
         return {
@@ -189,9 +197,10 @@ module.exports.createModule = function (context) {
                 payload.description = requestedScript.description || "";
                 payload.approvalLevels = levels;
 
-                if (!levels.length) {
+                if (!levels.length && allowNoApproval()) {
                     return { ok: true, request: directResult(requestedScript, user) };
                 }
+                if (!levels.length) payload.approvalLevels = [1];
 
                 return context.approval.submit("myscripts", user, payload, value.note)
                     .then(function (request) { return { ok: true, request: request }; });
