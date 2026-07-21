@@ -85,6 +85,17 @@ jobs:
         working-directory: MyCompany
         run: npm test
 
+      - name: Upload synchronized seeds
+        uses: actions/upload-artifact@v4
+        with:
+          name: mycompany-seeds
+          path: |
+            MyCompany/seed/MyScripts
+            MyCompany/seed/MyCommands
+            MyCompany/seed/SOURCES.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Commit synchronized seeds
         working-directory: MyCompany
         shell: bash
