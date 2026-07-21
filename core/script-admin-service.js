@@ -13,6 +13,14 @@ module.exports.createScriptAdminService = function (options) {
     var context = options.context;
     var library = options.library;
     var namespace = String(options.namespace || "scripts");
+    var assignmentNamespace = namespace + ".system-credentials";
+    var profileLabels = {
+        ad: "Active Directory",
+        entra: "Entra ID",
+        jira: "Jira",
+        defender: "Defender XDR",
+        zabbix: "Zabbix"
+    };
 
     function requireAdmin(user) {
         if (!shared.isSiteAdmin(user)) {
@@ -29,6 +37,66 @@ module.exports.createScriptAdminService = function (options) {
     function readStore() {
         var value = context.secrets.get(namespace);
         return value && typeof value === "object" ? value : {};
+    }
+
+    function readAssignments() {
+        var value = context.secrets.get(assignmentNamespace);
+        return value && typeof value === "object" ? value : {};
+    }
+
+    function configuredProfiles() {
+        var configured = context.integrations.configured();
+        var values = context.integrations.readSettings();
+        return ["ad", "entra", "jira", "defender", "zabbix"].map(function (name) {
+            var available = false;
+            if (name === "ad") {
+                available = !!(values.ad && values.ad.domain && values.ad.login && configured.adPassword);
+            } else if (name === "entra") {
+                available = !!(values.entra && values.entra.tenantId && values.entra.clientId && configured.entraClientSecret);
+            } else if (name === "jira") {
+                available = configured.jira === true;
+            } else if (name === "defender") {
+                available = configured.defender === true;
+            } else if (name === "zabbix") {
+                available = !!(values.zabbix && values.zabbix.url && (configured.zabbixPassword || configured.zabbixToken));
+            }
+            return { name: name, label: profileLabels[name], configured: available };
+        });
+    }
+
+    function getSystemCredentialState(user, relativePath) {
+        requireAdmin(user);
+        var value = script(relativePath);
+        var assignments = readAssignments();
+        var selected = Array.isArray(assignments[keyFor(value.path)])
+            ? assignments[keyFor(value.path)].map(String)
+            : [];
+        return {
+            path: value.path,
+            profiles: configuredProfiles().map(function (profile) {
+                profile.selected = selected.indexOf(profile.name) >= 0;
+                return profile;
+            })
+        };
+    }
+
+    function saveSystemCredentials(user, relativePath, selected) {
+        requireAdmin(user);
+        var value = script(relativePath);
+        var allowed = configuredProfiles().filter(function (profile) {
+            return profile.configured;
+        }).map(function (profile) {
+            return profile.name;
+        });
+        selected = (Array.isArray(selected) ? selected : []).map(String).filter(function (name, index, list) {
+            return allowed.indexOf(name) >= 0 && list.indexOf(name) === index;
+        });
+        var assignments = readAssignments();
+        var key = keyFor(value.path);
+        if (selected.length) assignments[key] = selected;
+        else delete assignments[key];
+        context.secrets.set(assignmentNamespace, assignments);
+        return getSystemCredentialState(user, value.path);
     }
 
     function getSecretState(user, relativePath) {
@@ -119,10 +187,10 @@ module.exports.createScriptAdminService = function (options) {
         if (requestedBody !== null) {
             var source = library.getSource(relativePath);
             var generatedBody = String(result.script && result.script.body || "");
-            var text = String(source && source.text || "");
-            var prefix = generatedBody && text.slice(-generatedBody.length) === generatedBody
-                ? text.slice(0, text.length - generatedBody.length)
-                : text;
+            var sourceText = String(source && source.text || "");
+            var prefix = generatedBody && sourceText.slice(-generatedBody.length) === generatedBody
+                ? sourceText.slice(0, sourceText.length - generatedBody.length)
+                : sourceText;
             prefix = prefix.replace(/[\t ]+$/gm, "").replace(/(?:\r?\n)+$/, "\n\n");
             library.saveSource(relativePath, prefix + requestedBody.replace(/^\s*\r?\n/, ""));
             result = {
@@ -140,6 +208,8 @@ module.exports.createScriptAdminService = function (options) {
         saveDefinition: saveDefinition,
         getSecretState: getSecretState,
         saveSecrets: saveSecrets,
-        secretValues: secretValues
+        secretValues: secretValues,
+        getSystemCredentialState: getSystemCredentialState,
+        saveSystemCredentials: saveSystemCredentials
     };
 };
