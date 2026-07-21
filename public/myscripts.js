@@ -30,7 +30,11 @@
             script.description || script.path
         );
         if (error) card.classList.add("mc-shared-error");
-        card.appendChild(shell.element("pre", "mc-shared-output", text(value) || "No output."));
+        card.appendChild(shell.element(
+            "pre",
+            "mc-shared-output",
+            text(value) || "No output."
+        ));
         host.appendChild(card);
     }
 
@@ -52,7 +56,12 @@
                         ? "Executing..."
                         : request.status || "Request submitted.");
             outputs[script.path] = text(message);
-            output(shell, script, request.status === "pending" ? "Waiting for approval" : "Result", outputs[script.path]);
+            output(
+                shell,
+                script,
+                request.status === "pending" ? "Waiting for approval" : "Result",
+                outputs[script.path]
+            );
         }).catch(function (error) {
             outputs[script.path] = error.message || String(error);
             output(shell, script, "Error", outputs[script.path], true);
@@ -66,12 +75,25 @@
             var script = result.script;
             var host = shell.state.page.details;
             host.innerHTML = "";
-            var card = shell.card(script.label || script.name, script.description || script.path);
-            var run = shell.element("button", "btn btn-primary", script.requiresApproval ? "Request" : "Run");
+            var card = shell.card(
+                script.label || script.name,
+                script.description || script.path
+            );
+            var run = shell.element(
+                "button",
+                "btn btn-primary",
+                script.requiresApproval ? "Request" : "Run"
+            );
             run.type = "button";
-            run.onclick = function () { submit(shell, script, run); };
+            run.onclick = function () {
+                submit(shell, script, run);
+            };
             card.appendChild(run);
-            card.appendChild(shell.element("pre", "mc-shared-output", outputs[script.path] || "Select Run or Request to see the result."));
+            card.appendChild(shell.element(
+                "pre",
+                "mc-shared-output",
+                outputs[script.path] || "Select Run or Request to see the result."
+            ));
             host.appendChild(card);
         }).catch(function (error) {
             shell.error(shell.state.page.details, error);
@@ -84,6 +106,7 @@
             treeContainer: treeHost,
             tree: tree,
             state: treeState,
+            search: shell.state.search,
             resultsActive: mode === "results",
             onResults: function () {
                 mode = "results";
@@ -111,7 +134,12 @@
                 shell.render();
             }
         });
-        return shell.api("results", { status: status, page: 1, perPage: 200 }).then(function (result) {
+        return shell.api("results", {
+            status: status,
+            q: shell.state.search,
+            page: 1,
+            perPage: 200
+        }).then(function (result) {
             window.SharedResultsView.mountTable(shell.state.page.details, {
                 title: "Script results",
                 kind: "scripts",
@@ -139,11 +167,11 @@
         order: 160,
         preset: "myscripts",
         buttons: {
-            collapse: false,
+            search: { side: "left", order: 10 },
+            collapse: { side: "left", order: 20 },
+            link: { side: "left", order: 30 },
             favorites: false,
-            link: false,
             manage: false,
-            search: false,
             refresh: false,
             clear: false,
             settings: false
@@ -153,7 +181,9 @@
         render: function (shell) {
             return shell.api("scripts").then(function (result) {
                 tree = result.tree;
-                return mode === "results" ? resultsView(shell) : scriptsView(shell);
+                return mode === "results"
+                    ? resultsView(shell)
+                    : scriptsView(shell);
             });
         }
     });
