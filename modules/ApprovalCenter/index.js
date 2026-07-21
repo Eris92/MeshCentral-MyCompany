@@ -4,6 +4,7 @@ var shared = require("../../core/shared.js");
 
 module.exports.createModule = function (context) {
     var providerTypes = ["moverequests", "mycommands", "myscripts"];
+    var policyGuardInstalled = false;
 
     function access(user) {
         return { allowed: !!user, siteAdmin: shared.isSiteAdmin(user) };
@@ -21,6 +22,33 @@ module.exports.createModule = function (context) {
             allowNoApproval: provider.allowNoApproval === true,
             levels: provider.levels || {}
         };
+    }
+
+    function providerPolicy(type) {
+        var current = context.settings.read();
+        return current.modules && current.modules.approvalcenter &&
+            current.modules.approvalcenter.providers &&
+            current.modules.approvalcenter.providers[type] || {};
+    }
+
+    function installPolicyGuard() {
+        if (policyGuardInstalled || context.approval.__explicitNoApprovalGuard) return;
+        var originalSubmit = context.approval.submit;
+        context.approval.submit = function (type, user, payload, note, submitOptions) {
+            type = String(type || "").toLowerCase();
+            payload = shared.copy(payload || {});
+            var levels = Array.isArray(payload.approvalLevels)
+                ? payload.approvalLevels.map(Number).filter(function (level, index, all) {
+                    return level >= 1 && level <= 3 && all.indexOf(level) === index;
+                })
+                : [];
+            var policy = providerPolicy(type);
+            if (!levels.length && policy.allowNoApproval !== true) levels = [1];
+            payload.approvalLevels = levels;
+            return originalSubmit.call(context.approval, type, user, payload, note, submitOptions);
+        };
+        context.approval.__explicitNoApprovalGuard = true;
+        policyGuardInstalled = true;
     }
 
     function persistNoApproval(type, enabled) {
@@ -90,6 +118,7 @@ module.exports.createModule = function (context) {
         },
         getAccess: access,
         initialize: function () {
+            installPolicyGuard();
             return normalizeProviderSettings().then(function () { return context.approval.initialize(); });
         },
         apiGet: function (asset, req, user) {
