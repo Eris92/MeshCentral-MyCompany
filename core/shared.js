@@ -21,11 +21,21 @@ function readJson(fs, filePath, fallback) {
 }
 
 function writeJsonAtomic(fs, path, filePath, value) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    var temporary = filePath + "." + process.pid + "." + crypto.randomBytes(4).toString("hex") + ".tmp";
-    fs.writeFileSync(temporary, JSON.stringify(value, null, 2), "utf8");
-    try { fs.renameSync(temporary, filePath); }
-    catch (error) { fs.copyFileSync(temporary, filePath); fs.unlinkSync(temporary); }
+    var directory = path.dirname(filePath);
+    var text = JSON.stringify(value, null, 2);
+
+    if (!fs.existsSync(directory)) {
+        fs.mkdirSync(directory, { recursive: true });
+    }
+
+    try {
+        if (fs.existsSync(filePath)) fs.chmodSync(filePath, 0o666);
+    } catch (error) {}
+
+    fs.writeFileSync(filePath, text, {
+        encoding: "utf8",
+        flag: "w"
+    });
 }
 
 function isSiteAdmin(user) {
