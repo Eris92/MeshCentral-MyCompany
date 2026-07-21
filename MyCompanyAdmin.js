@@ -64,6 +64,14 @@ module.exports.admin = function (plugin) {
         return plugin.runtime && plugin.runtime.modules && plugin.runtime.modules[String(moduleName || "").toLowerCase()];
     }
 
+    function safeAdminJson(value) {
+        var slash = String.fromCharCode(92);
+        return JSON.stringify(value)
+            .replace(/</g, slash + "u003c")
+            .replace(/>/g, slash + "u003e")
+            .replace(/&/g, slash + "u0026");
+    }
+
     obj.req = function (req, res, user) {
         var asset = String(req && req.query && req.query.asset || "");
         var moduleName = String(req && req.query && req.query.module || "");
@@ -82,7 +90,7 @@ module.exports.admin = function (plugin) {
             res.render("MyCompany", {
                 title: "My Company",
                 pluginShortName: String(req && req.query && req.query.pin || plugin.shortName || "MyCompany"),
-                adminDataJson: JSON.stringify(data).replace(/</g, "\u003c").replace(/>/g, "\u003e").replace(/&/g, "\u0026")
+                adminDataJson: safeAdminJson(data)
             });
         } catch (error) {
             console.error("MyCompany admin render failed", error);
