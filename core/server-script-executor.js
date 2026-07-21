@@ -157,9 +157,18 @@ module.exports.createServerScriptExecutor = function (options) {
             var preamble = names.map(function (name) {
                 return "$" + name + "='" + psQuote(values[name]) + "'";
             }).join(";");
-            var wrapper = "$ProgressPreference='SilentlyContinue';" +
+            var wrapper = "$ProgressPreference='SilentlyContinue';$ErrorActionPreference='Stop';" +
                 "try{$e=New-Object System.Text.UTF8Encoding($false);[Console]::OutputEncoding=$e;$OutputEncoding=$e}catch{};" +
-                preamble + "; & '" + psQuote(target) + "' *>&1 | ForEach-Object { if($_ -ne $null){$_.ToString()} }";
+                preamble + ";" +
+                "$__mcOutput=@(& '" + psQuote(target) + "' *>&1);" +
+                "$__mcText=New-Object System.Collections.Generic.List[string];" +
+                "$__mcObjects=New-Object System.Collections.Generic.List[object];" +
+                "foreach($__mcItem in $__mcOutput){" +
+                "if($__mcItem -eq $null){continue};" +
+                "if(($__mcItem -is [string])-or($__mcItem -is [System.ValueType])-or($__mcItem -is [System.Management.Automation.ErrorRecord])){$__mcText.Add($__mcItem.ToString())}else{$__mcObjects.Add($__mcItem)}};" +
+                "$__mcText|ForEach-Object{$_};" +
+                "if($__mcObjects.Count -eq 1){ConvertTo-Json -InputObject $__mcObjects[0] -Depth 12 -Compress}" +
+                "elseif($__mcObjects.Count -gt 1){ConvertTo-Json -InputObject @($__mcObjects) -Depth 12 -Compress}";
             return {
                 file: powershellPath(),
                 args: ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", Buffer.from(wrapper, "utf16le").toString("base64")],
