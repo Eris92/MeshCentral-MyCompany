@@ -148,6 +148,12 @@
                     })
                     .then(function () {
                         return core.loadScript("mycompany-portal-collapse-isolation", core.assetUrl("", "portal-collapse-isolation.js"));
+                    })
+                    .then(function () {
+                        return core.loadScript("mycompany-portal-approval", core.assetUrl("", "portal-approval.js"));
+                    })
+                    .then(function () {
+                        return core.loadScript("mycompany-portal-approval-hook", core.assetUrl("", "portal-approval-hook.js"));
                     });
             });
         }).catch(function (error) {
