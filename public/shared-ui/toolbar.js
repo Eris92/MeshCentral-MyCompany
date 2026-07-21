@@ -29,13 +29,10 @@
 
             var left = document.createElement("div");
             left.className = "mc-shared-toolbar-group mc-shared-toolbar-left";
-
             var center = document.createElement("div");
             center.className = "mc-shared-toolbar-group mc-shared-toolbar-center";
-
             var right = document.createElement("div");
             right.className = "mc-shared-toolbar-group mc-shared-toolbar-right";
-
             root.appendChild(left);
             root.appendChild(center);
             root.appendChild(right);
@@ -43,11 +40,11 @@
             var searchWrap = document.createElement("div");
             searchWrap.className = "mc-shared-toolbar-search";
             searchWrap.hidden = true;
-
             var searchInput = document.createElement("input");
             searchInput.type = "search";
             searchInput.placeholder = options.searchPlaceholder || "Search";
             searchWrap.appendChild(searchInput);
+            left.appendChild(searchWrap);
 
             var context = {
                 root: root,
@@ -65,21 +62,19 @@
                 },
                 onSearch: options.handlers && options.handlers.onSearch
             };
-
             var api = window.SharedToolbarApi.create(context);
             var handlers = options.handlers || {};
 
             function add(definition) {
                 var item = button(definition);
                 context.buttons[definition.key] = item;
-
                 var group = context.groups[definition.side] || right;
-                group.appendChild(item);
-
-                if (definition.search) {
-                    group.appendChild(searchWrap);
-                }
-
+                group.insertBefore(
+                    item,
+                    definition.side === "left" && definition.key === "search"
+                        ? searchWrap
+                        : null
+                );
                 item.onclick = function (event) {
                     if (definition.search) {
                         api.showSearch(!context.state.searchVisible);
@@ -105,12 +100,7 @@
                 add(definition);
             });
 
-            if (!searchWrap.parentNode) {
-                right.appendChild(searchWrap);
-            }
-
             api.addButton = add;
-
             var timer = 0;
             searchInput.oninput = function () {
                 context.state.search = searchInput.value || "";
@@ -131,6 +121,7 @@
                 };
             }
 
+            root.hidden = Object.keys(context.buttons).length === 0;
             host.appendChild(root);
             return api;
         }
