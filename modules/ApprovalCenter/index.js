@@ -3,6 +3,8 @@
 var shared = require("../../core/shared.js");
 
 module.exports.createModule = function (context) {
+    var providerTypes = ["moverequests", "mycommands", "myscripts"];
+
     function access(user) {
         return {
             allowed: !!user,
@@ -16,6 +18,33 @@ module.exports.createModule = function (context) {
 
     function body(req) {
         return req && req.body || {};
+    }
+
+    function normalizeProvider(provider) {
+        provider = provider && typeof provider === "object"
+            ? provider
+            : {};
+        return {
+            enabled: true,
+            showTab: true,
+            showOverview: true,
+            levels: provider.levels || {}
+        };
+    }
+
+    function normalizeProviderSettings() {
+        return context.settings.update(function (current) {
+            var approval = current.modules.approvalcenter;
+            approval.providers = approval.providers || {};
+
+            providerTypes.forEach(function (type) {
+                approval.providers[type] = normalizeProvider(
+                    approval.providers[type]
+                );
+            });
+
+            return current;
+        });
     }
 
     function saveSettings(user, value) {
@@ -36,14 +65,12 @@ module.exports.createModule = function (context) {
             current.modules.approvalcenter.retentionDays = retentionDays;
             return current;
         }).then(function () {
-            return Promise.all(Object.keys(providers).map(function (type) {
-                var provider = providers[type] || {};
-                return context.approval.saveProviderSettings(user, type, {
-                    enabled: true,
-                    showTab: true,
-                    showOverview: true,
-                    levels: provider.levels || {}
-                });
+            return Promise.all(providerTypes.map(function (type) {
+                return context.approval.saveProviderSettings(
+                    user,
+                    type,
+                    normalizeProvider(providers[type])
+                );
             }));
         }).then(function () {
             return {
@@ -75,7 +102,9 @@ module.exports.createModule = function (context) {
         },
         getAccess: access,
         initialize: function () {
-            return context.approval.initialize();
+            return normalizeProviderSettings().then(function () {
+                return context.approval.initialize();
+            });
         },
         apiGet: function (asset, req, user) {
             if (!user) throw new Error("Permission denied.");
@@ -129,12 +158,11 @@ module.exports.createModule = function (context) {
                 return saveSettings(user, value);
             }
             if (asset === "provider-settings") {
-                return context.approval.saveProviderSettings(user, value.type, {
-                    enabled: true,
-                    showTab: true,
-                    showOverview: true,
-                    levels: value.levels || {}
-                }).then(function () {
+                return context.approval.saveProviderSettings(
+                    user,
+                    value.type,
+                    normalizeProvider(value)
+                ).then(function () {
                     return { ok: true };
                 });
             }
