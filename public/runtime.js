@@ -115,6 +115,7 @@
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
                 if (!state || !state.enabled || state.ready === false) return;
+                if (key === "portal" && window.top !== window.self) return;
                 chain = chain.then(function () {
                     return core.loadScript("mycompany-module-" + key, core.assetUrl("", files[key]));
                 }).then(function () {
