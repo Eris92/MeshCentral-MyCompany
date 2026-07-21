@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "sources": {
+    "MyScripts": {
+      "repository": "Eris92/MeshCentral-MyScripts",
+      "branch": "main",
+      "sourcePath": "scripts",
+      "destinationPath": "seed/MyScripts"
+    },
+    "MyCommands": {
+      "repository": "Eris92/MeshCentral-MyCommands",
+      "branch": "main",
+      "sourcePath": "scripts",
+      "destinationPath": "seed/MyCommands"
+    }
+  }
+}
