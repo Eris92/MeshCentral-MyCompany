@@ -33,7 +33,17 @@
             var chain = core.loadScript(
                 "mycompany-shared-directory-tree",
                 core.assetUrl("", "shared-ui/tree.js")
-            );
+            ).then(function () {
+                return core.loadScript(
+                    "mycompany-shared-catalog-view",
+                    core.assetUrl("", "shared-ui/catalog.js")
+                );
+            }).then(function () {
+                return core.loadScript(
+                    "mycompany-shared-results-view",
+                    core.assetUrl("", "shared-ui/results.js")
+                );
+            });
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
                 if (!state || !state.enabled || state.ready === false) return;
