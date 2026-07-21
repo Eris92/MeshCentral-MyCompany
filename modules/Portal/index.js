@@ -15,6 +15,14 @@ module.exports.createModule = function (context) {
         if (!shared.isSiteAdmin(user)) throw new Error("Permission denied.");
     }
 
+    function standalonePortalActive() {
+        var plugins = context.parent && context.parent.plugins || {};
+        return Object.keys(plugins).some(function (key) {
+            var normalized = String(key || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+            return normalized === "sirkportal";
+        });
+    }
+
     return {
         key: "portal",
         clientConfig: function () {
@@ -27,7 +35,8 @@ module.exports.createModule = function (context) {
                 style: "portal.css",
                 showInMenu: false,
                 defaultView: String(value.defaultView || "overview"),
-                showLauncher: value.showLauncher !== false
+                showLauncher: value.showLauncher !== false,
+                standaloneConflict: standalonePortalActive()
             };
         },
         getAccess: function (user) {
@@ -45,7 +54,8 @@ module.exports.createModule = function (context) {
                 return {
                     ok: true,
                     module: settings(),
-                    siteAdmin: shared.isSiteAdmin(user)
+                    siteAdmin: shared.isSiteAdmin(user),
+                    standaloneConflict: standalonePortalActive()
                 };
             }
             throw new Error("Unknown Portal action.");
@@ -54,6 +64,9 @@ module.exports.createModule = function (context) {
             requireAdmin(user);
             var value = req && req.body || {};
             if (asset !== "settings") throw new Error("Unknown Portal action.");
+            if (value.enabled === true && standalonePortalActive()) {
+                throw new Error("Disable or uninstall the standalone SirKPortal plugin before enabling the embedded MyCompany Portal.");
+            }
             return context.settings.update(function (current) {
                 current.modules.portal = current.modules.portal || {};
                 if (typeof value.enabled === "boolean") current.modules.portal.enabled = value.enabled;
