@@ -48,6 +48,11 @@
                     "mycompany-shared-script-tools",
                     core.assetUrl("", "shared-ui/script-tools.js")
                 );
+            }).then(function () {
+                return core.loadScript(
+                    "mycompany-shared-credentials-actions",
+                    core.assetUrl("", "shared-ui/credentials-actions.js")
+                );
             });
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
@@ -77,16 +82,12 @@
         notify("onNativePageStart", view);
     };
 
-    runtime.onNativePageEnd = function (view) {
-        notify("onNativePageEnd", view);
-    };
+    runtime.onNativePageEnd = function (view) { notify("onNativePageEnd", view); };
 
     runtime.onDeviceRefreshEnd = function (nodeId) {
         runtime.state.nodeId = String(nodeId || "");
         notify("onDeviceRefreshEnd", runtime.state.nodeId);
     };
 
-    runtime.commandResult = function (message) {
-        notify("commandResult", message);
-    };
+    runtime.commandResult = function (message) { notify("commandResult", message); };
 }());
