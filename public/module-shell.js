@@ -1,6 +1,7 @@
 (function () {
     "use strict";
     var core = window.MyCompanyCore;
+
     function buttonRow(host, items, selected, onSelect) {
         host.innerHTML = "";
         (items || []).forEach(function (item) {
@@ -13,12 +14,14 @@
             host.appendChild(button);
         });
     }
+
     function renderError(host, error) {
         host.innerHTML = "";
         var card = core.card("Error", error && error.message || String(error));
         card.classList.add("mc-shared-error");
         host.appendChild(card);
     }
+
     function renderJson(host, value) {
         host.innerHTML = "";
         var pre = document.createElement("pre");
@@ -26,6 +29,7 @@
         pre.textContent = JSON.stringify(value, null, 2);
         host.appendChild(pre);
     }
+
     function registerMenu(definition, open) {
         core.ensureMenu({
             mainId: "MainMenuMyCompany-" + definition.key,
@@ -35,33 +39,174 @@
             open: open
         });
     }
+
+    function createDeviceIntegration(definition, state, api, mountPage) {
+        var options = definition.deviceTab || null;
+        if (!options) return null;
+
+        var pageId = options.pageId || ("mycompany-" + definition.key + "-device-page");
+        var topTabId = options.topTabId || ("MainDevMyCompany-" + definition.key);
+        var title = options.title || definition.title;
+
+        function enabled() {
+            if (options.enabled === false) return false;
+            if (typeof options.enabled === "function" && options.enabled(state.bootstrap, api) === false) return false;
+            return !(state.bootstrap && state.bootstrap.config && state.bootstrap.config.showOnDevice === false);
+        }
+
+        function registerPage() {
+            if (!enabled()) return false;
+            if (!window.pluginHandler || typeof window.pluginHandler.registerPluginTab !== "function") return false;
+            window.pluginHandler.registerPluginTab({ tabId: pageId, tabTitle: title });
+            return true;
+        }
+
+        function ensureTopTab() {
+            if (!enabled() || !document.getElementById(pageId)) return false;
+            var anchor = document.getElementById("MainDevTerminal") || document.getElementById("MainDevPlugins");
+            if (!anchor || !anchor.parentNode) return false;
+
+            var tab = document.getElementById(topTabId);
+            if (!tab) {
+                tab = document.createElement("td");
+                tab.id = topTabId;
+                tab.tabIndex = 0;
+                tab.className = "topbar_td style3x";
+                tab.textContent = title;
+                tab.onmouseup = open;
+                tab.onkeypress = function (event) {
+                    if (event && event.key === "Enter") return open(event);
+                };
+                anchor.parentNode.insertBefore(tab, anchor.nextSibling);
+            }
+            tab.style.display = "";
+            return true;
+        }
+
+        function remove() {
+            [topTabId, "p19ph-" + pageId, pageId].forEach(function (id) {
+                var element = document.getElementById(id);
+                if (element && element.parentNode) element.parentNode.removeChild(element);
+            });
+        }
+
+        function mountDevicePage() {
+            var host = document.getElementById(pageId);
+            if (!host) return false;
+            mountPage(host, "device");
+            return true;
+        }
+
+        function open(event) {
+            if (event && ((event.which === 3) || (event.button === 2))) return false;
+            registerPage();
+            if (typeof window.putstore === "function") window.putstore("_curPluginPage", pageId);
+            if (typeof window.go === "function") window.go(19, event);
+            window.setTimeout(function () {
+                var header = document.getElementById("p19ph-" + pageId);
+                if (header && window.pluginHandler && typeof window.pluginHandler.callPluginPage === "function") {
+                    window.pluginHandler.callPluginPage(pageId, header);
+                }
+                ensureTopTab();
+                mountDevicePage();
+                update(19);
+            }, 0);
+            if (event && event.preventDefault) event.preventDefault();
+            return false;
+        }
+
+        function update(view) {
+            var tab = document.getElementById(topTabId);
+            if (!tab) return;
+            if (view == null && typeof window.xxcurrentView !== "undefined") view = window.xxcurrentView;
+            var activeHeader = document.querySelector("#p19headers span.on");
+            var moduleHeader = document.getElementById("p19ph-" + pageId);
+            var active = Number(view) === 19 && activeHeader === moduleHeader;
+            tab.classList.remove("style3x", "style3sel");
+            tab.classList.add(active ? "style3sel" : "style3x");
+            var pluginTab = document.getElementById("MainDevPlugins");
+            if (pluginTab && active) {
+                pluginTab.classList.remove("style3sel");
+                pluginTab.classList.add("style3x");
+            }
+            var headers = document.getElementById("p19headers");
+            if (headers) headers.style.display = active ? "none" : "";
+        }
+
+        function sync() {
+            if (!enabled()) {
+                remove();
+                return false;
+            }
+            if (!registerPage()) return false;
+            ensureTopTab();
+            return true;
+        }
+
+        return {
+            open: open,
+            sync: sync,
+            update: update,
+            onDeviceRefreshEnd: function (nodeId) {
+                state.nodeId = String(nodeId || "");
+                sync();
+            },
+            onNativePageEnd: function (view) {
+                sync();
+                update(view);
+            }
+        };
+    }
+
     window.MyCompanyModuleShell = {
         create: function (definition) {
-            var state = { page: null, tab: definition.defaultTab || "main", search: "" };
+            var state = {
+                page: null,
+                pages: {},
+                tab: definition.defaultTab || "main",
+                search: "",
+                nodeId: "",
+                bootstrap: null
+            };
+
+            function mountPage(host, mode) {
+                host.innerHTML = "";
+                var page = window.SharedPage.mount({
+                    container: host,
+                    preset: definition.preset || definition.key,
+                    buttons: definition.buttons || {},
+                    customButtons: definition.customButtons || [],
+                    tabs: definition.tabs || [{ key: "main", title: definition.title }],
+                    activeTab: state.tab,
+                    handlers: {
+                        onCollapse: function () { page.layout.toggleCollapsed(); },
+                        onRefresh: function () { state.page = page; if (definition.onRefresh) definition.onRefresh(api); else api.render(); },
+                        onClear: function () { state.page = page; state.search = ""; page.toolbar.clearSearch(false); if (definition.onClear) definition.onClear(api); else api.render(); },
+                        onSearch: function (value) { state.page = page; state.search = value || ""; if (definition.onSearch) definition.onSearch(state.search, api); else api.render(); },
+                        onManage: function () { state.page = page; if (definition.onManage) definition.onManage(api); },
+                        onSettings: function () { state.page = page; state.tab = "settings"; page.tabs.select("settings", true); },
+                        onLink: function () { try { navigator.clipboard.writeText(window.location.href); } catch (error) {} },
+                        onFavorites: function () { state.page = page; if (definition.onFavorites) definition.onFavorites(api); }
+                    },
+                    onTab: function (key) { state.page = page; state.tab = key; api.render(); }
+                });
+                state.pages[mode] = page;
+                state.page = page;
+                api.render();
+                return page;
+            }
+
             function open() {
                 return core.showWorkspace(definition.title, definition.viewMode || 960, function (host) {
-                    state.page = window.SharedPage.mount({
-                        container: host,
-                        preset: definition.preset || definition.key,
-                        buttons: definition.buttons || {},
-                        customButtons: definition.customButtons || [],
-                        tabs: definition.tabs || [{ key: "main", title: definition.title }],
-                        activeTab: state.tab,
-                        handlers: {
-                            onCollapse: function () { state.page.layout.toggleCollapsed(); },
-                            onRefresh: function () { if (definition.onRefresh) definition.onRefresh(api); else api.render(); },
-                            onClear: function () { state.search = ""; state.page.toolbar.clearSearch(false); if (definition.onClear) definition.onClear(api); else api.render(); },
-                            onSearch: function (value) { state.search = value || ""; if (definition.onSearch) definition.onSearch(state.search, api); else api.render(); },
-                            onManage: function () { if (definition.onManage) definition.onManage(api); },
-                            onSettings: function () { state.tab = "settings"; state.page.tabs.select("settings", true); },
-                            onLink: function () { try { navigator.clipboard.writeText(window.location.href); } catch (error) {} },
-                            onFavorites: function () { if (definition.onFavorites) definition.onFavorites(api); }
-                        },
-                        onTab: function (key) { state.tab = key; api.render(); }
-                    });
-                    api.render();
+                    mountPage(host, "standalone");
                 });
             }
+
+            function menuEnabled() {
+                if (definition.showInMenu === false) return false;
+                return !(state.bootstrap && state.bootstrap.config && state.bootstrap.config.showInMenu === false);
+            }
+
             var api = {
                 definition: definition,
                 state: state,
@@ -79,11 +224,28 @@
                 card: core.card,
                 element: core.element
             };
+
+            var device = createDeviceIntegration(definition, state, api, mountPage);
+
             return {
-                initialize: function () { if (definition.showInMenu !== false) registerMenu(definition, open); return Promise.resolve(); },
+                initialize: function (bootstrapState) {
+                    state.bootstrap = bootstrapState || null;
+                    if (menuEnabled()) registerMenu(definition, open);
+                    if (device) device.sync();
+                    return Promise.resolve();
+                },
                 open: open,
                 render: api.render,
-                api: api
+                api: api,
+                onDeviceRefreshEnd: function (nodeId) {
+                    state.nodeId = String(nodeId || "");
+                    if (device) device.onDeviceRefreshEnd(nodeId);
+                },
+                onNativePageStart: function () {},
+                onNativePageEnd: function (view) {
+                    if (menuEnabled()) registerMenu(definition, open);
+                    if (device) device.onNativePageEnd(view);
+                }
             };
         }
     };
