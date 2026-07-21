@@ -20,6 +20,7 @@ module.exports.admin = function (plugin) {
         "module-shell.js": ["public/module-shell.js", "text/javascript; charset=utf-8"],
         "runtime.js": ["public/runtime.js", "text/javascript; charset=utf-8"],
         "portal.js": ["public/portal.js", "text/javascript; charset=utf-8"],
+        "portal-icon-data.js": ["public/portal-icon-data.js", "text/javascript; charset=utf-8"],
         "portal-management.js": ["public/portal-management.js", "text/javascript; charset=utf-8"],
         "portal-fix.js": ["public/portal-fix.js", "text/javascript; charset=utf-8"],
         "portal-ui-fix.js": ["public/portal-ui-fix.js", "text/javascript; charset=utf-8"],
