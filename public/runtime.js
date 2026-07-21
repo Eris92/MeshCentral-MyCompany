@@ -30,7 +30,10 @@
         if (runtime.state.initializePromise) return runtime.state.initializePromise;
         runtime.state.initializePromise = core.api("", "bootstrap").then(function (bootstrap) {
             runtime.state.bootstrap = bootstrap;
-            var chain = Promise.resolve();
+            var chain = core.loadScript(
+                "mycompany-shared-directory-tree",
+                core.assetUrl("", "shared-ui/tree.js")
+            );
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
                 if (!state || !state.enabled || state.ready === false) return;
