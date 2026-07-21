@@ -4,8 +4,16 @@
     var tree = null;
     var mode = "scripts";
     var status = "";
-    var treeState = { selectedRoot: "", selectedScript: "", expanded: {} };
+    var treeState = {
+        selectedRoot: "",
+        selectedScript: "",
+        expanded: {}
+    };
     var outputs = Object.create(null);
+    var tools = window.SharedScriptTools.create({
+        storageKey: "mycompany.mycommands.favorites",
+        deepLinkParameter: "mycommand"
+    });
 
     function nodeId(shell) {
         return shell.state.nodeId ||
@@ -21,12 +29,23 @@
         catch (error) { return String(value); }
     }
 
+    function syncToolbar(shell) {
+        tools.syncToolbar(
+            shell.state.page && shell.state.page.toolbar,
+            mode,
+            treeState.selectedScript
+        );
+    }
+
     function placeholder(shell) {
         shell.state.page.details.innerHTML = "";
         shell.state.page.details.appendChild(shell.card(
             "Output",
-            "Select a command script to see its result."
+            tools.state.favoritesOnly && !tools.state.favorites.length
+                ? "No favorite command scripts. Enable Edit on a script and add it to Favorites."
+                : "Select a command script to see its result."
         ));
+        syncToolbar(shell);
     }
 
     function output(shell, script, title, value, error) {
@@ -43,6 +62,7 @@
             text(value) || "No output."
         ));
         host.appendChild(card);
+        syncToolbar(shell);
     }
 
     function execute(shell, script, button) {
@@ -57,7 +77,9 @@
         }).then(function (result) {
             var request = result.request || {};
             var message = request.result &&
-                (request.result.output || request.result.message || request.result.status) ||
+                (request.result.output ||
+                    request.result.message ||
+                    request.result.status) ||
                 (request.status === "pending"
                     ? "Waiting for approval."
                     : request.status === "executing"
@@ -67,7 +89,9 @@
             output(
                 shell,
                 script,
-                request.status === "pending" ? "Waiting for approval" : "Result",
+                request.status === "pending"
+                    ? "Waiting for approval"
+                    : "Result",
                 outputs[script.path]
             );
         }).catch(function (error) {
@@ -97,12 +121,18 @@
                 execute(shell, script, run);
             };
             card.appendChild(run);
+            tools.addEditActions(shell, card, script, function () {
+                treeState.selectedScript = "";
+                shell.render();
+            });
             card.appendChild(shell.element(
                 "pre",
                 "mc-shared-output",
-                outputs[script.path] || "Select Run or Request to see the result."
+                outputs[script.path] ||
+                    "Select Run or Request to see the result."
             ));
             host.appendChild(card);
+            syncToolbar(shell);
         }).catch(function (error) {
             shell.error(shell.state.page.details, error);
         });
@@ -116,6 +146,10 @@
             state: treeState,
             search: shell.state.search,
             resultsActive: mode === "results",
+            emptyText: tools.state.favoritesOnly
+                ? "No favorite command scripts found."
+                : "No command scripts found.",
+            filterScript: tools.filterScript,
             onResults: function () {
                 mode = "results";
                 treeState.selectedScript = "";
@@ -142,6 +176,7 @@
                 shell.render();
             }
         });
+        syncToolbar(shell);
         return shell.api("results", {
             status: status,
             q: shell.state.search,
@@ -154,6 +189,7 @@
                 rows: result.rows || [],
                 emptyText: "No command results match the selected status."
             });
+            syncToolbar(shell);
         });
     }
 
@@ -163,9 +199,19 @@
             placeholder(shell);
             return;
         }
-        var selected = window.SharedDirectoryTree.find(tree, treeState.selectedScript);
-        if (selected) scriptView(shell, selected);
-        else placeholder(shell);
+        var selected = window.SharedDirectoryTree.find(
+            tree,
+            treeState.selectedScript
+        );
+        if (
+            selected &&
+            tools.filterScript(selected)
+        ) {
+            scriptView(shell, selected);
+        } else {
+            treeState.selectedScript = "";
+            placeholder(shell);
+        }
     }
 
     var module = window.MyCompanyModuleShell.create({
@@ -181,11 +227,38 @@
             topTabId: "MainDevMyCompany-Commands"
         },
         buttons: {
-            search: { side: "left", order: 10 },
-            collapse: { side: "left", order: 20 },
-            link: { side: "left", order: 30 },
-            favorites: false,
-            manage: false,
+            collapse: { side: "left", order: 10 },
+            favorites: {
+                side: "left",
+                order: 20,
+                onClick: function (toolbar) {
+                    tools.toggleFavorites(toolbar, function () {
+                        treeState.selectedScript = "";
+                        module.api.render();
+                    });
+                }
+            },
+            link: {
+                side: "left",
+                order: 30,
+                onClick: function (toolbar) {
+                    tools.copySelectedLink(
+                        toolbar,
+                        treeState.selectedScript
+                    );
+                }
+            },
+            manage: {
+                title: "Edit",
+                side: "left",
+                order: 40,
+                onClick: function (toolbar) {
+                    tools.toggleEdit(toolbar, function () {
+                        module.api.render();
+                    });
+                }
+            },
+            search: { side: "left", order: 50 },
             refresh: false,
             clear: false,
             settings: false
@@ -195,6 +268,7 @@
         render: function (shell) {
             return shell.api("scripts").then(function (result) {
                 tree = result.tree;
+                tools.applyDeepLink(tree, treeState);
                 return mode === "results"
                     ? resultsView(shell)
                     : scriptsView(shell);
