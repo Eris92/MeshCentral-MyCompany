@@ -10,11 +10,19 @@
 - Dodano stałe lewe menu: Overview, Move Request, Commands i Scripts wraz ze statusami.
 - Usunięto Settings z widoku My Scripts; konfiguracja pozostaje w panelu administratora.
 - Usunięto niepotrzebne ustawienia widoczności providerów Approval Center.
-- Toolbar My Scripts i My Commands ma wspólny układ: Collapse, Favorites, Copy link, Edit, Refresh, opcjonalnie Multi i Search.
-- Search jest zawsze ostatnim przyciskiem po lewej, a pusta prawa grupa toolbara jest usuwana.
-- Favorites, Copy link i Edit odtwarzają zachowanie oryginalnego MyScripts: tryb filtrowania, ikony przy skryptach i edycję źródła dla Site Admin.
-- Multi-device jest dostępne wyłącznie w My Commands i dodaje ikonę `⟳` przy skryptach.
+- Toolbar My Commands ma układ: Collapse, Favorites, Copy link, Edit, Refresh, Multi i Search.
+- Toolbar My Scripts ma układ: Favorites, Copy link, Edit, Refresh i Search; Collapse oraz Multi są ukryte.
+- Search jest zawsze ostatnim przyciskiem po lewej, `Clear` został usunięty, a pusta prawa grupa toolbara jest ukrywana.
+- Favorites zachowuje wybór w `localStorage`, filtruje bibliotekę i pokazuje gwiazdki przy skryptach w trybie Edit.
+- Copy link kopiuje deep link do zaznaczonego skryptu albo włącza ikony linków przy wszystkich skryptach.
+- Edit dla Site Admin otwiera wspólny edytor nazwy, opisu, zmiennych, poziomów akceptacji, `runAsUser` i `MultiHost`.
+- Skrypty z dyrektywami `SaveSecret` pokazują administratorowi ikonę klucza i wspólny edytor szyfrowanych poświadczeń.
+- Multi-device jest dostępne wyłącznie w My Commands, pokazuje ikonę `⟳` i pobiera zaznaczone urządzenia bez ręcznego wklejania identyfikatorów.
 - Multi-device respektuje `maxMultiHostNodes`, `multiHostConcurrency`, uprawnienia urządzeń oraz Approval Center.
+- Wyniki My Scripts i My Commands mają filtr, przycisk View, renderowanie JSON/CSV jako tabeli, kopiowanie oraz zwijany `Debug / raw output`.
+- Poza Overview Approval Center pokazuje filtrowaną tabelę wniosków z View, Approve i Reject; Overview pozostaje widokiem oczekujących kafelków.
+- Approval Center ma działający, zapamiętywany icon-rail Collapse, wyłączony Copy link i poprawione ikony providerów.
+- Poszerzono pierwszą i drugą kolumnę oraz ustabilizowano etykiety, akcje i układ mobilny.
 - Dodano walidację architektury i składni JavaScript w GitHub Actions.
 
 ## 1.3.0
@@ -58,37 +66,3 @@
 - Moved the implementation to `plugin-main.js`.
 - Added verified exports for `MyCompany` and `mycompany`.
 - Added deployment preflight validation.
-
-## 1.2.2
-
-- Naprawiono `Unauthorized` po zmianie shortName między `mycompany` i `MyCompany`.
-- Dodano admin-only alias bez podwójnego uruchamiania browser hooks.
-- Panel i assety zachowują identyfikator `pin`, przez który zostały otwarte.
-
-## 1.2.1
-
-- Fixed plugin registration when MeshCentral normalizes `shortName` to lowercase.
-- Added `MyCompany` and `mycompany` export/file compatibility.
-- Plugin admin panel remains available when one migrated module fails to load.
-- Added per-module load diagnostics and `plugin-load-error.log`.
-
-## 1.2.0
-
-- Applied the full MyScripts layout to every module.
-- Migrated the full My Commands catalog, multi-host execution, progress, structured tables, results and metadata editor.
-- Expanded Approval Center with provider views, visibility, API tokens and idempotency.
-- Added full Move Requests history and settings page.
-- Rebuilt My Jira tickets/tasks/assets workflow in the shared shell.
-- Rebuilt Defender XDR tabs, report status, logs and settings in the shared shell.
-- Added data migration for My Commands, Approval Center and Move Requests.
-
-## 1.1.1
-
-- Przywrócono pełny interfejs My Scripts 1.9.7 wewnątrz MyCompany.
-- Przywrócono drzewo folderów, ikony, wyszukiwanie i panel wyników.
-- Przywrócono Settings, folder permissions oraz AD/Entra/Jira credentials.
-- Przywrócono wybór użytkownika, Jira Assets wizard i script secrets.
-- Dodano migrację katalogów `scripts`, `settings` i plików danych starego My Scripts.
-- My Scripts nadal jest modułem wewnętrznym jednej wtyczki MyCompany.
-
-## 1.1.0
