@@ -14,6 +14,7 @@ module.exports.admin = function (plugin) {
         "admin-approval-policy.js": ["web/admin-approval-policy.js", "text/javascript; charset=utf-8"],
         "admin-ui-enhancements.js": ["web/admin-ui-enhancements.js", "text/javascript; charset=utf-8"],
         "admin-move-mesh-levels.js": ["web/admin-move-mesh-levels.js", "text/javascript; charset=utf-8"],
+        "admin-portal.js": ["web/admin-portal.js", "text/javascript; charset=utf-8"],
         "core.js": ["public/core.js", "text/javascript; charset=utf-8"],
         "mesh-plugin-core.js": ["public/mesh-plugin-core.js", "text/javascript; charset=utf-8"],
         "module-shell.js": ["public/module-shell.js", "text/javascript; charset=utf-8"],
