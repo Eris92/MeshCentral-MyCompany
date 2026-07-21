@@ -25,9 +25,10 @@ module.exports.createModule = function (context) {
             ? provider
             : {};
         return {
-            enabled: true,
-            showTab: true,
-            showOverview: true,
+            enabled: provider.enabled !== false,
+            showTab: provider.showTab !== false,
+            showOverview: provider.showOverview !== false,
+            allowNoApproval: provider.allowNoApproval === true,
             levels: provider.levels || {}
         };
     }
