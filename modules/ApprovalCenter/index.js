@@ -27,14 +27,23 @@ module.exports.createModule = function (context) {
         var providers = value.providers && typeof value.providers === "object"
             ? value.providers
             : {};
-        var retentionDays = Math.max(1, Math.min(3650, Number(value.retentionDays) || 365));
+        var retentionDays = Math.max(
+            1,
+            Math.min(3650, Number(value.retentionDays) || 365)
+        );
 
         return context.settings.update(function (current) {
             current.modules.approvalcenter.retentionDays = retentionDays;
             return current;
         }).then(function () {
             return Promise.all(Object.keys(providers).map(function (type) {
-                return context.approval.saveProviderSettings(user, type, providers[type]);
+                var provider = providers[type] || {};
+                return context.approval.saveProviderSettings(user, type, {
+                    enabled: true,
+                    showTab: true,
+                    showOverview: true,
+                    levels: provider.levels || {}
+                });
             }));
         }).then(function () {
             return {
@@ -59,8 +68,8 @@ module.exports.createModule = function (context) {
                     clear: true,
                     favorites: false,
                     search: true,
-                    manage: true,
-                    settings: true
+                    manage: false,
+                    settings: false
                 }
             };
         },
@@ -71,8 +80,12 @@ module.exports.createModule = function (context) {
         apiGet: function (asset, req, user) {
             if (!user) throw new Error("Permission denied.");
             var q = query(req);
+
             if (asset === "providers") {
-                return { ok: true, providers: context.approval.listProviders() };
+                return {
+                    ok: true,
+                    providers: context.approval.listProviders()
+                };
             }
             if (asset === "overview") {
                 return context.approval.overview(user).then(function (cards) {
@@ -86,15 +99,22 @@ module.exports.createModule = function (context) {
                 });
             }
             if (asset === "request") {
-                return { ok: true, request: context.approval.getRequest(user, q.id) };
+                return {
+                    ok: true,
+                    request: context.approval.getRequest(user, q.id)
+                };
             }
             if (asset === "settings") {
-                return { ok: true, settings: context.approval.getSettings(user) };
+                return {
+                    ok: true,
+                    settings: context.approval.getSettings(user)
+                };
             }
             throw new Error("Unknown Approval Center action.");
         },
         apiPost: function (asset, req, user) {
             var value = body(req);
+
             if (asset === "decide") {
                 return context.approval.decide(
                     user,
@@ -109,14 +129,26 @@ module.exports.createModule = function (context) {
                 return saveSettings(user, value);
             }
             if (asset === "provider-settings") {
-                return context.approval.saveProviderSettings(user, value.type, value)
-                    .then(function () { return { ok: true }; });
+                return context.approval.saveProviderSettings(user, value.type, {
+                    enabled: true,
+                    showTab: true,
+                    showOverview: true,
+                    levels: value.levels || {}
+                }).then(function () {
+                    return { ok: true };
+                });
             }
             if (asset === "create-token") {
-                return { ok: true, result: context.approval.createApiToken(user, value) };
+                return {
+                    ok: true,
+                    result: context.approval.createApiToken(user, value)
+                };
             }
             if (asset === "revoke-token") {
-                return { ok: true, revoked: context.approval.revokeApiToken(user, value.id) };
+                return {
+                    ok: true,
+                    revoked: context.approval.revokeApiToken(user, value.id)
+                };
             }
             throw new Error("Unknown Approval Center action.");
         }
