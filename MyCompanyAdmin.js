@@ -30,6 +30,7 @@ module.exports.admin = function (plugin) {
         "shared-ui/layout.js": ["public/shared-ui/layout.js", "text/javascript; charset=utf-8"],
         "shared-ui/settings.js": ["public/shared-ui/settings.js", "text/javascript; charset=utf-8"],
         "shared-ui/status-nav.js": ["public/shared-ui/status-nav.js", "text/javascript; charset=utf-8"],
+        "shared-ui/tree.js": ["public/shared-ui/tree.js", "text/javascript; charset=utf-8"],
         "shared-ui/page.js": ["public/shared-ui/page.js", "text/javascript; charset=utf-8"],
         "shared-ui/shared-ui.css": ["public/shared-ui/shared-ui.css", "text/css; charset=utf-8"],
         "shared-ui/toolbar.css": ["public/shared-ui/toolbar.css", "text/css; charset=utf-8"]
