@@ -19,19 +19,20 @@
             if (!host) throw new Error("Catalog primary container not found.");
 
             host.innerHTML = "";
-            createResultsButton(host, options.resultsActive, function () {
+
+            var navigation = document.createElement("div");
+            navigation.className = "mc-catalog-navigation";
+            host.appendChild(navigation);
+
+            createResultsButton(navigation, options.resultsActive, function () {
                 if (typeof options.onResults === "function") {
                     options.onResults();
                 }
             });
 
-            var separator = document.createElement("div");
-            separator.className = "mc-catalog-separator";
-            host.appendChild(separator);
-
             var roots = document.createElement("div");
             roots.className = "mc-catalog-roots";
-            host.appendChild(roots);
+            navigation.appendChild(roots);
 
             var treeContainer = options.treeContainer || document.createElement("div");
             var state = window.SharedDirectoryTree.mount({
