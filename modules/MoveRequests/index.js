@@ -177,10 +177,12 @@ module.exports.createModule = function (context) {
                 return context.settings.update(function (current) {
                     current.modules.moverequests.hostButtonEnabled = value.hostButtonEnabled !== false;
                     current.modules.moverequests.menuEnabled = false;
-                    current.modules.moverequests.targetMeshApprovalLevels = normalizeMeshApprovalLevels(
-                        value.targetMeshApprovalLevels,
-                        allowedMeshes
-                    );
+                    if (Object.prototype.hasOwnProperty.call(value, "targetMeshApprovalLevels")) {
+                        current.modules.moverequests.targetMeshApprovalLevels = normalizeMeshApprovalLevels(
+                            value.targetMeshApprovalLevels,
+                            allowedMeshes
+                        );
+                    }
                     return current;
                 }).then(function () { return { ok: true }; });
             }
