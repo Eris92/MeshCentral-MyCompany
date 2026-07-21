@@ -32,25 +32,20 @@ module.exports.createModule = function (context) {
     }
 
     function approvalLevels(payload) {
-        var levels = Array.isArray(payload && payload.approvalLevels)
-            ? payload.approvalLevels.map(Number).filter(function (level) {
-                return level >= 1 && level <= 3;
-            })
+        return Array.isArray(payload && payload.approvalLevels)
+            ? payload.approvalLevels.map(Number).filter(function (level, index, all) {
+                return level >= 1 && level <= 3 && all.indexOf(level) === index;
+            }).sort()
             : [];
-        if (levels.length) return levels;
-        var settings = context.settings.read();
-        var provider = settings.modules && settings.modules.approvalcenter &&
-            settings.modules.approvalcenter.providers &&
-            settings.modules.approvalcenter.providers.myscripts || {};
-        return provider.allowNoApproval === true ? [] : [1];
     }
 
     var provider = {
         type: "myscripts",
         moduleKey: "myscripts",
-        title: "Scripts",
-        tabTitle: "Scripts",
-        description: "Approval workflow for My Scripts executions.",
+        title: "My Scripts",
+        tabTitle: "My Scripts",
+        settingsTitle: "My Scripts approvers",
+        description: "Approval workflow for My Scripts executions. Approval levels are defined per script.",
         columns: ["createdAt", "title", "requester", "status"],
         normalizePayload: function (payload) { return shared.copy(payload || {}); },
         getTitle: function (payload) { return payload.label || payload.scriptPath || "Script"; },
@@ -77,7 +72,6 @@ module.exports.createModule = function (context) {
                 style: "myscripts.css",
                 scriptsRoot: root,
                 toolbar: {
-                    collapse: true,
                     refresh: true,
                     clear: false,
                     favorites: true,
@@ -117,7 +111,7 @@ module.exports.createModule = function (context) {
             }
             if (asset === "definition") return { ok: true, definition: admin.getDefinition(user, q.path) };
             if (asset === "script-secrets") return { ok: true, secrets: admin.getSecretState(user, q.path) };
-            if (asset === "system-credentials") return { ok: true, systemCredentials: admin.getSystemCredentialState(user, q.path) };
+            if (asset === "system-credentials") return { ok: true, systemCredentials: admin.getSystemCredentials(user, q.path) };
             if (asset === "results") {
                 return context.approval.list(user, {
                     type: "myscripts",
