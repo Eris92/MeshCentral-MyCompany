@@ -211,6 +211,7 @@
                 definition: definition,
                 state: state,
                 open: open,
+                mount: function (host, mode) { return mountPage(host, mode || "embedded"); },
                 render: function () {
                     if (!state.page) return;
                     state.page.layout.clear();
@@ -235,6 +236,7 @@
                     return Promise.resolve();
                 },
                 open: open,
+                mount: function (host, mode) { return mountPage(host, mode || "embedded"); },
                 render: api.render,
                 api: api,
                 onDeviceRefreshEnd: function (nodeId) {
