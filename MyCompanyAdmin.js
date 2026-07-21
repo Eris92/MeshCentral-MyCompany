@@ -36,8 +36,7 @@ module.exports.admin = function (plugin) {
         "shared-ui/script-tools.js": ["public/shared-ui/script-tools.js", "text/javascript; charset=utf-8"],
         "shared-ui/page.js": ["public/shared-ui/page.js", "text/javascript; charset=utf-8"],
         "shared-ui/shared-ui.css": ["public/shared-ui/shared-ui.css", "text/css; charset=utf-8"],
-        "shared-ui/toolbar.css": ["public/shared-ui/toolbar.css", "text/css; charset=utf-8"],
-        "shared-ui/script-actions.css": ["public/shared-ui/script-actions.css", "text/css; charset=utf-8"]
+        "shared-ui/toolbar.css": ["public/shared-ui/toolbar.css", "text/css; charset=utf-8"]
     };
 
     function serve(res, name) {
