@@ -23,6 +23,7 @@ module.exports.admin = function (plugin) {
         "portal-icon-data.js": ["public/portal-icon-data.js", "text/javascript; charset=utf-8"],
         "portal-subfolder-icons.js": ["public/portal-subfolder-icons.js", "text/javascript; charset=utf-8"],
         "portal-collapse-isolation.js": ["public/portal-collapse-isolation.js", "text/javascript; charset=utf-8"],
+        "portal-folder-collapse.js": ["public/portal-folder-collapse.js", "text/javascript; charset=utf-8"],
         "portal-management.js": ["public/portal-management.js", "text/javascript; charset=utf-8"],
         "portal-approval.js": ["public/portal-approval.js", "text/javascript; charset=utf-8"],
         "portal-approval-hook.js": ["public/portal-approval-hook.js", "text/javascript; charset=utf-8"],
