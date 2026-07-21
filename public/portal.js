@@ -23,13 +23,23 @@
         return core.assetUrl("", "vendor/sirk-portal/" + name);
     }
 
-    function loadStyle() {
-        if (document.getElementById("mycompany-sirk-portal-vendor-style")) return;
+    function ensureStyle(id, href) {
+        var existing = document.getElementById(id);
+        if (existing) {
+            if (existing.href !== href) existing.href = href;
+            return existing;
+        }
         var link = document.createElement("link");
-        link.id = "mycompany-sirk-portal-vendor-style";
+        link.id = id;
         link.rel = "stylesheet";
-        link.href = vendorAsset("sirk-portal.css");
+        link.href = href;
         (document.head || document.documentElement).appendChild(link);
+        return link;
+    }
+
+    function loadStyle() {
+        ensureStyle("mycompany-sirk-portal-vendor-style", vendorAsset("sirk-portal.css"));
+        ensureStyle("mycompany-sirk-portal-adapter-style", core.assetUrl("", "portal.css"));
     }
 
     function loadVendor() {
@@ -103,6 +113,7 @@
         }
         if (label) {
             label.textContent = text;
+            label.classList.add("sirk-menu-label");
             return;
         }
         var created = document.createElement("span");
@@ -115,15 +126,32 @@
         return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2"/><circle cx="15" cy="17" r="2"/></svg>';
     }
 
+    function findManagementNavigation(root) {
+        var direct = root.querySelector('[data-sirk-view="management"]');
+        if (direct) return direct;
+        var candidates = root.querySelectorAll(".sirk-nav button,.sirk-sidebar button,[role=\"navigation\"] button");
+        for (var index = 0; index < candidates.length; index++) {
+            var text = String(candidates[index].textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+            if (text === "zarządzanie" || text === "management") return candidates[index];
+        }
+        return null;
+    }
+
     function ensureManagementNavigation(root) {
-        var button = root.querySelector('[data-sirk-view="management"]');
-        if (button) return button;
+        var button = findManagementNavigation(root);
+        if (button) {
+            button.setAttribute("data-sirk-view", "management");
+            button.setAttribute("data-mycompany-management-nav", "1");
+            buttonLabel(button, "Zarządzanie");
+            return button;
+        }
         var automation = root.querySelector('[data-sirk-view="automation"]');
         var nav = automation && automation.parentNode || root.querySelector(".sirk-nav");
         if (!nav) return null;
         button = document.createElement("button");
         button.type = "button";
         button.setAttribute("data-sirk-view", "management");
+        button.setAttribute("data-mycompany-management-nav", "1");
         button.innerHTML = '<span class="sirk-menu-icon" aria-hidden="true">' + managementIcon() + '</span><span class="sirk-menu-label">Zarządzanie</span>';
         if (automation && automation.nextSibling) nav.insertBefore(button, automation.nextSibling);
         else nav.appendChild(button);
@@ -131,7 +159,7 @@
     }
 
     function normalizeNavigation(root) {
-        ensureManagementNavigation(root);
+        var management = ensureManagementNavigation(root);
         var labels = {
             overview: "Przegląd",
             devices: "Urządzenia",
@@ -144,9 +172,15 @@
         Object.keys(labels).forEach(function (view) {
             var buttons = root.querySelectorAll('[data-sirk-view="' + view + '"]');
             if (!buttons.length) return;
-            buttonLabel(buttons[0], labels[view]);
-            for (var index = 1; index < buttons.length; index++) buttons[index].hidden = true;
-            if (view === "administration" && !siteAdmin()) buttons[0].hidden = true;
+            var keep = view === "management" && management ? management : buttons[0];
+            buttonLabel(keep, labels[view]);
+            for (var index = 0; index < buttons.length; index++) {
+                if (buttons[index] !== keep) {
+                    buttons[index].hidden = true;
+                    buttons[index].setAttribute("aria-hidden", "true");
+                }
+            }
+            if (view === "administration" && !siteAdmin()) keep.hidden = true;
         });
     }
 
@@ -197,6 +231,7 @@
     function adaptPortal() {
         var root = document.getElementById("sirkPortalRoot");
         if (!root) return false;
+        loadStyle();
         root.setAttribute("data-mycompany-portal", "1");
         root.setAttribute("data-sirk-vendor-version", vendorVersion);
         normalizeNavigation(root);
