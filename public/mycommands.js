@@ -20,8 +20,11 @@
             });
         });
     }
+    function currentNodeId(shell) {
+        return shell.state.nodeId || window.MyCompanyRuntime.state.nodeId || window.selectedNode || "";
+    }
     function openCustom(shell) {
-        var nodeId = window.MyCompanyRuntime.state.nodeId || window.selectedNode || "";
+        var nodeId = currentNodeId(shell);
         var command = window.prompt("Command to run");
         if (!command) return;
         shell.post("execute", { nodeId: nodeId, label: "Custom command", command: command, type: 2, approvalLevels: [] })
@@ -34,6 +37,11 @@
         menuTitle: "My Commands",
         order: 150,
         preset: "mycommands",
+        deviceTab: {
+            title: "Commands",
+            pageId: "mycompany-mycommands-device-page",
+            topTabId: "MainDevMyCompany-Commands"
+        },
         customButtons: [
             { key: "custom", title: "Custom command", icon: ">_", side: "right", order: 50, onClick: function () { openCustom(module.api); } },
             { key: "multiHost", title: "Run on multiple hosts", icon: "▦", side: "right", order: 60, onClick: function () { window.alert("Select multiple devices and submit the same script from this view."); } }
@@ -63,7 +71,7 @@
                         shell.state.page.details.appendChild(shell.card(result.script.label, result.script.description || result.script.path));
                         var run = shell.element("button", "btn btn-primary", "Run"); run.type = "button";
                         run.onclick = function () {
-                            shell.post("execute", { nodeId: window.MyCompanyRuntime.state.nodeId || "", scriptPath: result.script.path, label: result.script.label, approvalLevels: result.script.approvalLevels || [] })
+                            shell.post("execute", { nodeId: currentNodeId(shell), scriptPath: result.script.path, label: result.script.label, approvalLevels: result.script.approvalLevels || [] })
                                 .then(function () { shell.state.tab = "results"; shell.state.page.tabs.select("results", true); })
                                 .catch(function (error) { shell.error(shell.state.page.details, error); });
                         };
