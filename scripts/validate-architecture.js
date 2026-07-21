@@ -43,6 +43,10 @@ function read(relative) {
     return fs.readFileSync(path.join(root, relative), "utf8");
 }
 
+function includes(source, value, error, errors) {
+    if (source.indexOf(value) < 0) errors.push(error);
+}
+
 function validateArchitecture() {
     var errors = [];
 
@@ -74,109 +78,97 @@ function validateArchitecture() {
     }
 
     var runtimeSource = read("core/runtime.js");
-    if (runtimeSource.indexOf('"seed", "MyScripts"') < 0) {
-        errors.push("Runtime must resolve MyScripts from seed/MyScripts.");
-    }
-    if (runtimeSource.indexOf('"seed", "MyCommands"') < 0) {
-        errors.push("Runtime must resolve MyCommands from seed/MyCommands.");
-    }
+    includes(runtimeSource, '"seed", "MyScripts"', "Runtime must resolve MyScripts from seed/MyScripts.", errors);
+    includes(runtimeSource, '"seed", "MyCommands"', "Runtime must resolve MyCommands from seed/MyCommands.", errors);
+
+    var librarySource = read("core/script-library.js");
+    includes(librarySource, "allowWrite", "Script library must support controlled source editing.", errors);
+    includes(librarySource, "saveSource", "Script library must expose source saving.", errors);
+    includes(librarySource, "multiHost", "Script library must parse MultiHost metadata.", errors);
 
     var myScriptsModule = read("modules/MyScripts/index.js");
-    if (myScriptsModule.indexOf('context.pluginRoot, "seed", "MyScripts"') < 0) {
-        errors.push("MyScripts must read directly from seed/MyScripts.");
-    }
+    includes(myScriptsModule, 'context.pluginRoot, "seed", "MyScripts"', "MyScripts must read directly from seed/MyScripts.", errors);
+    includes(myScriptsModule, 'asset === "source"', "MyScripts must expose the Site Admin source editor endpoint.", errors);
+    includes(myScriptsModule, "allowWrite: true", "MyScripts source editing must be explicitly enabled.", errors);
 
     var myCommandsModule = read("modules/MyCommands/index.js");
-    if (myCommandsModule.indexOf('context.pluginRoot, "seed", "MyCommands"') < 0) {
-        errors.push("MyCommands must read directly from seed/MyCommands.");
-    }
-    if (myCommandsModule.indexOf('type: "mycommands"') < 0 ||
-        myCommandsModule.indexOf("approvalResults") < 0) {
-        errors.push("MyCommands results must use the shared approval workflow.");
-    }
+    includes(myCommandsModule, 'context.pluginRoot, "seed", "MyCommands"', "MyCommands must read directly from seed/MyCommands.", errors);
+    includes(myCommandsModule, "approvalResults", "MyCommands results must use the shared approval workflow.", errors);
+    includes(myCommandsModule, 'asset === "multi-execute"', "MyCommands must expose multi-device execution.", errors);
+    includes(myCommandsModule, "maxMultiHostNodes", "MyCommands multi-device execution must enforce a host limit.", errors);
+    includes(myCommandsModule, "multiHostConcurrency", "MyCommands multi-device execution must enforce concurrency.", errors);
+    includes(myCommandsModule, 'asset === "source"', "MyCommands must expose the Site Admin source editor endpoint.", errors);
 
     var treeSource = read("public/shared-ui/tree.js");
-    if (treeSource.indexOf("iconData") < 0) {
-        errors.push("Shared directory tree must render embedded folder icons.");
-    }
-    if (treeSource.indexOf("mc-tree-folder-body") < 0) {
-        errors.push("Shared directory tree must expand folders in the middle column.");
-    }
-    if (treeSource.indexOf("if (!graphic)") < 0) {
-        errors.push("Folder expand arrows must be hidden when a folder graphic exists.");
-    }
+    includes(treeSource, "iconData", "Shared directory tree must render embedded folder icons.", errors);
+    includes(treeSource, "mc-tree-folder-body", "Shared directory tree must expand folders in the middle column.", errors);
+    includes(treeSource, "if (!graphic)", "Folder expand arrows must be hidden when a folder graphic exists.", errors);
+    includes(treeSource, "scriptActions", "Shared directory tree must support inline script actions.", errors);
+    includes(treeSource, "mc-tree-script-actions", "Inline script actions need a dedicated container.", errors);
 
     var toolbarSource = read("public/shared-ui/toolbar.js");
-    if (toolbarSource.indexOf("root.hidden = Object.keys(context.buttons).length === 0") < 0) {
-        errors.push("Empty module toolbars must be hidden.");
-    }
-    if (toolbarSource.indexOf("left.appendChild(searchWrap)") < 0) {
-        errors.push("Search input must be appended after the left toolbar buttons.");
-    }
+    includes(toolbarSource, "root.hidden = Object.keys(context.buttons).length === 0", "Empty module toolbars must be hidden.", errors);
+    includes(toolbarSource, "if (context.buttons.search) left.appendChild(searchWrap)", "Search input must follow the last left toolbar button.", errors);
+    includes(toolbarSource, "right.hidden = right.childNodes.length === 0", "Empty right toolbar groups must be removed.", errors);
+
+    var toolbarConfig = read("public/shared-ui/toolbar-config.js");
+    includes(toolbarConfig, 'refresh: {\n            title: "Refresh"', "Refresh must be a shared toolbar action.", errors);
+    includes(toolbarConfig, 'multi: {\n            title: "Multi-device execution"', "Multi-device must be a shared toolbar action.", errors);
+    includes(toolbarConfig, "order: 70", "Search must be the last left toolbar action.", errors);
 
     var cssSource = read("public/shared-ui/shared-ui.css");
-    if (cssSource.indexOf("grid-template-columns:64px") < 0 ||
-        cssSource.indexOf(".mc-shared-layout.is-collapsed .mc-shared-primary .mc-tree-label{display:none}") < 0) {
+    if (
+        cssSource.indexOf("grid-template-columns:64px") < 0 ||
+        cssSource.indexOf(".mc-shared-layout.is-collapsed .mc-shared-primary .mc-tree-label{display:none}") < 0
+    ) {
         errors.push("Collapsed navigation must remain as a 64px icon rail.");
     }
+    var toolbarCss = read("public/shared-ui/toolbar.css");
+    includes(toolbarCss, ".mc-tree-script-actions", "Inline script actions must be styled.", errors);
+    includes(toolbarCss, ".mc-script-editor", "The source editor must be styled.", errors);
+    includes(toolbarCss, ".mc-multi-node-list", "The multi-device selector must be styled.", errors);
 
     var scriptToolsSource = read("public/shared-ui/script-tools.js");
-    if (scriptToolsSource.indexOf("favoritesOnly") < 0 ||
-        scriptToolsSource.indexOf("addEditActions") < 0) {
-        errors.push("Shared script tools must provide Favorites and Edit behavior.");
-    }
+    includes(scriptToolsSource, "favoritesOnly", "Shared script tools must provide Favorites filtering.", errors);
+    includes(scriptToolsSource, "linkPickMode", "Copy link must provide original link-pick behavior.", errors);
+    includes(scriptToolsSource, "editMode", "Shared script tools must provide Edit mode.", errors);
+    includes(scriptToolsSource, "multiPickMode", "Shared script tools must provide command-only multi-pick mode.", errors);
+    includes(scriptToolsSource, "scriptActions", "Shared script tools must provide per-script actions.", errors);
 
     ["myscripts", "mycommands"].forEach(function (name) {
         var source = read("public/" + name + ".js");
-        if (source.indexOf("window.SharedCatalogView.mount") < 0) {
-            errors.push(name + " must use the shared Results and folder catalog navigation.");
-        }
-        if (source.indexOf("window.SharedResultsView.mountStatus") < 0 ||
-            source.indexOf("window.SharedResultsView.mountTable") < 0) {
-            errors.push(name + " must use shared status filters and result tables.");
-        }
-        if (source.indexOf("window.SharedScriptTools.create") < 0) {
-            errors.push(name + " must use shared Favorites and Edit tools.");
-        }
-        if (source.indexOf("tabs: []") < 0) {
-            errors.push(name + " must not render top tabs.");
-        }
-        ["collapse", "favorites", "link", "manage", "search"].forEach(function (button) {
-            if (source.indexOf(button + ": {") < 0) {
-                errors.push(name + " must show the left toolbar button: " + button);
-            }
-        });
-        if (source.indexOf('manage: {\n                title: "Edit"') < 0) {
-            errors.push(name + " must label the pencil action as Edit.");
-        }
-        if (source.indexOf('search: { side: "left", order: 50 }') < 0) {
-            errors.push(name + " Search must be the last left toolbar action.");
-        }
-        ["refresh", "clear", "settings"].forEach(function (button) {
-            if (source.indexOf(button + ": false") < 0) {
-                errors.push(name + " must disable top button: " + button);
-            }
-        });
-        if (source.indexOf("search: shell.state.search") < 0 ||
-            source.indexOf("q: shell.state.search") < 0) {
-            errors.push(name + " Search must filter folders and result tables.");
-        }
+        includes(source, "window.SharedCatalogView.mount", name + " must use the shared Results and folder catalog navigation.", errors);
+        includes(source, "window.SharedResultsView.mountStatus", name + " must use shared status filters.", errors);
+        includes(source, "window.SharedResultsView.mountTable", name + " must use shared result tables.", errors);
+        includes(source, "window.SharedScriptTools.create", name + " must use shared Favorites, link and Edit behavior.", errors);
+        includes(source, "scriptActions:", name + " must render inline script actions.", errors);
+        includes(source, 'manage: {\n                title: "Edit"', name + " must label the pencil action as Edit.", errors);
+        includes(source, 'refresh: {\n                side: "left",\n                order: 50', name + " must place Refresh on the left.", errors);
+        includes(source, 'search: { side: "left", order: 70 }', name + " Search must be the last left toolbar action.", errors);
+        includes(source, "clear: false", name + " must remove the duplicate Clear action.", errors);
+        includes(source, "search: shell.state.search", name + " Search must filter script folders.", errors);
+        includes(source, "q: shell.state.search", name + " Search must filter result tables.", errors);
+        includes(source, "tabs: []", name + " must not render top tabs.", errors);
     });
 
+    var myScriptsUi = read("public/myscripts.js");
+    includes(myScriptsUi, "multi: false", "Multi-device toolbar action must be hidden in MyScripts.", errors);
+
+    var myCommandsUi = read("public/mycommands.js");
+    includes(myCommandsUi, 'multi: {\n                title: "Multi-device execution"', "Multi-device toolbar action must exist only in MyCommands.", errors);
+    includes(myCommandsUi, "openMultiEditor", "MyCommands must open the per-script multi-device selector.", errors);
+    includes(myCommandsUi, 'shell.post("multi-execute"', "MyCommands must submit multi-device execution.", errors);
+
     var catalogSource = read("public/shared-ui/catalog.js");
-    if (catalogSource.indexOf("mc-catalog-navigation") < 0 ||
-        catalogSource.indexOf('icon.textContent = "▤"') < 0 ||
-        catalogSource.indexOf('label.textContent = "Results"') < 0) {
-        errors.push("Shared catalog must integrate Results with icon-only collapse support.");
-    }
+    includes(catalogSource, "mc-catalog-navigation", "Shared catalog must integrate Results with folder navigation.", errors);
+    includes(catalogSource, 'icon.textContent = "▤"', "Results must retain its icon when navigation is collapsed.", errors);
+    includes(catalogSource, "scriptActions: options.scriptActions", "Catalog must pass inline actions to the tree.", errors);
     if (catalogSource.indexOf("mc-catalog-separator") >= 0) {
         errors.push("Shared catalog must not use the hard Results separator.");
     }
 
     if (errors.length) {
-        errors.forEach(function (error) {
-            console.error(error);
-        });
+        errors.forEach(function (error) { console.error(error); });
         throw new Error("Architecture validation failed.");
     }
 }
