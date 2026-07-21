@@ -170,6 +170,7 @@ module.exports.createScriptLibrary = function (options) {
     var fs = options.fs;
     var path = options.path;
     var root = options.root;
+    var readOnly = options.readOnly === true;
     var extensions = options.extensions || {
         ".ps1": "powershell",
         ".cmd": "cmd",
@@ -191,9 +192,21 @@ module.exports.createScriptLibrary = function (options) {
     };
 
     function ensure() {
-        fs.mkdirSync(root, {
-            recursive: true
-        });
+        var stat;
+
+        try {
+            stat = fs.statSync(root);
+        } catch (error) {
+            if (readOnly) {
+                throw new Error("Script library directory not found: " + root);
+            }
+            fs.mkdirSync(root, { recursive: true });
+            return;
+        }
+
+        if (!stat.isDirectory()) {
+            throw new Error("Script library path is not a directory: " + root);
+        }
     }
 
     function folderIcon(directory, relative) {
@@ -272,7 +285,6 @@ module.exports.createScriptLibrary = function (options) {
             cached.mtimeMs === stat.mtimeMs
         ) {
             var hit = shared.copy(cached.value);
-
             if (!includeBody) delete hit.body;
             return hit;
         }
@@ -310,7 +322,6 @@ module.exports.createScriptLibrary = function (options) {
         };
 
         result = shared.copy(result);
-
         if (!includeBody) delete result.body;
         return result;
     }
@@ -363,7 +374,6 @@ module.exports.createScriptLibrary = function (options) {
                 ) {
                     return left.isDirectory() ? -1 : 1;
                 }
-
                 return left.name.localeCompare(right.name);
             });
 
@@ -402,7 +412,6 @@ module.exports.createScriptLibrary = function (options) {
                         relativePath,
                         false
                     );
-
                     if (script) node.children.push(script);
                 }
             });
