@@ -2,7 +2,7 @@
     "use strict";
     window.MyCompanyCore = window.MyCompanyCore || {};
     var core = window.MyCompanyCore;
-    core.assetVersion = "1.4.6";
+    core.assetVersion = "1.4.7";
     core.assetUrl = function (moduleName, assetName, parameters) {
         var endpoint = new URL("pluginadmin.ashx", window.location.href);
         endpoint.searchParams.set("pin", "MyCompany");
