@@ -11,6 +11,8 @@
             var debug = content.querySelector(":scope > .mc-results-debug");
             if (!debug) return;
             actions.classList.add("mc-results-copy-after-output");
+            actions.style.marginTop = "12px";
+            actions.style.marginBottom = "0";
             content.insertBefore(actions, debug);
         });
     }
