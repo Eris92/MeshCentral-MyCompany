@@ -8,9 +8,11 @@ module.exports.admin = function (plugin) {
     var obj = {}, root = __dirname;
     var assets = {
         "admin.css": ["web/admin.css", "text/css; charset=utf-8"],
+        "admin-ui-enhancements.css": ["web/admin-ui-enhancements.css", "text/css; charset=utf-8"],
         "admin.js": ["web/admin.js", "text/javascript; charset=utf-8"],
         "admin-layout.js": ["web/admin-layout.js", "text/javascript; charset=utf-8"],
         "admin-approval-policy.js": ["web/admin-approval-policy.js", "text/javascript; charset=utf-8"],
+        "admin-ui-enhancements.js": ["web/admin-ui-enhancements.js", "text/javascript; charset=utf-8"],
         "core.js": ["public/core.js", "text/javascript; charset=utf-8"],
         "mesh-plugin-core.js": ["public/mesh-plugin-core.js", "text/javascript; charset=utf-8"],
         "module-shell.js": ["public/module-shell.js", "text/javascript; charset=utf-8"],
