@@ -17,11 +17,16 @@ function uniqueLevels(value) {
     }).sort();
 }
 
+function assignmentKey(value) {
+    return String(value || "").replace(/\\/g, "/").toLowerCase();
+}
+
 module.exports.createServerScriptExecutor = function (options) {
     options = options || {};
     var context = options.context;
     var library = options.library;
     var admin = options.admin;
+    var assignmentNamespace = String(options.assignmentNamespace || "script-secrets.myscripts.system-credentials");
     var queue = Promise.resolve();
 
     function timeoutMs() {
@@ -57,6 +62,56 @@ module.exports.createServerScriptExecutor = function (options) {
             values[name] = String(secrets[name] == null ? "" : secrets[name]);
         });
         return values;
+    }
+
+    function assignedProfiles(scriptPath) {
+        var assignments = context.secrets.get(assignmentNamespace);
+        assignments = assignments && typeof assignments === "object" ? assignments : {};
+        var selected = assignments[assignmentKey(scriptPath)];
+        return Array.isArray(selected) ? selected.map(String) : [];
+    }
+
+    function systemEnvironment(scriptPath) {
+        var selected = assignedProfiles(scriptPath);
+        var environment = {};
+        function enabled(name) { return selected.indexOf(name) >= 0; }
+
+        if (enabled("ad")) {
+            var ad = context.integrations.get("ad");
+            environment.MYSCRIPTS_AD_DOMAIN = String(ad.domain || "");
+            environment.MYSCRIPTS_AD_LOGIN = String(ad.login || "");
+            environment.MYSCRIPTS_AD_PASSWORD = String(ad.password || "");
+        }
+        if (enabled("entra")) {
+            var entra = context.integrations.get("entra");
+            environment.MYSCRIPTS_ENTRA_TENANT_ID = String(entra.tenantId || "");
+            environment.MYSCRIPTS_ENTRA_CLIENT_ID = String(entra.clientId || "");
+            environment.MYSCRIPTS_ENTRA_CLIENT_SECRET = String(entra.clientSecret || "");
+        }
+        if (enabled("jira")) {
+            var jira = context.integrations.get("jira");
+            environment.MYSCRIPTS_JIRA_URL = String(jira.url || "");
+            environment.MYSCRIPTS_JIRA_LOGIN = String(jira.email || "");
+            environment.MYSCRIPTS_JIRA_EMAIL = String(jira.email || "");
+            environment.MYSCRIPTS_JIRA_TOKEN = String(jira.token || "");
+            environment.MYSCRIPTS_JIRA_PROJECT_KEY = String(jira.projectKey || "");
+            environment.MYSCRIPTS_JIRA_WORKSPACE_ID = String(jira.workspaceId || "");
+            environment.MYSCRIPTS_JIRA_CLOUD_ID = String(jira.cloudId || "");
+        }
+        if (enabled("defender")) {
+            var defender = context.integrations.get("defender");
+            environment.MYSCRIPTS_DEFENDER_TENANT_ID = String(defender.tenantId || "");
+            environment.MYSCRIPTS_DEFENDER_CLIENT_ID = String(defender.clientId || "");
+            environment.MYSCRIPTS_DEFENDER_CLIENT_SECRET = String(defender.clientSecret || "");
+        }
+        if (enabled("zabbix")) {
+            var zabbix = context.integrations.get("zabbix");
+            environment.MYSCRIPTS_ZABBIX_URL = String(zabbix.url || "");
+            environment.MYSCRIPTS_ZABBIX_USERNAME = String(zabbix.username || "");
+            environment.MYSCRIPTS_ZABBIX_PASSWORD = String(zabbix.password || "");
+            environment.MYSCRIPTS_ZABBIX_TOKEN = String(zabbix.token || "");
+        }
+        return environment;
     }
 
     function powershellPath() {
@@ -149,7 +204,7 @@ module.exports.createServerScriptExecutor = function (options) {
         try { plan = buildPlan(script, values); }
         catch (error) { return Promise.reject(error); }
 
-        var environment = Object.assign({}, process.env, admin.systemEnvironment(script.path), {
+        var environment = Object.assign({}, process.env, systemEnvironment(script.path), {
             MYSCRIPTS_REQUEST_ID: request && request.id || "",
             MYSCRIPTS_REQUESTER: request && request.requester && request.requester.name || "",
             MYSCRIPTS_PLUGIN_ROOT: context.pluginRoot,
