@@ -5,7 +5,18 @@
         var button = document.createElement("button");
         button.type = "button";
         button.className = "mc-shared-nav-item mc-catalog-results";
-        button.textContent = "▤ Results";
+        button.title = "Results";
+
+        var icon = document.createElement("span");
+        icon.className = "mc-tree-fallback-icon";
+        icon.textContent = "▤";
+        button.appendChild(icon);
+
+        var label = document.createElement("span");
+        label.className = "mc-tree-label";
+        label.textContent = "Results";
+        button.appendChild(label);
+
         button.classList.toggle("active", active === true);
         button.onclick = onClick;
         host.appendChild(button);
