@@ -43,7 +43,13 @@ module.exports.createModule = function (context) {
                 })
                 : [];
             var policy = providerPolicy(type);
-            if (!levels.length && policy.allowNoApproval !== true) levels = [1];
+
+            // MyScripts defines approval levels per script. An empty list means
+            // direct execution and must not be replaced with Level 1.
+            if (type !== "myscripts" && !levels.length && policy.allowNoApproval !== true) {
+                levels = [1];
+            }
+
             payload.approvalLevels = levels;
             return originalSubmit.call(context.approval, type, user, payload, note, submitOptions);
         };
