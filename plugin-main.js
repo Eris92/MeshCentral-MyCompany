@@ -8,13 +8,17 @@ function cleanError(error) {
 
 function createFallbackRuntime(error) {
     var message = cleanError(error);
+
     function sendJson(res, status, value) {
         if (typeof res.status === "function") res.status(status);
-        if (typeof res.set === "function") res.set("Content-Type", "application/json; charset=utf-8");
+        if (typeof res.set === "function") {
+            res.set("Content-Type", "application/json; charset=utf-8");
+        }
         if (typeof res.json === "function") res.json(value);
         else if (typeof res.send === "function") res.send(JSON.stringify(value));
         else if (typeof res.end === "function") res.end(JSON.stringify(value));
     }
+
     return {
         loadError: message,
         modules: {},
@@ -29,7 +33,7 @@ function createFallbackRuntime(error) {
         },
         adminSnapshot: function () {
             return {
-                plugin: { name: "My Company", version: "1.3.0" },
+                plugin: { name: "My Company", version: "1.3.1" },
                 modules: [],
                 moduleSettings: {},
                 integrations: {},
@@ -39,7 +43,9 @@ function createFallbackRuntime(error) {
             };
         },
         saveAdminSettings: function () {
-            return Promise.reject(new Error("MyCompany runtime failed to load: " + message));
+            return Promise.reject(new Error(
+                "MyCompany runtime failed to load: " + message
+            ));
         }
     };
 }
@@ -53,7 +59,11 @@ function writeLoadError(parent, error) {
             ? meshServer.datapath
             : path.dirname(parent.pluginPath || __dirname);
         var dataRoot = path.join(dataBase, "mycompany-data");
-        fs.mkdirSync(dataRoot, { recursive: true });
+
+        if (!fs.existsSync(dataRoot)) {
+            fs.mkdirSync(dataRoot, { recursive: true });
+        }
+
         fs.writeFileSync(
             path.join(dataRoot, "plugin-load-error.log"),
             new Date().toISOString() + "\r\n" + cleanError(error) + "\r\n",
@@ -67,8 +77,13 @@ function createPlugin(parent, shortName) {
     obj.parent = parent;
     obj.meshServer = parent && parent.parent;
     obj.shortName = shortName || "MyCompany";
-    obj.exports = ["onWebUIStartupEnd", "goPageStart", "goPageEnd",
-        "onDeviceRefreshEnd", "commandResult"];
+    obj.exports = [
+        "onWebUIStartupEnd",
+        "goPageStart",
+        "goPageEnd",
+        "onDeviceRefreshEnd",
+        "commandResult"
+    ];
 
     try {
         obj.runtime = require("./core/runtime.js").createRuntime({
@@ -90,34 +105,50 @@ function createPlugin(parent, shortName) {
             writeLoadError(parent, error);
         });
     };
-    obj.handleAdminReq = function (req, res, user) { return obj.admin.req(req, res, user); };
-    obj.handleAdminPostReq = function (req, res, user) { return obj.admin.post(req, res, user); };
+
+    obj.handleAdminReq = function (req, res, user) {
+        return obj.admin.req(req, res, user);
+    };
+
+    obj.handleAdminPostReq = function (req, res, user) {
+        return obj.admin.post(req, res, user);
+    };
+
     obj.hook_processAgentData = function (command, agent) {
-        if (obj.runtime && typeof obj.runtime.captureAgentData === "function") {
+        if (
+            obj.runtime &&
+            typeof obj.runtime.captureAgentData === "function"
+        ) {
             obj.runtime.captureAgentData(command, agent);
         }
     };
 
     obj.onWebUIStartupEnd = function () {
-        if (typeof window === "undefined" || typeof document === "undefined") return;
+        if (typeof window === "undefined" || typeof document === "undefined") {
+            return;
+        }
+
         function asset(name) {
             var url = new URL("pluginadmin.ashx", window.location.href);
             url.searchParams.set("pin", obj.shortName || "MyCompany");
             url.searchParams.set("asset", name);
-            url.searchParams.set("v", "1.3.0");
+            url.searchParams.set("v", "1.3.1");
             return url.href;
         }
+
         function load(id, source) {
             return new Promise(function (resolve, reject) {
                 var existing = document.getElementById(id);
                 if (existing) {
-                    if (existing.getAttribute("data-loaded") === "1") resolve();
-                    else {
+                    if (existing.getAttribute("data-loaded") === "1") {
+                        resolve();
+                    } else {
                         existing.addEventListener("load", resolve, { once: true });
                         existing.addEventListener("error", reject, { once: true });
                     }
                     return;
                 }
+
                 var script = document.createElement("script");
                 script.id = id;
                 script.src = source;
@@ -130,6 +161,7 @@ function createPlugin(parent, shortName) {
                 (document.head || document.documentElement).appendChild(script);
             });
         }
+
         if (!document.getElementById("mycompany-main-style")) {
             var style = document.createElement("link");
             style.id = "mycompany-main-style";
@@ -137,6 +169,7 @@ function createPlugin(parent, shortName) {
             style.href = asset("main.css");
             (document.head || document.documentElement).appendChild(style);
         }
+
         if (!document.getElementById("mycompany-myscripts-style")) {
             var masterStyle = document.createElement("link");
             masterStyle.id = "mycompany-myscripts-style";
@@ -144,7 +177,11 @@ function createPlugin(parent, shortName) {
             masterStyle.href = asset("myscripts.css");
             (document.head || document.documentElement).appendChild(masterStyle);
         }
-        ["shared-ui/shared-ui.css", "shared-ui/toolbar.css"].forEach(function (source, index) {
+
+        [
+            "shared-ui/shared-ui.css",
+            "shared-ui/toolbar.css"
+        ].forEach(function (source, index) {
             var id = "mycompany-shared-style-" + index;
             if (document.getElementById(id)) return;
             var sharedStyle = document.createElement("link");
@@ -153,46 +190,117 @@ function createPlugin(parent, shortName) {
             sharedStyle.href = asset(source);
             (document.head || document.documentElement).appendChild(sharedStyle);
         });
+
         load("mycompany-core-script", asset("core.js"))
-            .then(function () { return load("mycompany-mesh-plugin-core-script", asset("mesh-plugin-core.js")); })
-            .then(function () { return load("mycompany-shared-toolbar-config", asset("shared-ui/toolbar-config.js")); })
-            .then(function () { return load("mycompany-shared-toolbar-api", asset("shared-ui/toolbar-api.js")); })
-            .then(function () { return load("mycompany-shared-toolbar", asset("shared-ui/toolbar.js")); })
-            .then(function () { return load("mycompany-shared-tabs", asset("shared-ui/tabs.js")); })
-            .then(function () { return load("mycompany-shared-layout", asset("shared-ui/layout.js")); })
-            .then(function () { return load("mycompany-shared-settings", asset("shared-ui/settings.js")); })
-            .then(function () { return load("mycompany-shared-status-nav", asset("shared-ui/status-nav.js")); })
-            .then(function () { return load("mycompany-shared-page", asset("shared-ui/page.js")); })
-            .then(function () { return load("mycompany-module-shell-script", asset("module-shell.js")); })
+            .then(function () {
+                return load(
+                    "mycompany-mesh-plugin-core-script",
+                    asset("mesh-plugin-core.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-toolbar-config",
+                    asset("shared-ui/toolbar-config.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-toolbar-api",
+                    asset("shared-ui/toolbar-api.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-toolbar",
+                    asset("shared-ui/toolbar.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-tabs",
+                    asset("shared-ui/tabs.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-layout",
+                    asset("shared-ui/layout.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-settings",
+                    asset("shared-ui/settings.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-status-nav",
+                    asset("shared-ui/status-nav.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-shared-page",
+                    asset("shared-ui/page.js")
+                );
+            })
+            .then(function () {
+                return load(
+                    "mycompany-module-shell-script",
+                    asset("module-shell.js")
+                );
+            })
             .then(function () {
                 return load("mycompany-runtime-script", asset("runtime.js"));
             })
-            .then(function () { return window.MyCompanyRuntime.initialize(); })
+            .then(function () {
+                return window.MyCompanyRuntime.initialize();
+            })
             .catch(function (error) {
-                if (window.console) console.error("MyCompany browser startup failed", error);
+                if (window.console) {
+                    console.error("MyCompany browser startup failed", error);
+                }
             });
     };
+
     obj.goPageStart = function (view) {
-        if (typeof window !== "undefined" && window.MyCompanyRuntime &&
-            typeof window.MyCompanyRuntime.onNativePageStart === "function") {
+        if (
+            typeof window !== "undefined" &&
+            window.MyCompanyRuntime &&
+            typeof window.MyCompanyRuntime.onNativePageStart === "function"
+        ) {
             window.MyCompanyRuntime.onNativePageStart(view);
         }
     };
+
     obj.goPageEnd = function (view) {
-        if (typeof window !== "undefined" && window.MyCompanyRuntime &&
-            typeof window.MyCompanyRuntime.onNativePageEnd === "function") {
+        if (
+            typeof window !== "undefined" &&
+            window.MyCompanyRuntime &&
+            typeof window.MyCompanyRuntime.onNativePageEnd === "function"
+        ) {
             window.MyCompanyRuntime.onNativePageEnd(view);
         }
     };
+
     obj.onDeviceRefreshEnd = function (nodeId) {
-        if (typeof window !== "undefined" && window.MyCompanyRuntime &&
-            typeof window.MyCompanyRuntime.onDeviceRefreshEnd === "function") {
+        if (
+            typeof window !== "undefined" &&
+            window.MyCompanyRuntime &&
+            typeof window.MyCompanyRuntime.onDeviceRefreshEnd === "function"
+        ) {
             window.MyCompanyRuntime.onDeviceRefreshEnd(nodeId);
         }
     };
+
     obj.commandResult = function (server, message) {
-        if (typeof window !== "undefined" && window.MyCompanyRuntime &&
-            typeof window.MyCompanyRuntime.commandResult === "function") {
+        if (
+            typeof window !== "undefined" &&
+            window.MyCompanyRuntime &&
+            typeof window.MyCompanyRuntime.commandResult === "function"
+        ) {
             window.MyCompanyRuntime.commandResult(message);
         }
     };
