@@ -71,15 +71,14 @@
             moduleError(host, title, "Moduł nie udostępnia punktu montowania.");
             return;
         }
-        if (host.getAttribute("data-mycompany-mounted") === key && host.querySelector(".mc-shared-page")) return;
+        if (host.getAttribute("data-mycompany-mounted") === key && host.querySelector(":scope > .mc-shared-page")) return;
         host.innerHTML = "";
         host.setAttribute("data-mycompany-mounted", key);
-        module.mount(host, "sirk-portal-" + key);
-        var page = host.querySelector(".mc-shared-page");
-        if (page) {
-            page.classList.add("sirk-mycompany-module", "sirk-mycompany-module-" + key);
-            page.setAttribute("data-sirk-module", key);
-        }
+        var mountPoint = document.createElement("div");
+        host.appendChild(mountPoint);
+        module.mount(mountPoint, "sirk-portal-" + key);
+        mountPoint.classList.add("sirk-mycompany-module", "sirk-mycompany-module-" + key);
+        mountPoint.setAttribute("data-sirk-module", key);
     }
 
     function mountSettings(host) {
