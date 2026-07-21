@@ -15,6 +15,40 @@
     };
     var order = ["approvalcenter", "moverequests", "mycommands", "myjira", "defendertools", "myscripts"];
 
+    function installCredentialsActions() {
+        if (!window.SharedScriptTools || window.__myCompanyCredentialsActions) return;
+        window.__myCompanyCredentialsActions = true;
+        var originalCreate = window.SharedScriptTools.create;
+        window.SharedScriptTools.create = function (options) {
+            var tools = originalCreate.call(window.SharedScriptTools, options);
+            var originalActions = tools.scriptActions;
+            tools.scriptActions = function (script, config) {
+                config = config || {};
+                var actions = originalActions.call(tools, script, config) || [];
+                var hasCredentials = !!(script && (
+                    (Array.isArray(script.secretVariables) && script.secretVariables.length) ||
+                    (Array.isArray(script.secretDefinitions) && script.secretDefinitions.length)
+                ));
+                if (hasCredentials && config.canEdit === true && !actions.some(function (action) {
+                    return action && action.key === "credentials";
+                })) {
+                    actions.unshift({
+                        key: "credentials",
+                        icon: "🔑",
+                        className: "mc-tree-credentials-action",
+                        title: "Edit script credentials",
+                        onClick: function () {
+                            if (typeof config.onCredentials === "function") config.onCredentials(script);
+                            else if (typeof config.onEdit === "function") config.onEdit(script);
+                        }
+                    });
+                }
+                return actions;
+            };
+            return tools;
+        };
+    }
+
     function notify(method) {
         var args = Array.prototype.slice.call(arguments, 1);
         Object.keys(window.MyCompanyModules).forEach(function (key) {
@@ -49,10 +83,7 @@
                     core.assetUrl("", "shared-ui/script-tools.js")
                 );
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-credentials-actions",
-                    core.assetUrl("", "shared-ui/credentials-actions.js")
-                );
+                installCredentialsActions();
             });
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
