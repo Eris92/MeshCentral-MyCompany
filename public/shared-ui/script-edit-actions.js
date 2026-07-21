@@ -4,6 +4,16 @@
     if (!window.SharedScriptTools || window.__myCompanyFixedEditActions) return;
     window.__myCompanyFixedEditActions = true;
 
+    if (!document.getElementById("mycompany-fixed-edit-actions-style")) {
+        var style = document.createElement("style");
+        style.id = "mycompany-fixed-edit-actions-style";
+        style.textContent =
+            ".mc-tree-script-actions{width:132px;min-width:132px;justify-content:flex-end}" +
+            ".mc-tree-action-disabled{opacity:.28!important;filter:grayscale(1);cursor:not-allowed!important;pointer-events:none}" +
+            ".mc-tree-credential-action:not(.mc-tree-action-disabled){color:#e0a800}";
+        (document.head || document.documentElement).appendChild(style);
+    }
+
     var originalCreate = window.SharedScriptTools.create;
 
     window.SharedScriptTools.create = function (options) {
@@ -70,7 +80,7 @@
                     disabled: !credentialsAvailable,
                     className: credentialsAvailable
                         ? "mc-tree-credential-action"
-                        : "mc-tree-credential-action mc-tree-action-disabled",
+                        : "mc-tree-action-disabled",
                     title: credentialsAvailable
                         ? "Configure script credentials"
                         : "This script has no SaveSecret variables",
