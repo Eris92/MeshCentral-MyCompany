@@ -82,7 +82,7 @@ function createPlugin(parent, shortName) {
     obj.onWebUIStartupEnd = function () {
         if (typeof window === "undefined" || typeof document === "undefined") return;
 
-        var browserVersion = "1.5.90";
+        var browserVersion = "1.5.91";
         var browserPin = "MyCompany";
         window.__MYCOMPANY_VERSION__ = browserVersion;
         document.documentElement.classList.add("mycompany-native-ui");
@@ -128,6 +128,7 @@ function createPlugin(parent, shortName) {
         style("mycompany-shared-style-0", "shared-ui/shared-ui.css");
         style("mycompany-shared-style-1", "shared-ui/toolbar.css");
         style("mycompany-native-approval-style", "native-approval.css");
+        style("mycompany-device-tabs-style", "portal-device-tabs.css");
 
         load("mycompany-core-script", asset("core.js"))
             .then(function () { return load("mycompany-mesh-plugin-core-script", asset("mesh-plugin-core.js")); })
@@ -149,6 +150,7 @@ function createPlugin(parent, shortName) {
             .then(function () { return load("mycompany-shared-system-credentials", asset("shared-ui/system-credentials-form.js")); })
             .then(function () { return load("mycompany-shared-page", asset("shared-ui/page.js")); })
             .then(function () { return load("mycompany-module-shell-script", asset("module-shell.js")); })
+            .then(function () { return load("mycompany-device-tabs-script", asset("portal-device-tabs.js")); })
             .then(function () { return load("mycompany-runtime-script", asset("runtime.js")); })
             .then(function () {
                 if (!window.MyCompanyRuntime || typeof window.MyCompanyRuntime.initialize !== "function") throw new Error("MyCompany runtime was not loaded.");
