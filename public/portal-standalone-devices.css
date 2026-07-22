@@ -1,0 +1,394 @@
+/* Standalone SirK Portal Overview and Devices. Never loaded by native MeshCentral. */
+.sirk-standalone-view-scroll {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+}
+
+.sirk-overview-link {
+    appearance: none;
+    -webkit-appearance: none;
+    display: block;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+.sirk-overview-link:hover,
+.sirk-overview-link:focus-visible {
+    border-color: #60a5fa;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .12);
+    outline: none;
+}
+
+.sirk-device-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.sirk-device-summary,
+.sirk-device-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sirk-device-summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 9px;
+    background: var(--sirk-panel, #fff);
+    color: var(--sirk-muted, #657187);
+}
+
+.sirk-device-summary strong {
+    color: var(--sirk-text, #172033);
+}
+
+.sirk-device-input,
+.sirk-device-select,
+.sirk-device-refresh,
+.sirk-device-back,
+.sirk-device-native-button {
+    min-height: 38px;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 8px;
+    background: var(--sirk-panel, #fff);
+    color: var(--sirk-text, #172033);
+    font: inherit;
+}
+
+.sirk-device-input {
+    width: min(380px, 42vw);
+    min-width: 240px;
+    padding: 0 11px;
+}
+
+.sirk-device-select {
+    padding: 0 30px 0 11px;
+}
+
+.sirk-device-refresh,
+.sirk-device-back,
+.sirk-device-native-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 12px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.sirk-device-refresh:hover,
+.sirk-device-back:hover,
+.sirk-device-native-button:hover {
+    border-color: #9fb0c5;
+    background: var(--sirk-hover, #f8fafc);
+}
+
+.sirk-device-status {
+    padding: 18px;
+    border: 1px dashed var(--sirk-border, #c7d0dd);
+    border-radius: 10px;
+    background: var(--sirk-panel, #fff);
+    color: var(--sirk-muted, #657187);
+}
+
+.sirk-device-groups {
+    display: grid;
+    gap: 14px;
+}
+
+.sirk-device-group {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 12px;
+    background: var(--sirk-panel, #fff);
+    box-shadow: 0 4px 14px rgba(20, 32, 54, .04);
+}
+
+.sirk-device-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--sirk-border, #dce3ec);
+    background: var(--sirk-subtle, #f8fafc);
+}
+
+.sirk-device-group-header > div {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.sirk-device-group-header strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sirk-device-group-header small,
+.sirk-device-group-header > span {
+    color: var(--sirk-muted, #657187);
+    white-space: nowrap;
+}
+
+.sirk-device-list {
+    display: grid;
+}
+
+.sirk-device-row {
+    appearance: none;
+    -webkit-appearance: none;
+    display: grid;
+    grid-template-columns: 34px minmax(180px, 1.3fr) minmax(170px, 1fr) minmax(100px, .7fr) minmax(145px, .8fr) 100px 68px;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 900px;
+    padding: 12px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--sirk-row-border, #edf1f6);
+    background: var(--sirk-panel, #fff);
+    color: var(--sirk-text, #172033);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+}
+
+.sirk-device-row:last-child {
+    border-bottom: 0;
+}
+
+.sirk-device-row:hover,
+.sirk-device-row:focus-visible {
+    background: var(--sirk-hover, #f7faff);
+    outline: none;
+}
+
+.sirk-device-icon,
+.sirk-device-hero-icon {
+    display: grid;
+    place-items: center;
+    background: rgba(59, 130, 246, .12);
+    color: #3b82f6;
+}
+
+.sirk-device-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+}
+
+.sirk-device-primary {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+}
+
+.sirk-device-primary strong,
+.sirk-device-primary small,
+.sirk-device-os,
+.sirk-device-network,
+.sirk-device-seen {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sirk-device-primary small,
+.sirk-device-os,
+.sirk-device-network,
+.sirk-device-seen {
+    color: var(--sirk-muted, #657187);
+}
+
+.sirk-device-connection {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sirk-device-connection i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+}
+
+.sirk-device-connection.is-online {
+    color: #16a34a;
+}
+
+.sirk-device-connection.is-online i {
+    background: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, .12);
+}
+
+.sirk-device-connection.is-offline {
+    color: #64748b;
+}
+
+.sirk-device-open {
+    color: #2563eb;
+    font-weight: 600;
+    text-align: right;
+}
+
+.sirk-device-detail-head {
+    margin-bottom: 12px;
+}
+
+.sirk-device-hero {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px 20px;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 14px;
+    background: var(--sirk-panel, #fff);
+    box-shadow: 0 5px 18px rgba(20, 32, 54, .05);
+}
+
+.sirk-device-hero-icon {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+    font-size: 24px;
+}
+
+.sirk-device-hero > div {
+    min-width: 0;
+    flex: 1;
+}
+
+.sirk-device-hero h2 {
+    margin: 0 0 5px;
+    font-size: 22px;
+}
+
+.sirk-device-hero p {
+    margin: 0;
+    overflow: hidden;
+    color: var(--sirk-muted, #657187);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sirk-device-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.sirk-device-detail-item {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 11px;
+    background: var(--sirk-panel, #fff);
+}
+
+.sirk-device-detail-item span {
+    color: var(--sirk-muted, #657187);
+    font-size: 12px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.sirk-device-detail-item strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sirk-device-native-card {
+    margin-bottom: 2px;
+}
+
+.sirk-device-native-button {
+    margin-top: 10px;
+    border-color: #3867d6;
+    background: #3867d6;
+    color: #fff;
+}
+
+.sirk-device-native-button:hover {
+    border-color: #2f5cc3;
+    background: #2f5cc3;
+}
+
+#sirkPortalRoot.sirk-theme-dark {
+    --sirk-hover: #17243a;
+    --sirk-subtle: #111d30;
+    --sirk-row-border: #223047;
+}
+
+#sirkPortalRoot.sirk-theme-dark .sirk-overview-link:hover,
+#sirkPortalRoot.sirk-theme-dark .sirk-overview-link:focus-visible {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+}
+
+@media (max-width: 1100px) {
+    .sirk-device-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .sirk-device-input {
+        width: min(520px, 100%);
+    }
+}
+
+@media (max-width: 800px) {
+    .sirk-device-summary,
+    .sirk-device-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .sirk-device-summary span,
+    .sirk-device-input,
+    .sirk-device-select,
+    .sirk-device-refresh {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .sirk-device-group {
+        overflow-x: auto;
+    }
+
+    .sirk-device-hero {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .sirk-device-hero .sirk-device-connection {
+        width: 100%;
+        margin-left: 63px;
+    }
+}
