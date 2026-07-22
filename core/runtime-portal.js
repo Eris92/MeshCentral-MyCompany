@@ -2,9 +2,9 @@
 
 var shared = require("./shared.js");
 var baseFactory = require("./runtime.js");
-var portalFactory = require("../modules/Portal/index.js");
+var portalFactory = require("../modules/Portal/index-safe.js");
 
-var VERSION = "1.4.0";
+var VERSION = "1.4.9";
 var PORTAL_DEFAULTS = {
     enabled: false,
     defaultView: "overview",
