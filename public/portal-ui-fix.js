@@ -18,6 +18,17 @@
         return document.getElementById("sirkPortalRoot");
     }
 
+    function markPortalReady(root) {
+        if (!root) return;
+        try { window.localStorage.setItem("mycompany.sirkportal.enabled", "1"); }
+        catch (error) {}
+        document.documentElement.classList.remove("mycompany-auth-portal-pending");
+        if (typeof window.__myCompanyRevealAuthenticatedPortal === "function") {
+            window.__myCompanyRevealAuthenticatedPortal();
+        }
+        root.setAttribute("data-mycompany-portal-ready", "1");
+    }
+
     function managementActive(root) {
         if (!root) return false;
         var host = root.querySelector('[data-mycompany-management-host="1"],.mycompany-management-host');
@@ -79,6 +90,7 @@
         if (!root) return false;
         normalizeManagementIcons(root);
         normalizeTitle(root);
+        markPortalReady(root);
         return true;
     }
 
@@ -86,7 +98,13 @@
     var timer = window.setInterval(function () {
         attempts++;
         if (!apply()) {
-            if (attempts > 150) window.clearInterval(timer);
+            if (attempts > 150) {
+                window.clearInterval(timer);
+                document.documentElement.classList.remove("mycompany-auth-portal-pending");
+                if (typeof window.__myCompanyRevealAuthenticatedPortal === "function") {
+                    window.__myCompanyRevealAuthenticatedPortal();
+                }
+            }
             return;
         }
         window.clearInterval(timer);
