@@ -1,3 +1,3 @@
 "use strict";
 
-module.exports = require("./plugin-main.js");
+module.exports = require("./plugin-main-standalone.js");
