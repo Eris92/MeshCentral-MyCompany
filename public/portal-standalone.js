@@ -8,10 +8,16 @@
     var title = document.getElementById("sirkStandaloneTitle");
     var bootstrap = null;
     var initialized = Object.create(null);
+    var renderSequence = 0;
     var viewNames = {
         overview: "Przegląd", devices: "Urządzenia", approvals: "Akceptacje",
         automation: "Automatyzacja", monitoring: "Monitoring", assets: "Zasoby",
         management: "Zarządzanie", reports: "Raporty", security: "Security", settings: "Ustawienia"
+    };
+    var moduleViews = {
+        automation: "mycommands",
+        assets: "myjira",
+        security: "defendertools"
     };
 
     function asset(name) {
@@ -24,6 +30,7 @@
         var state = moduleState(key);
         return !!(state && state.enabled && state.ready !== false && (!state.access || state.access.allowed !== false));
     }
+    function isCurrent(sequence) { return sequence === renderSequence; }
     function loading(message) {
         content.innerHTML = '<div class="sirk-standalone-loading"><span></span><p>' + (message || "Ładowanie…") + '</p></div>';
     }
@@ -54,35 +61,52 @@
         initialized[key] = Promise.resolve(typeof module.initialize === "function" ? module.initialize(moduleState(key) || {}) : null);
         return initialized[key];
     }
-    function management() {
+    function mountModule(view, key, sequence) {
+        if (!moduleAllowed(key)) {
+            error(viewNames[view] + ": moduł jest wyłączony albo użytkownik nie ma dostępu.");
+            return;
+        }
+        loading("Ładowanie: " + viewNames[view] + "…");
+        initializeModule(key).then(function () {
+            if (!isCurrent(sequence)) return;
+            var module = window.MyCompanyModules[key];
+            if (!module || typeof module.mount !== "function") throw new Error("Moduł " + key + " nie udostępnia widoku Portalu.");
+            content.innerHTML = "";
+            module.mount(content, "sirk-standalone-" + view);
+        }).catch(function (reason) {
+            if (isCurrent(sequence)) error(viewNames[view] + ": " + (reason && reason.message || reason));
+        });
+    }
+    function management(sequence) {
         if (!moduleAllowed("myscripts")) { error("MyScripts jest wyłączony albo użytkownik nie ma dostępu."); return; }
         loading("Ładowanie Zarządzania…");
-        var host = document.createElement("div");
-        host.className = "mycompany-management-host";
-        content.innerHTML = "";
-        content.appendChild(host);
         if (!window.MyCompanyPortalManagement || typeof window.MyCompanyPortalManagement.mount !== "function") {
             error("Renderer Zarządzania nie został załadowany.");
             return;
         }
-        Promise.resolve(window.MyCompanyPortalManagement.mount(host)).catch(function (reason) {
-            error("Zarządzanie: " + (reason && reason.message || reason));
-        });
-        window.setTimeout(function () {
-            if (content.contains(host) && !host.querySelector(".sirk-management-shell,.mc-shared-error,.sirk-card")) {
-                error("Zarządzanie nie zakończyło inicjalizacji. Sprawdź sesję i odpowiedź API MyScripts.");
+        var host = document.createElement("div");
+        host.className = "mycompany-management-host";
+        content.innerHTML = "";
+        content.appendChild(host);
+        Promise.resolve(window.MyCompanyPortalManagement.mount(host)).then(function () {
+            if (!isCurrent(sequence)) return;
+            if (!host.querySelector(".sirk-management-shell,.mc-shared-error,.sirk-card")) {
+                throw new Error("Renderer nie utworzył widoku MyScripts.");
             }
-        }, 8000);
+        }).catch(function (reason) {
+            if (isCurrent(sequence)) error("Zarządzanie: " + (reason && reason.message || reason));
+        });
     }
-    function approvals() {
+    function approvals(sequence) {
         if (!moduleAllowed("approvalcenter")) { error("Approval Center jest wyłączony albo użytkownik nie ma dostępu."); return; }
         loading("Ładowanie Akceptacji…");
         initializeModule("approvalcenter").then(function () {
+            if (!isCurrent(sequence)) return;
             var module = window.MyCompanyModules.approvalcenter;
             if (!module || typeof module.mount !== "function") throw new Error("Approval Center nie udostępnia widoku Portalu.");
             content.innerHTML = "";
             module.mount(content, "sirk-standalone-approval");
-        }).catch(function (reason) { error(reason.message || reason); });
+        }).catch(function (reason) { if (isCurrent(sequence)) error(reason.message || reason); });
     }
     function settings() {
         var access = moduleState("portal") && moduleState("portal").access;
@@ -101,15 +125,21 @@
     }
     function render(view) {
         view = viewNames[view] ? view : "overview";
+        var sequence = ++renderSequence;
         title.textContent = viewNames[view];
         Array.prototype.forEach.call(document.querySelectorAll(".sirk-standalone-nav [data-view]"), function (button) {
-            button.classList.toggle("is-active", button.getAttribute("data-view") === view);
+            var active = button.getAttribute("data-view") === view;
+            button.classList.toggle("is-active", active);
+            button.setAttribute("aria-current", active ? "page" : "false");
         });
         if (view === "overview") overview();
-        else if (view === "management") management();
-        else if (view === "approvals") approvals();
+        else if (view === "management") management(sequence);
+        else if (view === "approvals") approvals(sequence);
         else if (view === "settings") settings();
         else if (view === "devices") devices();
+        else if (moduleViews[view]) mountModule(view, moduleViews[view], sequence);
+        else if (view === "monitoring") placeholder(view, "Moduł Zabbix/Monitoring zostanie podłączony do wspólnego API MyCompany.");
+        else if (view === "reports") placeholder(view, "Raporty będą korzystać ze wspólnego rejestru wyników MyCompany.");
         else placeholder(view, "Moduł będzie podłączony do niezależnego API MyCompany bez zależności od starego WebUI.");
         if (window.location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
     }
@@ -122,13 +152,21 @@
     function bind() {
         root.addEventListener("click", function (event) {
             var nav = event.target.closest("[data-view]");
-            if (nav && root.contains(nav)) { render(nav.getAttribute("data-view")); return; }
+            if (nav && root.contains(nav)) {
+                event.preventDefault();
+                event.stopPropagation();
+                render(nav.getAttribute("data-view"));
+                return;
+            }
             var action = event.target.closest("[data-action]");
             if (!action) return;
+            event.preventDefault();
+            event.stopPropagation();
             if (action.getAttribute("data-action") === "sidebar") {
                 var value = !root.classList.contains("is-collapsed");
                 root.classList.toggle("is-collapsed", value);
-                action.querySelector("svg").style.transform = value ? "rotate(180deg)" : "";
+                var icon = action.querySelector("svg");
+                if (icon) icon.style.transform = value ? "rotate(180deg)" : "";
                 try { localStorage.setItem("mycompany.sirkportal.standaloneCollapsed", value ? "1" : "0"); } catch (ignored) {}
             }
             if (action.getAttribute("data-action") === "theme") setTheme(!portalRoot.classList.contains("sirk-theme-dark"));
@@ -160,6 +198,10 @@
             ["sirk-module-shell", "module-shell.js"],
             ["sirk-icon-data", "portal-icon-data.js"],
             ["sirk-approval-module", "approvalcenter.js"],
+            ["sirk-move-module", "moverequests.js"],
+            ["sirk-commands-module", "mycommands.js"],
+            ["sirk-jira-module", "myjira.js"],
+            ["sirk-defender-module", "defendertools.js"],
             ["sirk-management-renderer", "portal-management.js"],
             ["sirk-subfolder-icons", "portal-subfolder-icons.js"],
             ["sirk-folder-collapse", "portal-folder-collapse.js"]
