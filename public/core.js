@@ -2,7 +2,7 @@
     "use strict";
     window.MyCompanyCore = window.MyCompanyCore || {};
     var core = window.MyCompanyCore;
-    core.assetVersion = "1.5.2";
+    core.assetVersion = "1.5.3";
 
     function svgData(svg) {
         return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
@@ -120,7 +120,6 @@
         core.workspaceState = null;
     };
     core.showWorkspace = function (title, viewMode, render) {
-        viewMode = Number(viewMode || 960);
         if (typeof window.go === "function" && Number(window.xxcurrentView) !== 1) {
             try { window.go(1); } catch (error) {}
         }
@@ -149,11 +148,6 @@
         workspace.style.display = "block";
         render(workspace);
         window.xxcurrentView = viewMode;
-        try {
-            var url = new URL(window.location.href);
-            url.searchParams.set("viewmode", String(viewMode));
-            window.history.replaceState(null, "", url.href);
-        } catch (ignored) {}
         return false;
     };
     core.element = function (tag, className, text) {
