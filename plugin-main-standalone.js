@@ -4,7 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var baseFactory = require("./plugin-main.js");
 
-var VERSION = "1.5.3";
+var VERSION = "1.5.4";
 
 function normalizeBase(value) {
     value = String(value || "/");
@@ -31,7 +31,11 @@ function send(res, status, type, body) {
 
 function redirect(res, target) {
     if (typeof res.redirect === "function") res.redirect(302, target);
-    else { res.statusCode = 302; res.setHeader("Location", target); res.end(); }
+    else {
+        res.statusCode = 302;
+        res.setHeader("Location", target);
+        res.end();
+    }
 }
 
 function contentType(file) {
@@ -56,13 +60,16 @@ function safePublicPath(asset) {
 
 module.exports.createPlugin = function (parent, shortName) {
     var plugin = baseFactory.createPlugin(parent, shortName);
+
     if (plugin.exports.indexOf("hook_setupHttpHandlers") < 0) plugin.exports.push("hook_setupHttpHandlers");
 
     function portalEnabled() {
         try {
             var state = plugin.runtime && typeof plugin.runtime.bootstrap === "function" ? plugin.runtime.bootstrap(null) : null;
             return !!(state && state.modules && state.modules.portal && state.modules.portal.enabled && state.modules.portal.ready !== false);
-        } catch (error) { return false; }
+        } catch (error) {
+            return false;
+        }
     }
 
     function portalHtml(base) {
@@ -101,14 +108,19 @@ module.exports.createPlugin = function (parent, shortName) {
         webserver.app.get(base + "sirkportal/assets/*", function (req, res) {
             var asset = req.params && req.params[0] || "";
             var target = safePublicPath(asset);
-            if (!target) { send(res, 400, "text/plain; charset=utf-8", "Invalid asset path"); return; }
+            if (!target) {
+                send(res, 400, "text/plain; charset=utf-8", "Invalid asset path");
+                return;
+            }
             fs.readFile(target, function (error, data) {
                 if (error) send(res, 404, "text/plain; charset=utf-8", "Not found");
                 else send(res, 200, contentType(target), data);
             });
         });
 
-        function openNative(req, res) { redirect(res, base + "?sirkNative=1"); }
+        function openNative(req, res) {
+            redirect(res, base + "?sirkNative=1");
+        }
         webserver.app.get(nativePath, openNative);
         webserver.app.get(nativePathSlash, openNative);
     }
