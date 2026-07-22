@@ -2,7 +2,7 @@
     "use strict";
     window.MyCompanyCore = window.MyCompanyCore || {};
     var core = window.MyCompanyCore;
-    core.assetVersion = "1.5.4";
+    core.assetVersion = "1.5.5";
 
     function svgData(svg) {
         return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
@@ -74,35 +74,66 @@
         var leftAnchor = document.getElementById("LeftMenuMyDevices");
         var key = String(definition.mainId || "").replace(/^MainMenuMyCompany-/, "").toLowerCase();
         var iconSource = definition.icon || menuIcons[key] || "";
+        var open = definition.open;
+
         if (mainAnchor && mainAnchor.parentNode) {
             var main = document.getElementById(definition.mainId) || mainAnchor.cloneNode(false);
+            var modern = String(main.tagName || "").toLowerCase() === "a" || main.classList.contains("nav-link");
             main.id = definition.mainId;
             main.textContent = definition.title;
             main.title = definition.title;
-            main.onclick = definition.open;
-            main.onmouseup = definition.open;
+            main.tabIndex = 0;
+            main.classList.remove("fullselect", "semiselect", "active");
+            main.onclick = main.onmouseup = main.onkeypress = null;
+            if (modern) {
+                main.href = "#";
+                main.onclick = open;
+            } else {
+                main.onmouseup = open;
+                main.onkeypress = function (event) { if (event && event.key === "Enter") return open(event); };
+            }
             main.setAttribute("data-mycompany-viewmode", String(definition.viewMode || ""));
             core.placeMenuItem(main, mainAnchor, definition.order);
         }
+
         if (leftAnchor && leftAnchor.parentNode) {
             var left = document.getElementById(definition.leftId) || leftAnchor.cloneNode(true);
+            var leftModern = String(left.tagName || "").toLowerCase() === "a" || left.classList.contains("nav-link");
             left.id = definition.leftId;
             left.title = definition.title;
-            left.onclick = definition.open;
-            left.onmouseup = definition.open;
+            left.setAttribute("aria-label", definition.title);
+            left.tabIndex = 0;
+            left.classList.remove("lbbuttonsel", "lbbuttonsel2", "active");
+            left.onclick = left.onmouseup = left.onkeypress = null;
+            if (leftModern) {
+                left.href = "#";
+                left.onclick = open;
+            } else {
+                left.onmouseup = open;
+                left.onkeypress = function (event) { if (event && event.key === "Enter") return open(event); };
+            }
             left.setAttribute("data-mycompany-viewmode", String(definition.viewMode || ""));
+
             if (iconSource) {
-                var image = left.querySelector("img");
-                if (!image) {
-                    image = document.createElement("img");
+                var legacyIcon = left.querySelector(".lbtg");
+                if (legacyIcon) {
+                    legacyIcon.className = "lbtg";
+                    legacyIcon.style.backgroundImage = 'url("' + iconSource + '")';
+                    legacyIcon.style.backgroundPosition = "center";
+                    legacyIcon.style.backgroundRepeat = "no-repeat";
+                    legacyIcon.style.backgroundSize = "contain";
+                } else if (leftModern) {
+                    var nativeIcon = left.querySelector("svg, i, img");
+                    var image = document.createElement("img");
+                    image.className = "mycompany-menu-icon";
                     image.alt = "";
-                    left.innerHTML = "";
-                    left.appendChild(image);
+                    image.src = iconSource;
+                    image.style.width = "24px";
+                    image.style.height = "24px";
+                    image.style.objectFit = "contain";
+                    if (nativeIcon && nativeIcon.parentNode) nativeIcon.parentNode.replaceChild(image, nativeIcon);
+                    else left.insertBefore(image, left.firstChild);
                 }
-                image.src = iconSource;
-                image.style.width = "32px";
-                image.style.height = "32px";
-                image.style.objectFit = "contain";
             }
             core.placeMenuItem(left, leftAnchor, definition.order);
         }
@@ -116,7 +147,10 @@
             item.element.hidden = item.hidden;
         });
         var workspace = document.getElementById("MyCompanyWorkspace");
-        if (workspace) workspace.style.display = "none";
+        if (workspace) {
+            workspace.innerHTML = "";
+            workspace.style.display = "none";
+        }
         core.workspaceState = null;
     };
     core.showWorkspace = function (title, viewMode, render) {
