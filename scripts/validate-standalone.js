@@ -27,7 +27,7 @@ required.filter(function (file) { return /\.js$/i.test(file) && fs.existsSync(pa
 var config = JSON.parse(read("config.json").replace(/^\uFEFF/, ""));
 var pkg = JSON.parse(read("package.json").replace(/^\uFEFF/, ""));
 if (config.version !== pkg.version) errors.push("config.json and package.json versions must match.");
-if (config.version !== "1.5.20") errors.push("Standalone Portal release must publish version 1.5.20.");
+if (config.version !== "1.5.21") errors.push("Standalone Portal release must publish version 1.5.21.");
 
 var wrapper = read("plugin-main-standalone.js");
 ["hook_setupHttpHandlers", 'base + "sirkportal"', 'base + "meshcentral"', 'base + "pluginadmin.ashx"', "portal-standalone.html"].forEach(function (value) {
@@ -56,6 +56,8 @@ need(portalBackend, "context.device.visibleNodes(user)", "Portal devices API mus
 var deviceService = read("core/device-service.js");
 need(deviceService, "visibleNodes", "Visible device inventory service is missing.");
 need(deviceService, "GetAllTypeNoTypeFieldMeshFiltered", "Device inventory must use the MeshCentral database filter.");
+need(deviceService, "meshIds,\n                    null,\n                    domainId,\n                    \"node\",\n                    null,\n                    0,\n                    0,", "Device inventory must use the complete MeshCentral database query signature.");
+need(deviceService, "if (!meshIds.length || !domain)", "Default MeshCentral domain identifier must not be rejected when it is an empty string.");
 
 var management = read("public/portal-management.js");
 ['core.api("myscripts"', 'core.post("myscripts"', "SharedResultsView.mountResult", "openDefinitionEditor", "openCredentialsEditor", "confirmedExecution"].forEach(function (value) {
