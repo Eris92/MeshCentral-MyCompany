@@ -1,6 +1,6 @@
 {
   "name": "meshcentral-mycompany",
-  "version": "1.5.19",
+  "version": "1.5.20",
   "private": true,
   "scripts": {
     "test": "node scripts/validate-standalone.js",
