@@ -177,9 +177,10 @@
             ["sirk-shared-system-credentials", "shared-ui/system-credentials-form.js"],
             ["sirk-module-shell", "module-shell.js"],
             ["sirk-icon-data", "portal-icon-data.js"],
-            ["sirk-myscripts-module", "myscripts.js"],
             ["sirk-approval-module", "approvalcenter.js"],
-            ["sirk-management-renderer", "portal-management.js"]
+            ["sirk-management-renderer", "portal-management.js"],
+            ["sirk-subfolder-icons", "portal-subfolder-icons.js"],
+            ["sirk-folder-collapse", "portal-folder-collapse.js"]
         ];
         var chain = Promise.resolve();
         files.forEach(function (entry) { chain = chain.then(function () { return load(entry[0], entry[1]); }); });
@@ -195,8 +196,6 @@
             window.MyCompanyRuntime.state.bootstrap = bootstrap;
             bootstrap.access = bootstrap.access || ((bootstrap.modules && bootstrap.modules.portal && bootstrap.modules.portal.access) || {});
             return loadDependencies();
-        }).then(function () {
-            return initializeModule("myscripts").catch(function () { return null; });
         }).then(function () {
             render(location.hash.slice(1) || "overview");
         }).catch(function (reason) {
