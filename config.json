@@ -1,7 +1,7 @@
 {
   "name": "My Company",
   "shortName": "MyCompany",
-  "version": "1.5.12",
+  "version": "1.5.13",
   "author": "Eris92",
   "description": "Consolidated MeshCentral plugin with a standalone SirK Portal frontend, MyScripts, MyCommands, Approval Center and shared integrations.",
   "hasAdminPanel": true,
