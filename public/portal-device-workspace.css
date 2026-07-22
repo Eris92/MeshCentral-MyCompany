@@ -1,0 +1,299 @@
+/* Standalone SirK Portal device workspace. Never loaded by native MeshCentral. */
+.sirk-device-workspace {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--sirk-bg, #f3f6fb);
+}
+
+.sirk-device-compact-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 8px 12px;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 11px 11px 0 0;
+    background: var(--sirk-panel, #fff);
+}
+
+.sirk-device-compact-back {
+    display: grid;
+    place-items: center;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 8px;
+    background: var(--sirk-panel, #fff);
+    color: var(--sirk-text, #172033);
+    font: 700 18px/1 "Segoe UI", Arial, sans-serif;
+    cursor: pointer;
+}
+
+.sirk-device-compact-back:hover,
+.sirk-device-compact-back:focus-visible {
+    border-color: #60a5fa;
+    outline: none;
+}
+
+.sirk-device-compact-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: rgba(59, 130, 246, .12);
+    color: #3b82f6;
+    font-size: 19px;
+}
+
+.sirk-device-compact-main {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.sirk-device-compact-main strong,
+.sirk-device-compact-main small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sirk-device-compact-main strong {
+    font-size: 16px;
+}
+
+.sirk-device-compact-main small,
+.sirk-device-compact-meta small {
+    color: var(--sirk-muted, #657187);
+    font-size: 12px;
+}
+
+.sirk-device-compact-meta {
+    display: grid;
+    justify-items: end;
+    gap: 3px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.sirk-device-tabs {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 5px 8px;
+    overflow-x: auto;
+    border-right: 1px solid var(--sirk-border, #dce3ec);
+    border-bottom: 1px solid var(--sirk-border, #dce3ec);
+    border-left: 1px solid var(--sirk-border, #dce3ec);
+    background: var(--sirk-panel, #fff);
+    scrollbar-width: thin;
+}
+
+.sirk-device-tabs button {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 5px 12px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--sirk-muted, #657187);
+    font: 600 13px/1.2 "Segoe UI", Arial, sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sirk-device-tabs button:hover,
+.sirk-device-tabs button:focus-visible {
+    background: var(--sirk-hover, #f7faff);
+    color: var(--sirk-text, #172033);
+    outline: none;
+}
+
+.sirk-device-tabs button.is-active {
+    border-color: rgba(59, 130, 246, .2);
+    background: rgba(59, 130, 246, .12);
+    color: #2563eb;
+}
+
+.sirk-device-tab-body {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--sirk-border, #dce3ec);
+    border-bottom: 1px solid var(--sirk-border, #dce3ec);
+    border-left: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 0 0 11px 11px;
+    background: var(--sirk-panel, #fff);
+}
+
+.sirk-device-general {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 14px;
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+.sirk-device-general .sirk-device-detail-grid {
+    margin: 0 0 14px;
+}
+
+.sirk-device-general-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sirk-device-general-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 6px 12px;
+    border: 1px solid #3867d6;
+    border-radius: 7px;
+    background: #3867d6;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.sirk-native-bridge-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.sirk-native-bridge-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 5px 9px;
+    border-bottom: 1px solid var(--sirk-border, #dce3ec);
+    background: var(--sirk-panel, #fff);
+}
+
+.sirk-native-bridge-label {
+    color: var(--sirk-muted, #657187);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.sirk-native-bridge-select,
+.sirk-native-bridge-button {
+    height: 32px;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: 7px;
+    background: var(--sirk-panel, #fff);
+    color: var(--sirk-text, #172033);
+    font: 600 13px "Segoe UI", Arial, sans-serif;
+}
+
+.sirk-native-bridge-select {
+    min-width: 180px;
+    padding: 0 28px 0 9px;
+}
+
+.sirk-native-bridge-button {
+    padding: 0 12px;
+    cursor: pointer;
+}
+
+.sirk-native-bridge-button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.sirk-native-bridge-status {
+    min-width: 0;
+    margin-left: auto;
+    overflow: hidden;
+    color: var(--sirk-muted, #657187);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sirk-native-bridge-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: #111;
+}
+
+.sirk-native-bridge-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: #111;
+}
+
+.sirk-native-bridge-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, .92);
+    color: #fff;
+    text-align: center;
+    white-space: pre-line;
+}
+
+.sirk-native-bridge-overlay[hidden] {
+    display: none !important;
+}
+
+.sirk-native-bridge-error {
+    max-width: 780px;
+    color: #fecaca;
+    font: 600 13px/1.5 Consolas, monospace;
+}
+
+#sirkPortalRoot.sirk-theme-dark .sirk-device-tabs button.is-active {
+    background: rgba(96, 165, 250, .18);
+    color: #93c5fd;
+}
+
+@media (max-width: 760px) {
+    .sirk-device-compact-meta small {
+        display: none;
+    }
+
+    .sirk-native-bridge-toolbar {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .sirk-native-bridge-status {
+        width: 100%;
+        margin-left: 0;
+    }
+}
