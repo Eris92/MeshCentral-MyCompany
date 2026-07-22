@@ -12,92 +12,127 @@
         panes: Object.create(null),
         active: "all",
         pending: null,
-        timer: 0
+        finalizeTimer: 0,
+        ensureTimer: 0,
+        observer: null
     };
 
     function text(value) { return String(value || "").replace(/\s+/g, " ").trim(); }
     function safeKey(value) { return text(value).replace(/[^a-z0-9._:-]/gi, "_").slice(0, 180); }
 
-    function deviceView() {
-        var root = document.getElementById("sirkPortalRoot");
-        return root && root.querySelector('[data-view="devices"]');
+    function findDeviceView(root) {
+        if (!root) return null;
+        var direct = root.querySelector([
+            '[data-view="devices"]',
+            '[data-view="device"]',
+            '[data-sirk-view-content="devices"]',
+            '#sirkDevicesView',
+            '.sirk-devices-view',
+            '.sirk-device-view'
+        ].join(","));
+        if (direct) return direct;
+
+        var candidates = root.querySelectorAll("section,main,div");
+        for (var i = 0; i < candidates.length; i++) {
+            var heading = candidates[i].querySelector && candidates[i].querySelector(":scope > h1,:scope > h2,:scope > header h1,:scope > header h2");
+            var title = text(heading && heading.textContent).toLowerCase();
+            if ((title === "devices" || title === "urządzenia" || title === "urzadzenia") && candidates[i].querySelector(".sirk-device-row,.sirk-device-card,.sirk-device-item,[data-node-id],[data-nodeid]")) return candidates[i];
+        }
+        return null;
+    }
+
+    function newStore(key) {
+        var store = document.createElement("div");
+        store.className = "sirk-device-tab-store";
+        store.setAttribute("data-device-tab-store", key);
+        return store;
     }
 
     function ensureInfrastructure() {
         var root = document.getElementById("sirkPortalRoot");
-        var view = deviceView();
+        var view = findDeviceView(root);
         if (!root || !view) return false;
+
         state.root = root;
-        state.view = view;
+        if (state.view !== view) {
+            state.view = view;
+            state.bar = null;
+        }
 
         if (!state.cache || !state.cache.isConnected) {
             state.cache = document.createElement("div");
             state.cache.className = "sirk-device-tab-cache";
             state.cache.hidden = true;
+            state.cache.setAttribute("aria-hidden", "true");
             root.appendChild(state.cache);
         }
+
         if (!state.bar || !state.bar.isConnected) {
             state.bar = document.createElement("div");
             state.bar.className = "sirk-device-tabs";
             state.bar.setAttribute("role", "tablist");
+            state.bar.setAttribute("aria-label", "Otwarte urządzenia");
             view.parentNode.insertBefore(state.bar, view);
         }
+
         if (!state.panes.all) {
-            state.panes.all = { key: "all", name: "ALL | Wszystkie", nodeId: "", fragment: document.createDocumentFragment() };
-            captureCurrent("all");
+            state.panes.all = { key: "all", name: "ALL | Wszystkie", nodeId: "", store: newStore("all") };
+            state.cache.appendChild(state.panes.all.store);
         }
+
+        syncBarVisibility();
         renderTabs();
+        bindRoot();
         return true;
     }
 
-    function currentNodes() {
-        return Array.prototype.slice.call(state.view.childNodes);
+    function syncBarVisibility() {
+        if (!state.bar || !state.view) return;
+        var hidden = state.view.hidden || state.view.style.display === "none";
+        state.bar.hidden = hidden;
+        state.bar.style.display = hidden ? "none" : "";
     }
 
-    function captureCurrent(key) {
-        var pane = state.panes[key];
-        if (!pane || !state.view) return;
-        pane.fragment = document.createDocumentFragment();
-        currentNodes().forEach(function (node) { pane.fragment.appendChild(node); });
+    function moveChildren(source, target) {
+        if (!source || !target) return;
+        while (source.firstChild) target.appendChild(source.firstChild);
     }
 
     function stashActive() {
-        if (!state.panes[state.active] || !state.view) return;
-        captureCurrent(state.active);
-        state.cache.appendChild(state.panes[state.active].fragment);
+        var pane = state.panes[state.active];
+        if (!pane || !state.view) return;
+        moveChildren(state.view, pane.store);
     }
 
     function activate(key) {
-        if (!state.panes[key] || key === state.active || !state.view) return;
-        stashActive();
+        var pane = state.panes[key];
+        if (!pane || !state.view) return;
+        if (key !== state.active) stashActive();
         state.active = key;
-        state.view.appendChild(state.panes[key].fragment);
+        moveChildren(pane.store, state.view);
         renderTabs();
-        state.view.dispatchEvent(new CustomEvent("mycompany:device-tab-activated", { bubbles: true, detail: { key: key } }));
+        state.view.dispatchEvent(new CustomEvent("mycompany:device-tab-activated", { bubbles: true, detail: { key: key, nodeId: pane.nodeId } }));
         window.dispatchEvent(new Event("resize"));
     }
 
     function disconnectPane(pane) {
-        if (!pane || !pane.fragment) return;
-        var holder = document.createElement("div");
-        holder.appendChild(pane.fragment);
-        holder.querySelectorAll("button").forEach(function (button) {
+        if (!pane || !pane.store) return;
+        pane.store.querySelectorAll("button").forEach(function (button) {
             var label = text(button.textContent).toLowerCase();
             if (label === "rozłącz" || label === "disconnect") {
                 try { button.click(); } catch (error) {}
             }
         });
-        holder.remove();
+        pane.store.remove();
     }
 
     function closeTab(key) {
         if (key === "all" || !state.panes[key]) return;
         var pane = state.panes[key];
         if (state.active === key) {
-            captureCurrent(key);
-            state.view.textContent = "";
+            stashActive();
             state.active = "all";
-            state.view.appendChild(state.panes.all.fragment);
+            moveChildren(state.panes.all.store, state.view);
         }
         disconnectPane(pane);
         delete state.panes[key];
@@ -116,11 +151,13 @@
             tab.setAttribute("role", "tab");
             tab.setAttribute("aria-selected", state.active === key ? "true" : "false");
             tab.title = pane.name;
+
             var label = document.createElement("span");
             label.className = "sirk-device-tab-label";
             label.textContent = pane.name;
             tab.appendChild(label);
             tab.onclick = function () { activate(key); };
+
             if (key !== "all") {
                 var close = document.createElement("span");
                 close.className = "sirk-device-tab-close";
@@ -141,23 +178,32 @@
     function attributeValue(element) {
         if (!element) return "";
         var names = ["data-node-id", "data-nodeid", "data-device-id", "data-deviceid", "data-node", "data-device"];
-        for (var i = 0; i < names.length; i++) {
-            var value = element.getAttribute && element.getAttribute(names[i]);
-            if (value) return value;
+        var nodes = [element].concat(Array.prototype.slice.call(element.querySelectorAll ? element.querySelectorAll("[data-node-id],[data-nodeid],[data-device-id],[data-deviceid],[data-node],[data-device],a[href]") : []));
+        for (var n = 0; n < nodes.length; n++) {
+            for (var i = 0; i < names.length; i++) {
+                var value = nodes[n].getAttribute && nodes[n].getAttribute(names[i]);
+                if (value) return value;
+            }
+            var href = nodes[n].getAttribute && nodes[n].getAttribute("href") || "";
+            var match = href.match(/[?&#](?:nodeid|node|device)=([^&#]+)/i);
+            if (match) return decodeURIComponent(match[1]);
         }
-        var href = element.getAttribute && element.getAttribute("href") || "";
-        var match = href.match(/[?&#](?:nodeid|node|device)=([^&#]+)/i);
-        return match ? decodeURIComponent(match[1]) : "";
+        return "";
     }
 
     function candidate(target) {
-        if (!state.view || state.active !== "all") return null;
-        var element = target.closest('[data-node-id],[data-nodeid],[data-device-id],[data-deviceid],[data-node],[data-device],.sirk-device-row,.sirk-device-card,.sirk-device-item,[role="row"]');
+        if (!state.view || state.active !== "all" || !target || !target.closest) return null;
+        var element = target.closest('[data-node-id],[data-nodeid],[data-device-id],[data-deviceid],[data-node],[data-device],.sirk-device-row,.sirk-device-card,.sirk-device-item,.device-row,.device-card,[role="row"]');
         if (!element || !state.view.contains(element)) return null;
-        if (element.closest("button,input,select,textarea,a") && !element.matches("button,a")) return null;
+        if (target.closest("button,input,select,textarea") && !target.closest(".sirk-device-row,.sirk-device-card,.sirk-device-item,.device-row,.device-card")) return null;
+
         var nodeId = attributeValue(element);
-        var nameNode = element.querySelector && element.querySelector('[data-device-name],.sirk-device-name,.device-name,strong,b');
-        var name = text(nameNode && nameNode.textContent || element.getAttribute("data-device-name") || element.textContent).split(" · ")[0];
+        var nameNode = element.querySelector && element.querySelector('[data-device-name],.sirk-device-name,.device-name,[data-host-name],strong,b');
+        var name = text(nameNode && nameNode.textContent || element.getAttribute("data-device-name") || element.getAttribute("data-host-name") || "");
+        if (!name) {
+            var raw = text(element.textContent);
+            name = raw.split(/\s{2,}| · |\n/)[0];
+        }
         if (!nodeId) nodeId = safeKey(name);
         if (!name || name.length > 100 || !nodeId) return null;
         return { element: element, key: "node:" + safeKey(nodeId), nodeId: nodeId, name: name.slice(0, 64) };
@@ -169,35 +215,31 @@
             return false;
         }
         state.pending = info;
-        captureCurrent("all");
-        state.cache.appendChild(state.panes.all.fragment);
-        window.clearTimeout(state.timer);
-        state.timer = window.setTimeout(finalizeOpen, 180);
+        stashActive();
+        window.clearTimeout(state.finalizeTimer);
+        state.finalizeTimer = window.setTimeout(finalizeOpen, 350);
         return true;
     }
 
     function finalizeOpen() {
         if (!state.pending || !state.view) return;
         var info = state.pending;
-        state.pending = null;
-        var nodes = currentNodes();
-        if (!nodes.length) {
-            state.view.appendChild(state.panes.all.fragment);
-            state.active = "all";
-            renderTabs();
+        var hasContent = state.view.childNodes.length > 0;
+        if (!hasContent) {
+            state.finalizeTimer = window.setTimeout(finalizeOpen, 200);
             return;
         }
-        var pane = { key: info.key, name: info.name, nodeId: info.nodeId, fragment: document.createDocumentFragment() };
-        nodes.forEach(function (node) { pane.fragment.appendChild(node); });
+        state.pending = null;
+        var pane = { key: info.key, name: info.name, nodeId: info.nodeId, store: newStore(info.key) };
+        state.cache.appendChild(pane.store);
         state.panes[info.key] = pane;
         state.active = info.key;
-        state.view.appendChild(pane.fragment);
         renderTabs();
         window.dispatchEvent(new Event("resize"));
     }
 
-    function bind() {
-        if (!ensureInfrastructure() || state.root.__myCompanyDeviceTabsBound) return;
+    function bindRoot() {
+        if (!state.root || state.root.__myCompanyDeviceTabsBound) return;
         state.root.__myCompanyDeviceTabsBound = true;
         state.root.addEventListener("click", function (event) {
             if (!ensureInfrastructure()) return;
@@ -212,26 +254,34 @@
             }
             beginOpen(info);
         }, true);
-        new MutationObserver(function () {
+    }
+
+    function scheduleEnsure() {
+        window.clearTimeout(state.ensureTimer);
+        state.ensureTimer = window.setTimeout(function () {
             ensureInfrastructure();
             if (state.pending) {
-                window.clearTimeout(state.timer);
-                state.timer = window.setTimeout(finalizeOpen, 120);
+                window.clearTimeout(state.finalizeTimer);
+                state.finalizeTimer = window.setTimeout(finalizeOpen, 120);
             }
-        }).observe(state.root, { childList: true, subtree: true });
+            syncBarVisibility();
+        }, 20);
     }
 
     function start() {
-        if (bind()) return;
-        var attempts = 0;
-        var timer = window.setInterval(function () {
-            attempts++;
-            if (ensureInfrastructure()) {
-                window.clearInterval(timer);
-                bind();
-            } else if (attempts > 120) window.clearInterval(timer);
-        }, 100);
+        ensureInfrastructure();
+        if (!state.observer) {
+            state.observer = new MutationObserver(scheduleEnsure);
+            state.observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden", "style", "class"] });
+        }
+        window.setInterval(function () { ensureInfrastructure(); }, 1000);
     }
+
+    window.MyCompanyDeviceTabs = {
+        mount: ensureInfrastructure,
+        activateAll: function () { if (state.panes.all) activate("all"); },
+        close: closeTab
+    };
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
     else start();
