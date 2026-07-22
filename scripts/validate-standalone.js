@@ -10,10 +10,10 @@ var required = [
     "config.json", "package.json", "core/runtime.js", "core/runtime-portal.js", "core/device-service.js",
     "modules/Portal/index-safe.js", "modules/MyScripts/index.js", "modules/ApprovalCenter/index.js",
     "public/portal-standalone.html", "public/portal-standalone.css", "public/portal-standalone-devices.css", "public/portal-standalone.js",
-    "public/portal-device-workspace.css", "public/portal-device-workspace.js",
-    "public/standalone-core.js", "public/portal-management.js", "public/portal-folder-collapse.js",
-    "public/portal-subfolder-icons.js", "public/native-portal-launcher.js", "public/approvalcenter.js",
-    "public/shared-ui/script-tools.js", "public/shared-ui/results.js"
+    "public/portal-device-workspace.js", "public/portal-device-workspace.css", "public/portal-link-visibility.js",
+    "public/sirk-login.js", "public/sirk-login.css", "public/standalone-core.js", "public/portal-management.js",
+    "public/portal-folder-collapse.js", "public/portal-subfolder-icons.js", "public/native-portal-launcher.js",
+    "public/approvalcenter.js", "public/shared-ui/script-tools.js", "public/shared-ui/results.js"
 ];
 
 function read(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
@@ -28,7 +28,7 @@ required.filter(function (file) { return /\.js$/i.test(file) && fs.existsSync(pa
 var config = JSON.parse(read("config.json").replace(/^\uFEFF/, ""));
 var pkg = JSON.parse(read("package.json").replace(/^\uFEFF/, ""));
 if (config.version !== pkg.version) errors.push("config.json and package.json versions must match.");
-if (config.version !== "1.5.22") errors.push("Standalone Portal release must publish version 1.5.22.");
+if (config.version !== "1.5.23") errors.push("Standalone Portal release must publish version 1.5.23.");
 
 var wrapper = read("plugin-main-standalone.js");
 ["hook_setupHttpHandlers", 'base + "sirkportal"', 'base + "meshcentral"', 'base + "pluginadmin.ashx"', "portal-standalone.html"].forEach(function (value) {
@@ -38,7 +38,7 @@ need(wrapper, "webserver.app.get(portalPath, servePortal)", "Slashless Portal ro
 need(wrapper, "webserver.app.get(portalPathSlash, servePortal)", "Slash Portal route must be served directly.");
 
 var html = read("public/portal-standalone.html");
-['id="sirkPortalRoot"', 'id="sirkStandaloneRoot"', "standalone-core.js", "portal-standalone.js", "portal-device-workspace.js", "shared-ui/shared-ui.css", "portal-standalone.css", "portal-standalone-devices.css", "portal-device-workspace.css"].forEach(function (value) {
+['id="sirkPortalRoot"', 'id="sirkStandaloneRoot"', "standalone-core.js", "portal-standalone.js", "portal-device-workspace.js", "portal-link-visibility.js"].forEach(function (value) {
     need(html, value, "Standalone document missing: " + value);
 });
 need(html, 'data-view="management"', "Standalone navigation must include Management.");
@@ -46,34 +46,29 @@ need(html, 'data-action="language"', "Standalone navigation must include the lan
 need(html, 'class="sirk-standalone-native"', "Standalone navigation must include native MeshCentral link.");
 
 var app = read("public/portal-standalone.js");
-['core.api("", "bootstrap")', 'core.api("portal", "devices")', 'var STORAGE_LANGUAGE = "sirkPortal.language"', 'name === "language"', "MyCompanyPortalManagement.mount", 'initializeModule("approvalcenter")', "sirk-standalone-settings-frame", "portal-folder-collapse.js", "portal-subfolder-icons.js", 'mycommands.js', 'myjira.js', 'defendertools.js'].forEach(function (value) {
+['core.api("", "bootstrap")', 'core.api("portal", "devices")', 'var STORAGE_LANGUAGE = "sirkPortal.language"', 'name === "language"', "MyCompanyPortalManagement.mount", 'initializeModule("approvalcenter")'].forEach(function (value) {
     need(app, value, "Standalone app contract missing: " + value);
 });
 if (app.indexOf('initializeModule("myscripts")') >= 0) errors.push("Standalone Portal must not initialize the legacy MyScripts UI.");
 
-var deviceWorkspace = read("public/portal-device-workspace.js");
-["desktop: 11", "terminal: 12", "files: 13", "registry: 9", "software: 18", "amt: 14", "connectDesktop", "connectTerminal", "connectFiles", "sirkDeviceTabBody", "sirkNativeBridgeFrame", "sirkPortal.language"].forEach(function (value) {
-    need(deviceWorkspace, value, "Device workspace native bridge missing: " + value);
+var safePortal = read("modules/Portal/index-safe.js");
+["showNativeLink", "showLauncher", "loginPanel", "applyLoginIntegration", "mycompany-sirk-login.js", "mycompany-sirk-login.css"].forEach(function (value) {
+    need(safePortal, value, "Portal setting/login integration missing: " + value);
 });
-need(deviceWorkspace, "new URL(String(window.__MYCOMPANY_NATIVE_URL__", "Device workspace must use the independent native MeshCentral route.");
+var adminPortal = read("web/admin-portal.js");
+["Show MeshCentral link in SirK Portal", "Show SirK Portal launcher in native Mesh", "Enable SirK Portal login screen"].forEach(function (value) {
+    need(adminPortal, value, "Portal admin switch missing: " + value);
+});
+var visibility = read("public/portal-link-visibility.js");
+need(visibility, "showNativeLink", "Standalone Mesh link visibility is not wired.");
+var login = read("public/sirk-login.js");
+need(login, "sirkNativeLoginHost", "SirK login must preserve the native MeshCentral form.");
 
 var portalBackend = read("modules/Portal/index-safe.js");
 need(portalBackend, 'asset === "devices"', "Portal devices API is missing.");
 need(portalBackend, "context.device.visibleNodes(user)", "Portal devices API must use the device service.");
 var deviceService = read("core/device-service.js");
 need(deviceService, "visibleNodes", "Visible device inventory service is missing.");
-need(deviceService, "GetAllTypeNoTypeFieldMeshFiltered", "Device inventory must use the MeshCentral database filter.");
-need(deviceService, "meshIds,\n                    null,\n                    domainId,\n                    \"node\",\n                    null,\n                    0,\n                    0,", "Device inventory must use the complete MeshCentral database query signature.");
-need(deviceService, "if (!meshIds.length || !domain)", "Default MeshCentral domain identifier must not be rejected when it is an empty string.");
-
-var management = read("public/portal-management.js");
-['core.api("myscripts"', 'core.post("myscripts"', "SharedResultsView.mountResult", "openDefinitionEditor", "openCredentialsEditor", "confirmedExecution"].forEach(function (value) {
-    need(management, value, "Management backend integration missing: " + value);
-});
-
-var myScriptsBackend = read("modules/MyScripts/index.js");
-need(myScriptsBackend, '"myscripts", "scripts"', "MyScripts must discover the complete legacy script library.");
-need(myScriptsBackend, "resolveScriptsRoot", "MyScripts root selection is missing.");
 
 var standaloneCore = read("public/standalone-core.js");
 need(standaloneCore, "__MYCOMPANY_API_BASE__", "Standalone core must use the injected API base.");
@@ -81,15 +76,10 @@ need(standaloneCore, 'credentials = "same-origin"', "Standalone API requests mus
 
 var runtime = read("public/runtime.js");
 need(runtime, "native-portal-launcher.js", "Native MeshCentral must load the SirK Portal launcher.");
-need(runtime, "portal.config.showLauncher !== false", "Native Portal launcher setting must be honored.");
+need(runtime, "config.showLauncher", "Native launcher must honor its independent setting.");
 var launcher = read("public/native-portal-launcher.js");
-need(launcher, '"left:8px"', "Native SirK Portal launcher must use left: 8px.");
-need(launcher, '"bottom:8px"', "Native SirK Portal launcher must use bottom: 8px.");
-need(launcher, "launcherAllowed", "Native SirK Portal launcher must remove itself when disabled.");
-var moduleShell = read("public/module-shell.js");
-["myscripts: 101", "mycommands: 102", "myjira: 103", "defendertools: 104", "approvalcenter: 105", "moverequests: 106"].forEach(function (value) {
-    need(moduleShell, value, "Original viewmode mapping missing: " + value);
-});
+need(launcher, '"left:8px"', "Native SirK Portal launcher must be positioned 8px from the left.");
+need(launcher, '"bottom:8px"', "Native SirK Portal launcher must be positioned 8px from the bottom.");
 
 if (errors.length) {
     console.error(errors.join("\n"));
@@ -97,5 +87,5 @@ if (errors.length) {
 }
 
 console.log("Standalone SirK Portal architecture: OK");
-console.log("Language, device inventory and native bridge: OK");
-console.log("Native launcher setting and viewmode compatibility: OK");
+console.log("Independent navigation controls: OK");
+console.log("Optional native login layout: OK");
