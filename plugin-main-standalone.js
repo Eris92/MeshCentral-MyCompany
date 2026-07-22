@@ -4,7 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var baseFactory = require("./plugin-main.js");
 
-var VERSION = "1.5.1";
+var VERSION = "1.5.2";
 
 function normalizeBase(value) {
     value = String(value || "/");
@@ -89,22 +89,22 @@ module.exports.createPlugin = function (parent, shortName) {
 
     function registerDomain(webserver, domain) {
         var base = normalizeBase(domain && domain.url || "/");
-        var portalPath = base + "sirkportal/";
-        var nativePath = base + "meshcentral/";
+        var portalPath = base + "sirkportal";
+        var portalPathSlash = portalPath + "/";
+        var nativePath = base + "meshcentral";
+        var nativePathSlash = nativePath + "/";
 
-        webserver.app.get(base + "sirkportal", function (req, res) {
-            redirect(res, portalPath);
-        });
-
-        // The shell is safe to serve without probing private session internals.
-        // Module/API requests remain protected by MeshCentral's existing session checks.
-        webserver.app.get(portalPath, function (req, res) {
+        function servePortal(req, res) {
             if (!portalEnabled()) {
-                send(res, 503, "text/html; charset=utf-8", "<!doctype html><meta charset=\"utf-8\"><title>SirK Portal disabled</title><p>SirK Portal is disabled in MyCompany settings.</p><p><a href=\"" + nativePath + "\">Open MeshCentral</a></p>");
+                send(res, 503, "text/html; charset=utf-8", "<!doctype html><meta charset=\"utf-8\"><title>SirK Portal disabled</title><p>SirK Portal is disabled in MyCompany settings.</p><p><a href=\"" + nativePathSlash + "\">Open MeshCentral</a></p>");
                 return;
             }
             send(res, 200, "text/html; charset=utf-8", portalHtml(base));
-        });
+        }
+
+        // Serve both forms directly. No slash normalization redirect, so reverse proxies cannot create a loop.
+        webserver.app.get(portalPath, servePortal);
+        webserver.app.get(portalPathSlash, servePortal);
 
         webserver.app.get(base + "sirkportal/assets/*", function (req, res) {
             var asset = req.params && req.params[0] || "";
@@ -119,14 +119,11 @@ module.exports.createPlugin = function (parent, shortName) {
             });
         });
 
-        webserver.app.get(base + "meshcentral", function (req, res) {
-            redirect(res, nativePath);
-        });
-
-        // Explicit native entry. No redirect from root to Portal is registered.
-        webserver.app.get(nativePath, function (req, res) {
+        function openNative(req, res) {
             redirect(res, base + "?sirkNative=1");
-        });
+        }
+        webserver.app.get(nativePath, openNative);
+        webserver.app.get(nativePathSlash, openNative);
     }
 
     plugin.hook_setupHttpHandlers = function (webserver, meshServer) {
