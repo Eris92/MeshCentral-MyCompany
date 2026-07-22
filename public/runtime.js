@@ -14,6 +14,19 @@
         myscripts: "myscripts.js"
     };
     var order = ["approvalcenter", "moverequests", "mycommands", "myjira", "defendertools", "myscripts"];
+    var viewModes = {
+        myscripts: 101,
+        mycommands: 102,
+        myjira: 103,
+        defendertools: 104,
+        approvalcenter: 105,
+        moverequests: 106
+    };
+
+    function requestedViewMode() {
+        try { return Number(new URL(window.location.href).searchParams.get("viewmode") || 0); }
+        catch (error) { return 0; }
+    }
 
     function installCredentialsActions() {
         if (!window.SharedScriptTools || window.__myCompanyCredentialsActions) return;
@@ -62,6 +75,25 @@
         });
     }
 
+    function configureModule(key, module) {
+        if (!module || !module.api || !module.api.definition) return;
+        module.api.definition.viewMode = viewModes[key] || module.api.definition.viewMode || 960;
+    }
+
+    function openRequestedModule() {
+        var target = requestedViewMode();
+        if (!target) return;
+        Object.keys(viewModes).some(function (key) {
+            if (viewModes[key] !== target) return false;
+            var module = window.MyCompanyModules[key];
+            if (module && typeof module.open === "function") {
+                window.setTimeout(function () { module.open(); }, 0);
+                return true;
+            }
+            return false;
+        });
+    }
+
     runtime.initialize = function () {
         if (runtime.state.initializePromise) return runtime.state.initializePromise;
         runtime.state.initializePromise = core.api("", "bootstrap").then(function (bootstrap) {
@@ -97,6 +129,7 @@
                     return core.loadScript("mycompany-module-" + key, core.assetUrl("", files[key]));
                 }).then(function () {
                     var module = window.MyCompanyModules[key];
+                    configureModule(key, module);
                     if (!module || typeof module.initialize !== "function") return null;
                     return Promise.resolve(module.initialize(state)).then(function () {
                         if (runtime.state.nodeId && typeof module.onDeviceRefreshEnd === "function") {
@@ -106,7 +139,9 @@
                 });
             });
 
-            return chain;
+            return chain.then(function () {
+                openRequestedModule();
+            });
         }).catch(function (error) {
             runtime.state.initializePromise = null;
             throw error;
