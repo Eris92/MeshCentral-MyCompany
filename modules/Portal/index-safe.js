@@ -48,6 +48,7 @@ module.exports.createModule = function (context) {
     var originalClientConfig = module.clientConfig;
 
     module.initialize = function () {
+        disableEarlyOverlay(context);
         return Promise.resolve(originalInitialize.call(module)).then(function (value) {
             disableEarlyOverlay(context);
             return value;
@@ -59,6 +60,7 @@ module.exports.createModule = function (context) {
     };
 
     module.apiPost = function (asset, req, user) {
+        disableEarlyOverlay(context);
         return Promise.resolve(originalApiPost.call(module, asset, req, user)).then(function (value) {
             disableEarlyOverlay(context);
             if (value && value.vendor) value.vendor.earlyOverlay = false;
