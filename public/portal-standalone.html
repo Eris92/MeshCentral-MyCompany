@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="__ASSET_BASE__/portal-standalone.css?v=__VERSION__">
   <link rel="stylesheet" href="__ASSET_BASE__/portal-standalone-devices.css?v=__VERSION__">
   <link rel="stylesheet" href="__ASSET_BASE__/portal-device-workspace.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__">
   <link rel="stylesheet" href="__ASSET_BASE__/portal-module-shell.css?v=__VERSION__">
   <style>
     .sirk-connect-wrap{position:relative;display:inline-flex;align-items:center}.sirk-connect-split{display:inline-flex;align-items:stretch}.sirk-connect-split #sirkNativeConnect{border-radius:7px 0 0 7px;border-right:0;background:#198754;border-color:#198754;color:#fff}.sirk-connect-arrow,.sirk-connect-amt{height:32px;border:1px solid #198754;background:#198754;color:#fff;font:600 13px "Segoe UI",Arial,sans-serif;cursor:pointer}.sirk-connect-arrow{width:28px;padding:0;border-radius:0 7px 7px 0;border-left:1px solid rgba(255,255,255,.4)}.sirk-connect-amt{margin-left:8px;padding:0 12px;border-radius:7px}.sirk-connect-amt[hidden]{display:none!important}.sirk-connect-menu{position:absolute;z-index:100;top:calc(100% + 4px);left:0;display:grid;min-width:190px;padding:5px 0;border:1px solid var(--sirk-border,#dce3ec);border-radius:9px;background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033);box-shadow:0 12px 28px rgba(15,23,42,.24)}.sirk-connect-menu[hidden]{display:none!important}.sirk-connect-menu button{min-height:34px;padding:7px 13px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}.sirk-connect-menu button:hover{background:var(--sirk-hover,#eef3f9)}
@@ -46,7 +47,7 @@
           <button type="button" data-view="management"><span class="icon-management"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M8 4v6M8 14v6M16 14v6M16 4v6"/></svg></span><b>Zarządzanie</b></button>
           <button type="button" data-view="reports"><span class="icon-reports"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7M3 20h18"/></svg></span><b>Raporty</b></button>
           <button type="button" data-view="security"><span class="icon-security"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3Z"/><path d="M12 8v5M12 17h.01"/></svg></span><b>Bezpieczeństwo</b></button>
-          <button type="button" data-view="settings"><span class="icon-settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><b>Ustawienia</b></button>
+          <button type="button" data-view="settings"><span class="icon-settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><b>Ustawienia</b></button>
         </nav>
         <a class="sirk-standalone-native" href="__NATIVE_URL__"><span><svg viewBox="0 0 24 24"><path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v6H5V6h6"/></svg></span><b>MeshCentral</b></a>
       </aside>
@@ -74,6 +75,7 @@
   <script src="__ASSET_BASE__/standalone-core.js?v=__VERSION__"></script>
   <script src="__ASSET_BASE__/portal-standalone.js?v=__VERSION__"></script>
   <script src="__ASSET_BASE__/portal-device-workspace.js?v=__VERSION__"></script>
+  <script src="__ASSET_BASE__/portal-device-tabs.js?v=__VERSION__"></script>
   <script>
   (function(){
     "use strict";
