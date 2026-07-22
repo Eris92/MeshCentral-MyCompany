@@ -4,7 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var baseFactory = require("./plugin-main.js");
 
-var VERSION = "1.5.4";
+var VERSION = "1.5.8";
 
 function normalizeBase(value) {
     value = String(value || "/");
