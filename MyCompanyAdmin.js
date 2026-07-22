@@ -31,6 +31,7 @@ module.exports.admin = function (plugin) {
         "portal-fix.js": ["public/portal-fix.js", "text/javascript; charset=utf-8"],
         "portal-ui-fix.js": ["public/portal-ui-fix.js", "text/javascript; charset=utf-8"],
         "portal.css": ["public/portal.css", "text/css; charset=utf-8"],
+        "native-approval.css": ["public/native-approval.css", "text/css; charset=utf-8"],
         "myscripts.js": ["public/myscripts.js", "text/javascript; charset=utf-8"],
         "myscripts.css": ["public/myscripts.css", "text/css; charset=utf-8"],
         "myscripts-menu.svg": ["assets/myscripts-menu.svg", "image/svg+xml; charset=utf-8"],
