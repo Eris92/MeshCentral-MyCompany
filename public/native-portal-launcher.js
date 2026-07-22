@@ -11,8 +11,20 @@
         return base + "sirkportal/";
     }
 
+    function launcherAllowed() {
+        var runtime = window.MyCompanyRuntime;
+        var bootstrap = runtime && runtime.state && runtime.state.bootstrap;
+        var portal = bootstrap && bootstrap.modules && bootstrap.modules.portal;
+        return !!(portal && portal.enabled && portal.ready !== false && (!portal.config || portal.config.showLauncher !== false));
+    }
+
     function ensureLauncher() {
-        if (!document.body || document.getElementById("myCompanyPortalLauncher")) return;
+        var existing = document.getElementById("myCompanyPortalLauncher");
+        if (!launcherAllowed()) {
+            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+            return;
+        }
+        if (!document.body || existing) return;
         var link = document.createElement("a");
         link.id = "myCompanyPortalLauncher";
         link.href = portalUrl();
