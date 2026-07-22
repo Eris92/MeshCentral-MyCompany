@@ -82,7 +82,7 @@ function createPlugin(parent, shortName) {
     obj.onWebUIStartupEnd = function () {
         if (typeof window === "undefined" || typeof document === "undefined") return;
 
-        var browserVersion = "1.5.84";
+        var browserVersion = "1.5.85";
         var browserPin = "MyCompany";
         window.__MYCOMPANY_VERSION__ = browserVersion;
         document.documentElement.classList.add("mycompany-native-ui");
