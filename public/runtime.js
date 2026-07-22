@@ -78,8 +78,7 @@
                 .then(function () { return core.loadScript("mycompany-shared-script-definition-form", core.assetUrl("", "shared-ui/script-definition-form.js")); })
                 .then(function () { return core.loadScript("mycompany-shared-confirm-execution-form", core.assetUrl("", "shared-ui/confirm-execution-form.js")); })
                 .then(function () { installCredentialsActions(); return core.loadScript("mycompany-shared-script-edit-actions", core.assetUrl("", "shared-ui/script-edit-actions.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-system-credentials-form", core.assetUrl("", "shared-ui/system-credentials-form.js")); })
-                .then(function () { return core.loadScript("mycompany-portal-icon-data", core.assetUrl("", "portal-icon-data.js")); });
+                .then(function () { return core.loadScript("mycompany-shared-system-credentials-form", core.assetUrl("", "shared-ui/system-credentials-form.js")); });
 
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
@@ -94,6 +93,8 @@
                 });
             });
 
+            // Native MeshCentral only receives a small link launcher to the standalone Portal.
+            // No Portal layout, theme or standalone renderer is loaded here.
             var portal = bootstrap.modules && bootstrap.modules.portal;
             if (portal && portal.enabled && portal.ready !== false) {
                 chain = chain.then(function () {
