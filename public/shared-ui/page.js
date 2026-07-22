@@ -13,18 +13,32 @@
             var host = typeof options.container === "string"
                 ? document.querySelector(options.container)
                 : options.container;
+            var preset = String(options.preset || "standard").toLowerCase();
+
             host.innerHTML = "";
-            host.className = "mc-shared-page";
+            host.className = "mc-shared-page mc-portal-module-shell mc-portal-module-" + preset;
+            host.setAttribute("data-module-preset", preset);
+
             var tabsHost = document.createElement("div");
+            tabsHost.className = "mc-portal-module-tabs";
             var toolbarHost = document.createElement("div");
+            toolbarHost.className = "mc-portal-module-toolbar";
             var layoutHost = document.createElement("div");
+            layoutHost.className = "mc-portal-module-workspace";
+
             host.appendChild(tabsHost);
             host.appendChild(toolbarHost);
             host.appendChild(layoutHost);
+
             var layout = window.SharedLayout.mount({
                 container: layoutHost,
                 storageKey: storageKey(options)
             });
+            layout.root.classList.add("mc-portal-module-layout");
+            layout.primary.classList.add("mc-portal-module-primary");
+            layout.secondary.classList.add("mc-portal-module-secondary");
+            layout.details.classList.add("mc-portal-module-details");
+
             var toolbar = window.SharedToolbar.mount({
                 container: toolbarHost,
                 preset: options.preset || "standard",
