@@ -4,7 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var baseFactory = require("./plugin-main.js");
 
-var VERSION = "1.5.22";
+var VERSION = "1.5.23";
 
 function normalizeBase(value) {
     value = String(value || "/");
@@ -118,9 +118,7 @@ module.exports.createPlugin = function (parent, shortName) {
             });
         });
 
-        function openNative(req, res) {
-            redirect(res, base + "?sirkNative=1");
-        }
+        function openNative(req, res) { redirect(res, base + "?sirkNative=1"); }
         webserver.app.get(nativePath, openNative);
         webserver.app.get(nativePathSlash, openNative);
     }
