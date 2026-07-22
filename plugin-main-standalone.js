@@ -4,7 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var baseFactory = require("./plugin-main.js");
 
-var VERSION = "1.5.0";
+var VERSION = "1.5.1";
 
 function normalizeBase(value) {
     value = String(value || "/");
@@ -60,7 +60,6 @@ function safePublicPath(asset) {
 
 module.exports.createPlugin = function (parent, shortName) {
     var plugin = baseFactory.createPlugin(parent, shortName);
-    var originalWebUi = plugin.onWebUIStartupEnd;
 
     if (plugin.exports.indexOf("hook_setupHttpHandlers") < 0) plugin.exports.push("hook_setupHttpHandlers");
 
@@ -71,10 +70,6 @@ module.exports.createPlugin = function (parent, shortName) {
         } catch (error) {
             return false;
         }
-    }
-
-    function authenticated(req) {
-        return !!(req && req.session && req.session.userid);
     }
 
     function portalHtml(base) {
@@ -101,23 +96,17 @@ module.exports.createPlugin = function (parent, shortName) {
             redirect(res, portalPath);
         });
 
+        // The shell is safe to serve without probing private session internals.
+        // Module/API requests remain protected by MeshCentral's existing session checks.
         webserver.app.get(portalPath, function (req, res) {
             if (!portalEnabled()) {
-                redirect(res, nativePath);
-                return;
-            }
-            if (!authenticated(req)) {
-                redirect(res, base + "?sirkportal=1");
+                send(res, 503, "text/html; charset=utf-8", "<!doctype html><meta charset=\"utf-8\"><title>SirK Portal disabled</title><p>SirK Portal is disabled in MyCompany settings.</p><p><a href=\"" + nativePath + "\">Open MeshCentral</a></p>");
                 return;
             }
             send(res, 200, "text/html; charset=utf-8", portalHtml(base));
         });
 
         webserver.app.get(base + "sirkportal/assets/*", function (req, res) {
-            if (!authenticated(req)) {
-                send(res, 401, "text/plain; charset=utf-8", "Authentication required");
-                return;
-            }
             var asset = req.params && req.params[0] || "";
             var target = safePublicPath(asset);
             if (!target) {
@@ -134,17 +123,9 @@ module.exports.createPlugin = function (parent, shortName) {
             redirect(res, nativePath);
         });
 
+        // Explicit native entry. No redirect from root to Portal is registered.
         webserver.app.get(nativePath, function (req, res) {
             redirect(res, base + "?sirkNative=1");
-        });
-
-        // Registered before MeshCentral's native root route.
-        webserver.app.get(base, function (req, res, next) {
-            if (!portalEnabled() || !authenticated(req) || String(req.query && req.query.sirkNative || "") === "1") {
-                next();
-                return;
-            }
-            redirect(res, portalPath);
         });
     }
 
@@ -157,16 +138,6 @@ module.exports.createPlugin = function (parent, shortName) {
             if (domain.dns != null || domain.share != null) return;
             registerDomain(webserver, domain);
         });
-    };
-
-    // Native mode is intentionally clean: no Portal overlay and no MyCompany browser shell.
-    plugin.onWebUIStartupEnd = function () {
-        if (typeof window !== "undefined") {
-            try {
-                if (new URL(window.location.href).searchParams.get("sirkNative") === "1") return;
-            } catch (ignored) {}
-        }
-        return originalWebUi.apply(plugin, arguments);
     };
 
     return plugin;
