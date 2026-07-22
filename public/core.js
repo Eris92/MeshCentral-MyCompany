@@ -2,7 +2,7 @@
     "use strict";
     window.MyCompanyCore = window.MyCompanyCore || {};
     var core = window.MyCompanyCore;
-    core.assetVersion = "1.5.5";
+    core.assetVersion = "1.5.6";
 
     function svgData(svg) {
         return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
@@ -153,7 +153,27 @@
         }
         core.workspaceState = null;
     };
+
+    core.isMyCompanyTarget = function (target) {
+        if (!target || !target.closest) return false;
+        return !!target.closest("#MyCompanyWorkspace,[id^='MainMenuMyCompany-'],[id^='LeftMenuMyCompany-'],#myCompanyPortalLauncher");
+    };
+
+    core.installNativeRestoreGuard = function () {
+        if (core.nativeRestoreGuardInstalled) return;
+        core.nativeRestoreGuardInstalled = true;
+        document.addEventListener("pointerdown", function (event) {
+            if (!core.workspaceState || core.isMyCompanyTarget(event.target)) return;
+            core.restoreWorkspace();
+        }, true);
+        document.addEventListener("keydown", function (event) {
+            if ((event.key !== "Enter" && event.key !== " ") || !core.workspaceState || core.isMyCompanyTarget(event.target)) return;
+            core.restoreWorkspace();
+        }, true);
+    };
+
     core.showWorkspace = function (title, viewMode, render) {
+        core.installNativeRestoreGuard();
         if (typeof window.go === "function" && Number(window.xxcurrentView) !== 1) {
             try { window.go(1); } catch (error) {}
         }
@@ -175,13 +195,12 @@
                 child.hidden = true;
                 child.style.setProperty("display", "none", "important");
             }
-            core.workspaceState = { heading: heading, headingText: heading.textContent, hidden: hidden };
+            core.workspaceState = { heading: heading, headingText: heading.textContent, hidden: hidden, viewMode: viewMode };
         }
         heading.textContent = title;
         while (workspace.firstChild) workspace.removeChild(workspace.firstChild);
         workspace.style.display = "block";
         render(workspace);
-        window.xxcurrentView = viewMode;
         return false;
     };
     core.element = function (tag, className, text) {
