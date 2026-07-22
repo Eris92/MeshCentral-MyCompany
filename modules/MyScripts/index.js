@@ -6,10 +6,50 @@ var adminFactory = require("../../core/script-admin-service.js");
 var executorFactory = require("../../core/server-script-executor.js");
 
 module.exports.createModule = function (context) {
-    var root = context.path.join(context.pluginRoot, "seed", "MyScripts");
+    function directoryExists(target) {
+        try { return context.fs.statSync(target).isDirectory(); }
+        catch (error) { return false; }
+    }
+
+    function hasScripts(target) {
+        if (!directoryExists(target)) return false;
+        var found = false;
+        function walk(directory, depth) {
+            if (found || depth > 12) return;
+            var entries = [];
+            try { entries = context.fs.readdirSync(directory, { withFileTypes: true }); }
+            catch (error) { return; }
+            entries.forEach(function (entry) {
+                if (found || entry.name === ".git" || entry.name === "node_modules") return;
+                var item = context.nativePath.join(directory, entry.name);
+                if (entry.isDirectory()) walk(item, depth + 1);
+                else if (entry.isFile() && /\.(ps1|cmd|bat)$/i.test(entry.name)) found = true;
+            });
+        }
+        walk(target, 0);
+        return found;
+    }
+
+    function resolveScriptsRoot() {
+        var pluginsRoot = context.parent && context.parent.pluginPath
+            ? context.parent.pluginPath
+            : context.nativePath.dirname(context.pluginRoot);
+        var candidates = [
+            context.nativePath.join(pluginsRoot, "myscripts", "scripts"),
+            context.nativePath.join(pluginsRoot, "MyScripts", "scripts"),
+            context.nativePath.join(context.dataRoot, "myscripts", "scripts"),
+            context.nativePath.join(context.pluginRoot, "seed", "MyScripts")
+        ];
+        for (var index = 0; index < candidates.length; index++) {
+            if (hasScripts(candidates[index])) return candidates[index];
+        }
+        return candidates[candidates.length - 1];
+    }
+
+    var root = resolveScriptsRoot();
     var library = libraryFactory.createScriptLibrary({
         fs: context.fs,
-        path: context.path,
+        path: context.nativePath,
         root: root,
         readOnly: true,
         allowWrite: true
