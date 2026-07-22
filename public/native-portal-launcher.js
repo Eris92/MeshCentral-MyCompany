@@ -21,7 +21,7 @@
         link.innerHTML = '<span aria-hidden="true">S</span><b>SirK Portal</b>';
         link.style.cssText = [
             "position:fixed",
-            "right:18px",
+            "left:18px",
             "bottom:18px",
             "z-index:2147483000",
             "display:flex",
