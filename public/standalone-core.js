@@ -2,6 +2,7 @@
     "use strict";
 
     window.MyCompanyCore = window.MyCompanyCore || {};
+    window.MyCompanyModules = window.MyCompanyModules || {};
     var core = window.MyCompanyCore;
     core.assetVersion = String(window.__MYCOMPANY_PORTAL_VERSION__ || "1.5.0");
 
@@ -62,6 +63,17 @@
             (document.head || document.documentElement).appendChild(script);
         });
     };
+
+    // Standalone modules share backend logic but never register native MeshCentral menus.
+    core.ensureMenu = function () { return false; };
+    core.showWorkspace = function (title, viewMode, render) {
+        var host = document.getElementById("sirkStandaloneContent");
+        if (!host) return false;
+        host.innerHTML = "";
+        render(host);
+        return false;
+    };
+    core.restoreWorkspace = function () {};
 
     core.element = function (tag, className, text) {
         var value = document.createElement(tag);
