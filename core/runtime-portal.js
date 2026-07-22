@@ -4,11 +4,13 @@ var shared = require("./shared.js");
 var baseFactory = require("./runtime.js");
 var portalFactory = require("../modules/Portal/index-safe.js");
 
-var VERSION = "1.5.22";
+var VERSION = "1.5.23";
 var PORTAL_DEFAULTS = {
     enabled: false,
     defaultView: "overview",
-    showLauncher: true
+    showLauncher: true,
+    showNativeLink: true,
+    loginPanel: false
 };
 
 module.exports.createRuntime = function (options) {
@@ -39,11 +41,7 @@ module.exports.createRuntime = function (options) {
                 access: module.getAccess(user)
             };
         });
-        return {
-            ok: true,
-            version: VERSION,
-            modules: result
-        };
+        return { ok: true, version: VERSION, modules: result };
     };
 
     var originalRequest = runtime.request;
