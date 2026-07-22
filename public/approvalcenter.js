@@ -1,17 +1,326 @@
-(function(){"use strict";
-var selectedProvider="",selectedStatus="",overviewFilter="",providers=[],requests=[];
-var order=["moverequests","mycommands","myscripts"],titles={moverequests:"Move Request",mycommands:"Commands",myscripts:"Scripts"},icons={moverequests:"⇄",mycommands:"⌨",myscripts:"▶"};
-function ordered(rows){var map=Object.create(null);(rows||[]).forEach(function(x){map[x.type]=x});return order.map(function(k){return map[k]}).filter(Boolean)}
-function nav(host,o){var b=document.createElement("button");b.type="button";b.className=o.className||"mc-shared-nav-item";b.classList.toggle("active",o.active===true);b.title=o.title;var i=document.createElement("span");i.className="mc-approval-nav-icon";i.setAttribute("aria-hidden","true");i.textContent=o.icon||"•";var l=document.createElement("span");l.className="mc-approval-nav-label";l.textContent=o.title+(o.count==null?"":" - "+o.count);b.appendChild(i);b.appendChild(l);b.onclick=o.onClick;host.appendChild(b);return b}
-function providerButtons(host,s){providers.forEach(function(p){nav(host,{title:titles[p.type]||p.tabTitle||p.title,icon:icons[p.type]||"◆",className:"mc-shared-nav-item mc-approval-provider",active:selectedProvider===p.type,onClick:function(){selectedProvider=p.type;selectedStatus="";s.render()}})})}
-function primary(s){var h=s.state.page.primary;h.innerHTML="";nav(h,{title:"Overview",icon:"▦",active:!selectedProvider,onClick:function(){selectedProvider="";selectedStatus="";s.render()}});providerButtons(h,s)}
-function counts(rows){var c={all:rows.length,moverequests:0,mycommands:0,myscripts:0};rows.forEach(function(r){if(Object.prototype.hasOwnProperty.call(c,r.type))c[r.type]++});return c}
-function overviewFilters(s,rows){var h=s.state.page.secondary,c=counts(rows);h.innerHTML="";nav(h,{title:"All",icon:"▤",count:c.all,active:!overviewFilter,onClick:function(){overviewFilter="";s.render()}});providers.forEach(function(p){nav(h,{title:titles[p.type]||p.title,icon:icons[p.type]||"◆",count:c[p.type]||0,active:overviewFilter===p.type,onClick:function(){overviewFilter=p.type;s.render()}})})}
-function statuses(s){var h=s.state.page.secondary;h.innerHTML="";window.SharedStatusNav.list().forEach(function(x){nav(h,{title:x.title,icon:x.icon,className:"mc-shared-nav-item mc-approval-status",active:selectedStatus===x.key,onClick:function(){selectedStatus=x.key;s.render()}})})}
-function decisions(s,r,host){if(!r.canDecide)return;var a=document.createElement("div");a.className="mc-approval-request-actions";[{t:"Approve",v:true,c:"btn btn-primary btn-sm"},{t:"Reject",v:false,c:"btn btn-secondary btn-sm"}].forEach(function(x){var b=document.createElement("button");b.type="button";b.className=x.c;b.textContent=x.t;b.onclick=function(){b.disabled=true;s.post("decide",{id:r.id,approved:x.v,note:""}).then(s.render).catch(function(e){b.disabled=false;s.error(host,e)})};a.appendChild(b)});host.appendChild(a)}
-function cards(s,title,empty,rows){var h=s.state.page.details;h.innerHTML="";rows=rows||requests;if(title)h.appendChild(s.element("h3","mc-approval-details-title",title));if(!rows.length){h.appendChild(s.card("No requests",empty||"No requests match the selected provider and status."));return}var g=document.createElement("div");g.className="mc-approval-card-grid";h.appendChild(g);rows.forEach(function(r){var c=s.card(r.title||r.type,(r.requester&&r.requester.name||"")+" · "+r.status);c.classList.add("mc-approval-request-card");c.appendChild(s.element("div","mc-shared-muted",new Date(r.createdAt).toLocaleString()));if(r.summary)c.appendChild(s.element("div","mc-approval-request-summary",r.summary));c.appendChild(s.element("div","mc-approval-request-provider",titles[r.type]||r.type));decisions(s,r,c);g.appendChild(c)})}
-function approver(r){if(r.approver&&r.approver.name)return r.approver.name;var d=Array.isArray(r.approvalDecisions)?r.approvalDecisions:[];for(var i=d.length-1;i>=0;i--)if(d[i].user&&d[i].user.name)return d[i].user.name;return"—"}
-function table(s,title,empty,rows){var h=s.state.page.details;window.SharedResultsView.mountTable(h,{title:title,rows:rows||[],filter:true,filterPlaceholder:"Filter requests",showView:true,dialogTitle:"Request details",resultValue:function(r){try{return JSON.stringify(r,null,2)}catch(e){return r.summary||""}},columns:[{title:"DateTime",value:function(r){return r.createdAt?new Date(r.createdAt).toLocaleString():"—"}},{title:"Request",value:function(r){return r.title||r.summary||r.type||"—"}},{title:"Requester",value:function(r){return r.requester&&r.requester.name||"—"}},{title:"Approver",value:approver},{title:"Approval",value:function(r){var p=r.approvalProgress||{};return p.text||((p.approved||0)+"/"+(p.total||0))}},{title:"Status",value:function(r){return r.status||"—"},className:function(r){return"mc-results-status mc-results-status-"+String(r.status||"unknown").toLowerCase()}},{title:"Summary",value:function(r){return r.summary||"—"}}],actions:function(cell,r){decisions(s,r,cell)},emptyText:empty})}
-function load(s,o){o=o||{};return s.api("requests",{type:o.type||"",status:o.status||"",q:s.state.search,page:1,perPage:200}).then(function(r){requests=r.rows||[];if(o.after)o.after(requests);else if(o.table)table(s,o.title,o.empty,requests);else cards(s,o.title,o.empty,requests)})}
-var module=window.MyCompanyModuleShell.create({key:"approvalcenter",title:"Approval Center",menuTitle:"Approval Center",order:110,preset:"approvalcenter",buttons:{collapse:{side:"left",order:10},link:false,refresh:{side:"left",order:50},search:{side:"left",order:70},clear:false,favorites:false,manage:false,settings:false},tabs:[],defaultTab:"",render:function(s){return s.api("providers").then(function(r){providers=ordered(r.providers||[]);primary(s);if(!selectedProvider)return load(s,{status:"pending",after:function(rows){overviewFilters(s,rows);var f=overviewFilter?rows.filter(function(x){return x.type===overviewFilter}):rows;cards(s,overviewFilter?(titles[overviewFilter]||overviewFilter)+" awaiting approval":"Requests awaiting approval","There are no pending requests for the selected filter.",f)}});statuses(s);return load(s,{type:selectedProvider,status:selectedStatus,title:titles[selectedProvider]||selectedProvider,empty:"No requests match the selected provider and status.",table:true})})}});
-window.MyCompanyModules.approvalcenter=module;}());
+(function () {
+    "use strict";
+
+    var selectedProvider = "";
+    var selectedStatus = "";
+    var overviewFilter = "";
+    var providers = [];
+    var requests = [];
+
+    var order = ["moverequests", "mycommands", "myscripts"];
+    var titles = {
+        moverequests: "Move Requests",
+        mycommands: "Commands",
+        myscripts: "Scripts"
+    };
+
+    function svg(paths) {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true">' + paths + '</svg>';
+    }
+
+    var icons = {
+        overview: svg('<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>'),
+        moverequests: svg('<path d="M7 7h11l-3-3M18 7l-3 3"/><path d="M17 17H6l3 3M6 17l3-3"/>'),
+        mycommands: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 10 3 2-3 2M12 15h5"/>'),
+        myscripts: svg('<path d="M6 3h9l3 3v15H6V3Z"/><path d="M9 11h6M9 15h6"/>'),
+        all: svg('<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8"/>'),
+        pending: svg('<path d="M6 2h12M6 22h12M8 2v5l4 5-4 5v5M16 2v5l-4 5 4 5v5"/>'),
+        executing: svg('<path d="m8 5 11 7-11 7V5Z"/>'),
+        approved: svg('<path d="m4 12 5 5L20 6"/>'),
+        completed: svg('<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>'),
+        failed: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/>'),
+        rejected: svg('<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>')
+    };
+
+    function ordered(rows) {
+        var map = Object.create(null);
+        (rows || []).forEach(function (item) { map[item.type] = item; });
+        return order.map(function (key) { return map[key]; }).filter(Boolean);
+    }
+
+    function skin(shell) {
+        var page = shell.state.page;
+        if (!page || !page.root) return;
+        page.root.classList.add("mc-module-approvalcenter", "sirk-management-shell");
+        page.layout.root.classList.add("sirk-management-workspace");
+        page.primary.classList.add("sirk-management-column");
+        page.secondary.classList.add("sirk-management-column");
+        page.details.classList.add("sirk-management-column", "sirk-management-content");
+        var toolbar = page.root.querySelector(".mc-shared-toolbar");
+        if (toolbar) toolbar.classList.add("sirk-management-toolbar");
+    }
+
+    function nav(host, options) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "sirk-management-item mc-approval-nav-item " + (options.className || "");
+        button.classList.toggle("is-active", options.active === true);
+        button.classList.toggle("active", options.active === true);
+        button.title = options.title;
+
+        var icon = document.createElement("span");
+        icon.className = "sirk-management-item-icon mc-approval-nav-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.innerHTML = options.icon || icons.all;
+
+        var label = document.createElement("span");
+        label.className = "sirk-script-label mc-approval-nav-label";
+        label.textContent = options.title + (options.count == null ? "" : " - " + options.count);
+
+        button.appendChild(icon);
+        button.appendChild(label);
+        button.onclick = options.onClick;
+        host.appendChild(button);
+        return button;
+    }
+
+    function providerButtons(host, shell) {
+        providers.forEach(function (provider) {
+            nav(host, {
+                title: titles[provider.type] || provider.tabTitle || provider.title,
+                icon: icons[provider.type] || icons.all,
+                className: "mc-approval-provider",
+                active: selectedProvider === provider.type,
+                onClick: function () {
+                    selectedProvider = provider.type;
+                    selectedStatus = "";
+                    shell.render();
+                }
+            });
+        });
+    }
+
+    function primary(shell) {
+        var host = shell.state.page.primary;
+        host.innerHTML = "";
+        nav(host, {
+            title: "Overview",
+            icon: icons.overview,
+            active: !selectedProvider,
+            onClick: function () {
+                selectedProvider = "";
+                selectedStatus = "";
+                shell.render();
+            }
+        });
+        providerButtons(host, shell);
+    }
+
+    function counts(rows) {
+        var result = { all: rows.length, moverequests: 0, mycommands: 0, myscripts: 0 };
+        rows.forEach(function (row) {
+            if (Object.prototype.hasOwnProperty.call(result, row.type)) result[row.type]++;
+        });
+        return result;
+    }
+
+    function overviewFilters(shell, rows) {
+        var host = shell.state.page.secondary;
+        var count = counts(rows);
+        host.innerHTML = "";
+        nav(host, {
+            title: "All",
+            icon: icons.all,
+            count: count.all,
+            active: !overviewFilter,
+            onClick: function () { overviewFilter = ""; shell.render(); }
+        });
+        providers.forEach(function (provider) {
+            nav(host, {
+                title: titles[provider.type] || provider.title,
+                icon: icons[provider.type] || icons.all,
+                count: count[provider.type] || 0,
+                active: overviewFilter === provider.type,
+                onClick: function () { overviewFilter = provider.type; shell.render(); }
+            });
+        });
+    }
+
+    function statuses(shell) {
+        var host = shell.state.page.secondary;
+        host.innerHTML = "";
+        window.SharedStatusNav.list().forEach(function (status) {
+            nav(host, {
+                title: status.title,
+                icon: icons[status.key] || icons.all,
+                className: "mc-approval-status",
+                active: selectedStatus === status.key,
+                onClick: function () { selectedStatus = status.key; shell.render(); }
+            });
+        });
+    }
+
+    function decisions(shell, request, host) {
+        if (!request.canDecide) return;
+        var actions = document.createElement("div");
+        actions.className = "sirk-approval-actions mc-approval-request-actions";
+
+        [
+            { title: "Approve", approved: true, className: "sirk-primary-button" },
+            { title: "Reject", approved: false, className: "sirk-primary-button sirk-danger-button" }
+        ].forEach(function (definition) {
+            var button = document.createElement("button");
+            button.type = "button";
+            button.className = definition.className;
+            button.textContent = definition.title;
+            button.onclick = function () {
+                button.disabled = true;
+                shell.post("decide", { id: request.id, approved: definition.approved, note: "" })
+                    .then(shell.render)
+                    .catch(function (error) {
+                        button.disabled = false;
+                        shell.error(host, error);
+                    });
+            };
+            actions.appendChild(button);
+        });
+        host.appendChild(actions);
+    }
+
+    function cards(shell, title, empty, rows) {
+        var host = shell.state.page.details;
+        host.innerHTML = "";
+        rows = rows || requests;
+
+        if (title) host.appendChild(shell.element("h2", "mc-approval-details-title", title));
+        if (!rows.length) {
+            host.appendChild(shell.card("No requests", empty || "No requests match the selected provider and status."));
+            return;
+        }
+
+        var grid = document.createElement("div");
+        grid.className = "sirk-approval-card-grid mc-approval-card-grid";
+        host.appendChild(grid);
+
+        rows.forEach(function (request) {
+            var card = shell.card(request.title || request.type, "");
+            card.classList.add("sirk-card", "mc-approval-request-card");
+
+            var meta = shell.element("div", "sirk-muted mc-approval-request-meta");
+            meta.textContent = (request.requester && request.requester.name || "—") + " · " + (request.status || "—");
+            card.appendChild(meta);
+
+            card.appendChild(shell.element("div", "sirk-muted", new Date(request.createdAt).toLocaleString()));
+            if (request.summary) card.appendChild(shell.element("p", "mc-approval-request-summary", request.summary));
+
+            var provider = shell.element("span", "mc-approval-request-provider", titles[request.type] || request.type);
+            card.appendChild(provider);
+            decisions(shell, request, card);
+            grid.appendChild(card);
+        });
+    }
+
+    function approver(request) {
+        if (request.approver && request.approver.name) return request.approver.name;
+        var decisionsList = Array.isArray(request.approvalDecisions) ? request.approvalDecisions : [];
+        for (var index = decisionsList.length - 1; index >= 0; index--) {
+            if (decisionsList[index].user && decisionsList[index].user.name) return decisionsList[index].user.name;
+        }
+        return "—";
+    }
+
+    function table(shell, title, empty, rows) {
+        var host = shell.state.page.details;
+        host.innerHTML = "";
+        window.SharedResultsView.mountTable(host, {
+            title: title,
+            rows: rows || [],
+            filter: true,
+            filterPlaceholder: "Filter requests",
+            showView: true,
+            dialogTitle: "Request details",
+            resultValue: function (request) {
+                try { return JSON.stringify(request, null, 2); }
+                catch (error) { return request.summary || ""; }
+            },
+            columns: [
+                { title: "DateTime", value: function (request) { return request.createdAt ? new Date(request.createdAt).toLocaleString() : "—"; } },
+                { title: "Request", value: function (request) { return request.title || request.summary || request.type || "—"; } },
+                { title: "Requester", value: function (request) { return request.requester && request.requester.name || "—"; } },
+                { title: "Approver", value: approver },
+                { title: "Approval", value: function (request) {
+                    var progress = request.approvalProgress || {};
+                    return progress.text || ((progress.approved || 0) + "/" + (progress.total || 0));
+                } },
+                { title: "Status", value: function (request) { return request.status || "—"; }, className: function (request) {
+                    return "mc-results-status mc-results-status-" + String(request.status || "unknown").toLowerCase();
+                } },
+                { title: "Summary", value: function (request) { return request.summary || "—"; } }
+            ],
+            actions: function (cell, request) { decisions(shell, request, cell); },
+            emptyText: empty
+        });
+    }
+
+    function load(shell, options) {
+        options = options || {};
+        return shell.api("requests", {
+            type: options.type || "",
+            status: options.status || "",
+            q: shell.state.search,
+            page: 1,
+            perPage: 200
+        }).then(function (response) {
+            requests = response.rows || [];
+            if (options.after) options.after(requests);
+            else if (options.table) table(shell, options.title, options.empty, requests);
+            else cards(shell, options.title, options.empty, requests);
+        });
+    }
+
+    var module = window.MyCompanyModuleShell.create({
+        key: "approvalcenter",
+        title: "Approval Center",
+        menuTitle: "Approval Center",
+        order: 110,
+        preset: "approvalcenter",
+        buttons: {
+            collapse: { side: "left", order: 10 },
+            link: false,
+            refresh: { side: "left", order: 50 },
+            search: { side: "left", order: 70 },
+            clear: false,
+            favorites: false,
+            manage: false,
+            settings: false
+        },
+        tabs: [],
+        defaultTab: "",
+        render: function (shell) {
+            skin(shell);
+            return shell.api("providers").then(function (response) {
+                providers = ordered(response.providers || []);
+                primary(shell);
+
+                if (!selectedProvider) {
+                    return load(shell, {
+                        status: "pending",
+                        after: function (rows) {
+                            overviewFilters(shell, rows);
+                            var filtered = overviewFilter
+                                ? rows.filter(function (request) { return request.type === overviewFilter; })
+                                : rows;
+                            cards(
+                                shell,
+                                overviewFilter ? (titles[overviewFilter] || overviewFilter) + " awaiting approval" : "Requests awaiting approval",
+                                "There are no pending requests for the selected filter.",
+                                filtered
+                            );
+                        }
+                    });
+                }
+
+                statuses(shell);
+                return load(shell, {
+                    type: selectedProvider,
+                    status: selectedStatus,
+                    title: titles[selectedProvider] || selectedProvider,
+                    empty: "No requests match the selected provider and status.",
+                    table: true
+                });
+            });
+        }
+    });
+
+    window.MyCompanyModules.approvalcenter = module;
+}());
