@@ -142,9 +142,9 @@ module.exports.createDeviceService = function (options) {
         var meshes = visibleMeshes(user);
         var meshIds = Object.keys(meshes);
         var domain = shared.getDomain(parent, user);
-        var domainId = String(domain && domain.id || user && user.domain || "");
+        var domainId = String(domain && domain.id != null ? domain.id : user && user.domain || "");
         var responseBase = { meshes: publicMeshRows(meshes), nodes: [] };
-        if (!meshIds.length || !domainId) return Promise.resolve(responseBase);
+        if (!meshIds.length || !domain) return Promise.resolve(responseBase);
 
         var db = getDatabase();
         if (!db) {
@@ -154,13 +154,24 @@ module.exports.createDeviceService = function (options) {
 
         return new Promise(function (resolve, reject) {
             try {
-                db.GetAllTypeNoTypeFieldMeshFiltered(meshIds, domainId, "node", null, function (error, rows) {
-                    if (error) { reject(error); return; }
-                    responseBase.nodes = (Array.isArray(rows) ? rows : []).map(publicNode).sort(function (a, b) {
-                        return a.name.localeCompare(b.name, "pl", { sensitivity: "base" });
-                    });
-                    resolve(responseBase);
-                });
+                db.GetAllTypeNoTypeFieldMeshFiltered(
+                    meshIds,
+                    null,
+                    domainId,
+                    "node",
+                    null,
+                    0,
+                    0,
+                    function (error, rows) {
+                        if (error) { reject(error); return; }
+                        var nodes = Array.isArray(rows) ? rows : [];
+                        if (!nodes.length) nodes = memoryNodes(meshIds);
+                        responseBase.nodes = nodes.map(publicNode).sort(function (a, b) {
+                            return a.name.localeCompare(b.name, "pl", { sensitivity: "base" });
+                        });
+                        resolve(responseBase);
+                    }
+                );
             } catch (error) {
                 reject(error);
             }
