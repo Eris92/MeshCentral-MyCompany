@@ -11,10 +11,9 @@
         mycommands: "mycommands.js",
         myjira: "myjira.js",
         defendertools: "defendertools.js",
-        myscripts: "myscripts.js",
-        portal: "portal.js"
+        myscripts: "myscripts.js"
     };
-    var order = ["approvalcenter", "moverequests", "mycommands", "myjira", "defendertools", "myscripts", "portal"];
+    var order = ["approvalcenter", "moverequests", "mycommands", "myjira", "defendertools", "myscripts"];
 
     function installCredentialsActions() {
         if (!window.SharedScriptTools || window.__myCompanyCredentialsActions) return;
@@ -71,62 +70,29 @@
                 "mycompany-shared-directory-tree",
                 core.assetUrl("", "shared-ui/tree.js")
             ).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-catalog-view",
-                    core.assetUrl("", "shared-ui/catalog.js")
-                );
+                return core.loadScript("mycompany-shared-catalog-view", core.assetUrl("", "shared-ui/catalog.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-results-view",
-                    core.assetUrl("", "shared-ui/results.js")
-                );
+                return core.loadScript("mycompany-shared-results-view", core.assetUrl("", "shared-ui/results.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-result-layout",
-                    core.assetUrl("", "shared-ui/result-layout.js")
-                );
+                return core.loadScript("mycompany-shared-result-layout", core.assetUrl("", "shared-ui/result-layout.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-script-tools",
-                    core.assetUrl("", "shared-ui/script-tools.js")
-                );
+                return core.loadScript("mycompany-shared-script-tools", core.assetUrl("", "shared-ui/script-tools.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-script-definition-form",
-                    core.assetUrl("", "shared-ui/script-definition-form.js")
-                );
+                return core.loadScript("mycompany-shared-script-definition-form", core.assetUrl("", "shared-ui/script-definition-form.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-confirm-execution-form",
-                    core.assetUrl("", "shared-ui/confirm-execution-form.js")
-                );
+                return core.loadScript("mycompany-shared-confirm-execution-form", core.assetUrl("", "shared-ui/confirm-execution-form.js"));
             }).then(function () {
                 installCredentialsActions();
-                return core.loadScript(
-                    "mycompany-shared-script-edit-actions",
-                    core.assetUrl("", "shared-ui/script-edit-actions.js")
-                );
+                return core.loadScript("mycompany-shared-script-edit-actions", core.assetUrl("", "shared-ui/script-edit-actions.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-shared-system-credentials-form",
-                    core.assetUrl("", "shared-ui/system-credentials-form.js")
-                );
+                return core.loadScript("mycompany-shared-system-credentials-form", core.assetUrl("", "shared-ui/system-credentials-form.js"));
             }).then(function () {
-                return core.loadScript(
-                    "mycompany-portal-icon-data",
-                    core.assetUrl("", "portal-icon-data.js")
-                );
+                return core.loadScript("mycompany-portal-icon-data", core.assetUrl("", "portal-icon-data.js"));
             });
+
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
                 if (!state || !state.enabled || state.ready === false) return;
-                if (key === "portal" && window.top !== window.self) return;
-                if (key === "portal" && state.config && state.config.standaloneConflict === true) {
-                    if (window.console) {
-                        console.error("MyCompany Portal was not loaded because standalone SirKPortal is active.");
-                    }
-                    return;
-                }
                 chain = chain.then(function () {
                     return core.loadScript("mycompany-module-" + key, core.assetUrl("", files[key]));
                 }).then(function () {
@@ -139,26 +105,8 @@
                     });
                 });
             });
-            return chain.then(function () {
-                var portal = bootstrap.modules && bootstrap.modules.portal;
-                if (!portal || !portal.enabled || portal.ready === false || window.top !== window.self) return null;
-                return core.loadScript("mycompany-portal-ui-fix", core.assetUrl("", "portal-ui-fix.js"))
-                    .then(function () {
-                        return core.loadScript("mycompany-portal-subfolder-icons", core.assetUrl("", "portal-subfolder-icons.js"));
-                    })
-                    .then(function () {
-                        return core.loadScript("mycompany-portal-collapse-isolation", core.assetUrl("", "portal-collapse-isolation.js"));
-                    })
-                    .then(function () {
-                        return core.loadScript("mycompany-portal-folder-collapse", core.assetUrl("", "portal-folder-collapse.js"));
-                    })
-                    .then(function () {
-                        return core.loadScript("mycompany-portal-approval", core.assetUrl("", "portal-approval.js"));
-                    })
-                    .then(function () {
-                        return core.loadScript("mycompany-portal-approval-hook", core.assetUrl("", "portal-approval-hook.js"));
-                    });
-            });
+
+            return chain;
         }).catch(function (error) {
             runtime.state.initializePromise = null;
             throw error;
