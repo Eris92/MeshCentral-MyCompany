@@ -19,6 +19,7 @@ module.exports.admin = function (plugin) {
         "mesh-plugin-core.js": ["public/mesh-plugin-core.js", "text/javascript; charset=utf-8"],
         "module-shell.js": ["public/module-shell.js", "text/javascript; charset=utf-8"],
         "runtime.js": ["public/runtime.js", "text/javascript; charset=utf-8"],
+        "native-portal-launcher.js": ["public/native-portal-launcher.js", "text/javascript; charset=utf-8"],
         "portal.js": ["public/portal.js", "text/javascript; charset=utf-8"],
         "portal-icon-data.js": ["public/portal-icon-data.js", "text/javascript; charset=utf-8"],
         "portal-subfolder-icons.js": ["public/portal-subfolder-icons.js", "text/javascript; charset=utf-8"],
@@ -91,10 +92,7 @@ module.exports.admin = function (plugin) {
 
     function safeAdminJson(value) {
         var slash = String.fromCharCode(92);
-        return JSON.stringify(value)
-            .replace(/</g, slash + "u003c")
-            .replace(/>/g, slash + "u003e")
-            .replace(/&/g, slash + "u0026");
+        return JSON.stringify(value).replace(/</g, slash + "u003c").replace(/>/g, slash + "u003e").replace(/&/g, slash + "u0026");
     }
 
     obj.req = function (req, res, user) {
@@ -104,20 +102,15 @@ module.exports.admin = function (plugin) {
         if (assets[asset]) { serve(res, asset); return; }
         if (asset === "bootstrap") { plugin.runtime.request("GET", "_runtime", "bootstrap", req, res, user); return; }
         if (moduleName === "myscripts" && asset === "folder-icon") {
-            if (plugin.runtime.modules && plugin.runtime.modules.myscripts && typeof plugin.runtime.modules.myscripts.serveIcon === "function") {
-                plugin.runtime.modules.myscripts.serveIcon(req, res, user);
-            } else shared.send(res, 404, "text/plain; charset=utf-8", "Folder icon unavailable");
+            if (plugin.runtime.modules && plugin.runtime.modules.myscripts && typeof plugin.runtime.modules.myscripts.serveIcon === "function") plugin.runtime.modules.myscripts.serveIcon(req, res, user);
+            else shared.send(res, 404, "text/plain; charset=utf-8", "Folder icon unavailable");
             return;
         }
         if (moduleName) { plugin.runtime.request("GET", moduleName, asset, req, res, user); return; }
         if (!shared.isSiteAdmin(user)) { shared.send(res, 403, "text/plain; charset=utf-8", "Forbidden"); return; }
         var data = plugin.runtime.adminSnapshot(user);
         try {
-            res.render("MyCompany", {
-                title: "My Company",
-                pluginShortName: String(req && req.query && req.query.pin || plugin.shortName || "MyCompany"),
-                adminDataJson: safeAdminJson(data)
-            });
+            res.render("MyCompany", { title: "My Company", pluginShortName: String(req && req.query && req.query.pin || plugin.shortName || "MyCompany"), adminDataJson: safeAdminJson(data) });
         } catch (error) {
             console.error("MyCompany admin render failed", error);
             shared.send(res, 500, "text/plain; charset=utf-8", "Internal error");
@@ -133,14 +126,8 @@ module.exports.admin = function (plugin) {
             var module = moduleObject(moduleName);
             if (asset === "settings" && shared.isSiteAdmin(user) && module && !module.__loadError && typeof module.apiPost === "function") {
                 try {
-                    Promise.resolve(module.apiPost(asset, req, user)).then(function (value) {
-                        shared.sendJson(res, 200, value || { ok: true });
-                    }).catch(function (error) {
-                        shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) });
-                    });
-                } catch (error) {
-                    shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) });
-                }
+                    Promise.resolve(module.apiPost(asset, req, user)).then(function (value) { shared.sendJson(res, 200, value || { ok: true }); }).catch(function (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); });
+                } catch (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); }
                 return;
             }
             plugin.runtime.request("POST", moduleName, asset, req, res, user);
@@ -153,11 +140,7 @@ module.exports.admin = function (plugin) {
                 integrations: shared.parseJsonObject(req && req.body && req.body.integrations, {}),
                 secrets: shared.parseJsonObject(req && req.body && req.body.secrets, {})
             };
-            plugin.runtime.saveAdminSettings(user, payload).then(function (snapshot) {
-                shared.sendJson(res, 200, { ok: true, snapshot: snapshot });
-            }).catch(function (error) {
-                shared.sendJson(res, 403, { ok: false, error: String(error && error.message || error) });
-            });
+            plugin.runtime.saveAdminSettings(user, payload).then(function (snapshot) { shared.sendJson(res, 200, { ok: true, snapshot: snapshot }); }).catch(function (error) { shared.sendJson(res, 403, { ok: false, error: String(error && error.message || error) }); });
             return;
         }
         shared.sendJson(res, 400, { ok: false, error: "Unknown MyCompany action." });
