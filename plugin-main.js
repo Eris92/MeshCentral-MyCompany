@@ -1,7 +1,7 @@
 "use strict";
 
 var createAdmin = require("./MyCompanyAdmin.js").admin;
-var VERSION = "1.5.17";
+var VERSION = "1.5.18";
 
 function cleanError(error) {
     return String(error && (error.stack || error.message) || error || "Unknown MyCompany load error.");
@@ -81,8 +81,9 @@ function createPlugin(parent, shortName) {
     obj.onWebUIStartupEnd = function () {
         if (typeof window === "undefined" || typeof document === "undefined") return;
 
-        var browserVersion = "1.5.17";
+        var browserVersion = "1.5.18";
         var browserPin = "MyCompany";
+        document.documentElement.classList.add("mycompany-native-ui");
 
         function asset(name) {
             var url = new URL("pluginadmin.ashx", window.location.href);
@@ -120,11 +121,11 @@ function createPlugin(parent, shortName) {
             (document.head || document.documentElement).appendChild(link);
         }
 
-        // Native MeshCentral receives only native/shared styles. Portal-only styles are never loaded here.
         style("mycompany-main-style", "main.css");
         style("mycompany-myscripts-style", "myscripts.css");
         style("mycompany-shared-style-0", "shared-ui/shared-ui.css");
         style("mycompany-shared-style-1", "shared-ui/toolbar.css");
+        style("mycompany-native-approval-style", "native-approval.css");
 
         load("mycompany-core-script", asset("core.js"))
             .then(function () { return load("mycompany-mesh-plugin-core-script", asset("mesh-plugin-core.js")); })
