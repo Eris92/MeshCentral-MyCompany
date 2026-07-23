@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyStandaloneDeviceTabsV4Loaded) return;
-    window.__myCompanyStandaloneDeviceTabsV4Loaded = true;
+    if (window.__myCompanyStandaloneDeviceTabsV5Loaded) return;
+    window.__myCompanyStandaloneDeviceTabsV5Loaded = true;
 
     var STORAGE_KEY = "mycompany.sirkportal.deviceTabs";
     var state = {
@@ -108,7 +108,10 @@
             main.insertBefore(state.bar, content);
         }
 
-        if (!state.panes.all) state.panes.all = { key: "all", name: allLabel(), nodeId: "", store: null, loaded: true };
+        if (!state.panes.all) {
+            state.panes.all = { key: "all", name: allLabel(), nodeId: "", store: createStore("all"), loaded: true };
+            state.cache.appendChild(state.panes.all.store);
+        }
         restoreMetadata();
         updateLanguage();
         syncVisibility();
@@ -131,58 +134,57 @@
         state.bar.style.display = visible ? "flex" : "none";
     }
 
-    function stashHost(key) {
-        var pane = state.panes[key];
-        if (!pane || key === "all" || !state.content) return;
+    function stashActive() {
+        var pane = state.panes[state.active];
+        if (!pane || !pane.store || !state.content) return;
         moveChildren(state.content, pane.store);
         pane.loaded = pane.store.childNodes.length > 0;
     }
 
-    function nativeDevicesButton() {
-        return document.querySelector('.sirk-standalone-nav [data-view="devices"]');
-    }
-
-    function renderNativeAll() {
-        var button = nativeDevicesButton();
-        if (button) {
-            button.click();
-            return true;
-        }
-        return false;
+    function showStored(key) {
+        var pane = state.panes[key];
+        if (!pane || !pane.store || !state.content) return false;
+        state.content.textContent = "";
+        moveChildren(pane.store, state.content);
+        pane.loaded = state.content.childNodes.length > 0;
+        return pane.loaded;
     }
 
     function activateAll() {
-        if (!state.content) return;
-        if (state.active !== "all") stashHost(state.active);
+        if (!state.content || !state.panes.all) return;
+        if (state.active !== "all") stashActive();
         state.active = "all";
         state.pending = null;
+        showStored("all");
         renderTabs();
         persist();
-        renderNativeAll();
         window.dispatchEvent(new Event("resize"));
     }
 
     function findDeviceRow(nodeId) {
-        if (!state.content) return null;
-        var rows = state.content.querySelectorAll("[data-device-id]");
-        for (var i = 0; i < rows.length; i++) {
-            if (String(rows[i].getAttribute("data-device-id") || "") === String(nodeId || "")) return rows[i];
+        var roots = [state.content, state.panes.all && state.panes.all.store];
+        for (var r = 0; r < roots.length; r++) {
+            var root = roots[r];
+            if (!root) continue;
+            var rows = root.querySelectorAll("[data-device-id]");
+            for (var i = 0; i < rows.length; i++) {
+                if (String(rows[i].getAttribute("data-device-id") || "") === String(nodeId || "")) return rows[i];
+            }
         }
         return null;
     }
 
-    function openPaneThroughNative(pane) {
-        if (!pane || !state.content) return;
-        state.pending = { key: pane.key, nodeId: pane.nodeId, name: pane.name, existing: true };
-        function clickWhenReady(attempt) {
-            if (!state.pending || state.pending.key !== pane.key) return;
-            var row = findDeviceRow(pane.nodeId);
-            if (row) { row.click(); return; }
-            if (attempt > 80) { state.pending = null; activateAll(); return; }
-            if (!devicesActive() || !state.content.querySelector("#sirkDevicesHost")) renderNativeAll();
-            window.setTimeout(function () { clickWhenReady(attempt + 1); }, 100);
+    function openPaneFromAll(pane) {
+        if (!pane || !state.content || !state.panes.all) return;
+        if (state.active !== "all") {
+            stashActive();
+            state.active = "all";
+            showStored("all");
         }
-        clickWhenReady(0);
+        var row = findDeviceRow(pane.nodeId);
+        if (!row) return;
+        state.pending = { key: pane.key, nodeId: pane.nodeId, name: pane.name, existing: true };
+        row.click();
     }
 
     function activate(key) {
@@ -190,20 +192,20 @@
         if (!pane || !state.content) return;
         if (key === "all") { activateAll(); return; }
         if (state.active === key) return;
-        if (state.active !== "all") stashHost(state.active);
+        if (state.active !== "all") stashActive();
+        else if (state.panes.all.store.childNodes.length === 0) stashActive();
         state.active = key;
         if (pane.loaded && pane.store.childNodes.length) {
-            state.content.textContent = "";
-            moveChildren(pane.store, state.content);
+            showStored(key);
             renderTabs();
             persist();
             window.dispatchEvent(new Event("resize"));
             return;
         }
+        state.active = "all";
+        showStored("all");
         renderTabs();
-        persist();
-        renderNativeAll();
-        openPaneThroughNative(pane);
+        openPaneFromAll(pane);
     }
 
     function disconnectPane(pane) {
@@ -221,12 +223,12 @@
         if (key === "all" || !state.panes[key]) return;
         var pane = state.panes[key];
         var wasActive = state.active === key;
-        if (wasActive) stashHost(key);
+        if (wasActive) stashActive();
         disconnectPane(pane);
         delete state.panes[key];
         if (wasActive) {
             state.active = "all";
-            renderNativeAll();
+            showStored("all");
         }
         renderTabs();
         persist();
@@ -288,7 +290,7 @@
     function candidate(target) {
         if (!devicesActive() || state.active !== "all" || !state.content || !target || !target.closest) return null;
         var element = target.closest('[data-device-id],.sirk-device-row');
-        if (!element || !state.content.contains(element)) return null;
+        if (!element || !state.root.contains(element)) return null;
         var nodeId = attributeValue(element);
         var nameNode = element.querySelector && element.querySelector('.sirk-device-primary strong,[data-device-name],.sirk-device-name,.device-name,strong');
         var name = text(nameNode && nameNode.textContent || element.getAttribute("data-device-name") || "");
@@ -297,14 +299,15 @@
     }
 
     function beginOpen(info, event) {
-        if (state.panes[info.key]) {
+        if (state.panes[info.key] && state.panes[info.key].loaded) {
             event.preventDefault();
             event.stopPropagation();
             if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
             activate(info.key);
             return;
         }
-        state.pending = { key: info.key, nodeId: info.nodeId, name: info.name, existing: false };
+        if (state.panes.all.store.childNodes.length === 0) moveChildren(state.content, state.panes.all.store);
+        state.pending = { key: info.key, nodeId: info.nodeId, name: info.name, existing: !!state.panes[info.key] };
         window.clearTimeout(state.finalizeTimer);
         state.finalizeTimer = window.setTimeout(finalizeOpen, 80);
     }
@@ -335,18 +338,20 @@
 
     function scheduleRestore() {
         if (!state.restored || state.restoreActive === "all" || !devicesActive()) return;
-        if (!state.panes[state.restoreActive]) { state.restoreActive = "all"; return; }
+        var pane = state.panes[state.restoreActive];
+        if (!pane) { state.restoreActive = "all"; return; }
+        if (!findDeviceRow(pane.nodeId)) return;
         window.clearTimeout(state.restoreTimer);
         state.restoreTimer = window.setTimeout(function () {
             var key = state.restoreActive;
             state.restoreActive = "all";
             activate(key);
-        }, 250);
+        }, 150);
     }
 
     function bind() {
-        if (!state.root || state.root.__myCompanyStandaloneDeviceTabsV4Bound) return;
-        state.root.__myCompanyStandaloneDeviceTabsV4Bound = true;
+        if (!state.root || state.root.__myCompanyStandaloneDeviceTabsV5Bound) return;
+        state.root.__myCompanyStandaloneDeviceTabsV5Bound = true;
 
         state.root.addEventListener("click", function (event) {
             ensureInfrastructure();
