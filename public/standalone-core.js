@@ -1,10 +1,22 @@
 (function () {
     "use strict";
 
+    window.MyCompanyCore = window.MyCompanyCore || {};
+    window.MyCompanyModules = window.MyCompanyModules || {};
+    var core = window.MyCompanyCore;
+
     (function prepareInitialView() {
+        var root = document.getElementById("sirkStandaloneRoot");
         var content = document.getElementById("sirkStandaloneContent");
         var child = false;
         var savedActive = "all";
+
+        if (root) {
+            document.documentElement.classList.add("sirk-portal-boot-pending");
+            root.style.visibility = "hidden";
+            root.style.pointerEvents = "none";
+            root.setAttribute("aria-busy", "true");
+        }
 
         try {
             child = new URL(window.location.href).searchParams.get("sirkWorkspaceChild") === "1";
@@ -26,6 +38,7 @@
         }
 
         var requested = String(window.location.hash || "#overview").replace(/^#/, "") || "overview";
+        var restoreHost = child || (requested === "devices" && savedActive !== "all");
         var buttons = document.querySelectorAll(".sirk-standalone-nav [data-view]");
         Array.prototype.forEach.call(buttons, function (button) {
             var active = button.getAttribute("data-view") === requested;
@@ -37,17 +50,72 @@
         var title = document.getElementById("sirkStandaloneTitle");
         if (title && requestedButton) title.textContent = requestedButton.textContent;
 
-        if (content && (child || (requested === "devices" && savedActive !== "all"))) {
+        if (content && restoreHost) {
             document.documentElement.classList.add("sirk-device-restore-pending");
             content.style.visibility = "hidden";
             content.style.pointerEvents = "none";
             content.setAttribute("aria-busy", "true");
         }
+
+        var finished = false;
+        var observer = null;
+        var timer = null;
+
+        function reveal() {
+            if (finished) return;
+            finished = true;
+            if (observer) observer.disconnect();
+            if (timer) window.clearTimeout(timer);
+            document.documentElement.classList.remove("sirk-portal-boot-pending");
+            if (root) {
+                root.style.visibility = "";
+                root.style.pointerEvents = "";
+                root.removeAttribute("aria-busy");
+            }
+            if (content && !document.documentElement.classList.contains("sirk-device-restore-pending")) {
+                content.style.visibility = "";
+                content.style.pointerEvents = "";
+                content.removeAttribute("aria-busy");
+            }
+            window.dispatchEvent(new Event("resize"));
+        }
+
+        core.revealPortal = function (force) {
+            if (!force && document.documentElement.classList.contains("sirk-device-restore-pending")) return false;
+            reveal();
+            return true;
+        };
+
+        function ready() {
+            if (finished || !content) return;
+            var currentView = String(content.getAttribute("data-active-view") || "");
+
+            if (!restoreHost) {
+                if (currentView === requested && content.childNodes.length > 0) reveal();
+                return;
+            }
+
+            if (child) {
+                if (content.querySelector(".sirk-device-workspace,.sirk-device-compact-header,[data-device-workspace-ready='1']")) reveal();
+                return;
+            }
+
+            var activeTab = document.querySelector(".sirk-device-tabs-standalone .sirk-device-tab.is-active[data-device-workspace-key]");
+            var activeKey = activeTab && String(activeTab.getAttribute("data-device-workspace-key") || "");
+            if (activeKey && activeKey !== "all" && content.querySelector(".sirk-device-isolated-workspace iframe")) reveal();
+        }
+
+        observer = new MutationObserver(function () { window.setTimeout(ready, 0); });
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["class", "hidden", "data-active-view", "data-device-workspace-key"]
+        });
+        timer = window.setTimeout(reveal, 15000);
+        ready();
     }());
 
-    window.MyCompanyCore = window.MyCompanyCore || {};
-    window.MyCompanyModules = window.MyCompanyModules || {};
-    var core = window.MyCompanyCore;
     core.assetVersion = String(window.__MYCOMPANY_PORTAL_VERSION__ || "1.5.0");
 
     core.redirectToLogin = function () {
@@ -133,7 +201,6 @@
         });
     };
 
-    // Standalone modules share backend logic but never register native MeshCentral menus.
     core.ensureMenu = function () { return false; };
     core.showWorkspace = function (title, viewMode, render) {
         var host = document.getElementById("sirkStandaloneContent");
