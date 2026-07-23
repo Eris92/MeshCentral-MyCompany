@@ -32,6 +32,42 @@
         }
     }
 
+    function normalizeDeviceWorkspace() {
+        var content = document.getElementById("sirkStandaloneContent");
+        var workspace = content && content.querySelector(":scope > .sirk-device-workspace");
+        if (!workspace) return;
+
+        var header = workspace.querySelector(":scope > .sirk-device-compact-header");
+        var tabs = workspace.querySelector(":scope > .sirk-device-tabs,:scope > .sirk-device-compact-tabs");
+        if (!header || !tabs) return;
+
+        [".sirk-device-compact-back", ".sirk-device-compact-icon", ".sirk-device-compact-main"].forEach(function (selector) {
+            var element = header.querySelector(selector);
+            if (element) element.remove();
+        });
+
+        tabs.className = "sirk-device-compact-tabs";
+        tabs.removeAttribute("role");
+        if (tabs.parentNode !== header) header.insertBefore(tabs, header.firstChild);
+        header.setAttribute("data-compact-tabs-mounted", "1");
+    }
+
+    function observeDeviceWorkspace() {
+        var content = document.getElementById("sirkStandaloneContent");
+        if (!content) return;
+        var scheduled = false;
+        var observer = new MutationObserver(function () {
+            if (scheduled) return;
+            scheduled = true;
+            window.requestAnimationFrame(function () {
+                scheduled = false;
+                normalizeDeviceWorkspace();
+            });
+        });
+        observer.observe(content, { childList: true, subtree: true });
+        normalizeDeviceWorkspace();
+    }
+
     function navigate(view) {
         view = String(view || "overview");
         var next = "#" + view;
@@ -70,6 +106,7 @@
     }
 
     loadUiContract();
+    observeDeviceWorkspace();
     loadTerminalConnect();
 
     if (!bind()) {
