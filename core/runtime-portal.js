@@ -24,6 +24,11 @@ var PORTAL_DEFAULTS = {
     showNativeLink: true,
     forceNewLogin: false,
     forcePortalInterface: false,
+    keepSessionsAfterRestart: false,
+    showPasswordReset: true,
+    passwordResetUrl: "https://passwordreset.microsoftonline.com/",
+    siteName: "SirK Portal",
+    siteIconUrl: "",
     views: PORTAL_VIEW_DEFAULTS
 };
 
