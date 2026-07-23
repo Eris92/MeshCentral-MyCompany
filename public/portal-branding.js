@@ -4,6 +4,131 @@
     var base = String(window.__MYCOMPANY_ASSET_BASE__ || window.__MYCOMPANY_LOGIN_ASSET_BASE__ || "").replace(/\/$/, "");
     if (!base) return;
     var current = {};
+    var DEVICE_TAB_STORAGE = "mycompany.sirkportal.deviceActiveTabs";
+    var LANGUAGE_STORAGE = "sirkPortal.language";
+
+    function workspaceChild() {
+        try { return new URL(window.location.href).searchParams.get("sirkWorkspaceChild") === "1"; }
+        catch (error) { return false; }
+    }
+
+    function workspaceNodeId() {
+        try {
+            var direct = new URL(window.location.href).searchParams.get("gotonode");
+            if (direct) return String(direct);
+        } catch (error) {}
+        var link = document.querySelector('.sirk-device-general-actions a[href*="gotonode="],.sirk-device-native-button[href*="gotonode="]');
+        if (link) {
+            try { return String(new URL(link.href, window.location.href).searchParams.get("gotonode") || ""); }
+            catch (error) {}
+        }
+        return "__last__";
+    }
+
+    function readDeviceTabs() {
+        try {
+            var value = JSON.parse(localStorage.getItem(DEVICE_TAB_STORAGE) || "{}");
+            return value && typeof value === "object" ? value : {};
+        } catch (error) { return {}; }
+    }
+
+    function savedDeviceTab() {
+        var state = readDeviceTabs();
+        return String(state[workspaceNodeId()] || state.__last__ || "general");
+    }
+
+    function saveDeviceTab(tab) {
+        tab = String(tab || "general");
+        var state = readDeviceTabs();
+        state[workspaceNodeId()] = tab;
+        state.__last__ = tab;
+        try { localStorage.setItem(DEVICE_TAB_STORAGE, JSON.stringify(state)); } catch (error) {}
+    }
+
+    function holdWorkspaceForRestore() {
+        if (!workspaceChild() || savedDeviceTab() === "general") return;
+        var content = document.getElementById("sirkStandaloneContent");
+        if (!content) return;
+        content.style.visibility = "hidden";
+        content.style.pointerEvents = "none";
+        content.setAttribute("data-device-tab-restore-pending", "1");
+    }
+
+    function finishWorkspaceRestore() {
+        var content = document.getElementById("sirkStandaloneContent");
+        if (!content) return;
+        content.style.visibility = "";
+        content.style.pointerEvents = "";
+        content.removeAttribute("data-device-tab-restore-pending");
+        document.documentElement.classList.remove("sirk-device-restore-pending");
+        content.removeAttribute("aria-busy");
+        window.dispatchEvent(new Event("resize"));
+    }
+
+    function restoreDeviceTab() {
+        if (!workspaceChild()) return false;
+        var content = document.getElementById("sirkStandaloneContent");
+        var workspace = content && content.querySelector(".sirk-device-workspace");
+        if (!workspace) return false;
+        var desired = savedDeviceTab();
+        var button = workspace.querySelector('[data-device-tab="' + desired.replace(/"/g, "\\\"") + '"]');
+        if (!button) button = workspace.querySelector('[data-device-tab="general"]');
+        if (button && !button.classList.contains("is-active")) button.click();
+        window.setTimeout(finishWorkspaceRestore, 0);
+        return true;
+    }
+
+    function language() {
+        try { return localStorage.getItem(LANGUAGE_STORAGE) === "en" ? "en" : "pl"; }
+        catch (error) { return "pl"; }
+    }
+
+    var WORKSPACE_TEXT = {
+        pl: { general: "Ogólne", desktop: "Pulpit", terminal: "Terminal", commands: "Polecenia", files: "Pliki", registry: "Rejestr", software: "Oprogramowanie", amt: "Intel AMT", online: "Online", offline: "Offline", name: "Nazwa", status: "Status", group: "Grupa", system: "System", ip: "Adres IP", lastSeen: "Ostatnio widziany", agent: "Wersja agenta", nodeId: "Node ID", openMesh: "Otwórz w MeshCentral" },
+        en: { general: "Overview", desktop: "Desktop", terminal: "Terminal", commands: "Commands", files: "Files", registry: "Registry", software: "Software", amt: "Intel AMT", online: "Online", offline: "Offline", name: "Name", status: "Status", group: "Group", system: "Operating system", ip: "IP address", lastSeen: "Last seen", agent: "Agent version", nodeId: "Node ID", openMesh: "Open in MeshCentral" }
+    };
+
+    function translateWorkspace() {
+        var text = WORKSPACE_TEXT[language()];
+        Array.prototype.forEach.call(document.querySelectorAll("[data-device-tab]"), function (button) {
+            var key = button.getAttribute("data-device-tab");
+            if (text[key]) button.textContent = text[key];
+        });
+        var connection = document.querySelector(".sirk-device-connection");
+        if (connection) {
+            var dot = connection.querySelector("i");
+            connection.textContent = connection.classList.contains("is-online") ? text.online : text.offline;
+            if (dot) connection.insertBefore(dot, connection.firstChild);
+        }
+        var labels = [text.name, text.status, text.group, text.system, text.ip, text.lastSeen, text.agent, text.nodeId];
+        Array.prototype.forEach.call(document.querySelectorAll(".sirk-device-detail-item > span"), function (label, index) {
+            if (labels[index]) label.textContent = labels[index];
+        });
+        var open = document.querySelector(".sirk-device-general-actions a");
+        if (open) open.textContent = text.openMesh;
+    }
+
+    function refreshWorkspaceLanguage(event) {
+        if (!workspaceChild()) return;
+        if (event && typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+        translateWorkspace();
+        var active = document.querySelector("[data-device-tab].is-active");
+        var tab = active && active.getAttribute("data-device-tab");
+        if (tab === "general" && active) active.click();
+        if (tab === "commands") {
+            var module = window.MyCompanyModules && window.MyCompanyModules.mycommands;
+            if (module && module.api && typeof module.api.render === "function") module.api.render();
+        }
+    }
+
+    function propagateLanguage(event) {
+        if (workspaceChild()) return;
+        var detail = event && event.detail || { language: language() };
+        Array.prototype.forEach.call(document.querySelectorAll('iframe[src*="sirkWorkspaceChild=1"]'), function (frame) {
+            try { frame.contentWindow.dispatchEvent(new CustomEvent("sirkportal:languagechange", { detail: detail })); }
+            catch (error) {}
+        });
+    }
 
     function applyDocument(doc, config) {
         if (!doc) return;
@@ -48,6 +173,7 @@
             try { applyDocument(frame.contentDocument, current); }
             catch (error) {}
         }
+        restoreDeviceTab();
     }
 
     function apply(config) {
@@ -69,6 +195,19 @@
             favicon.href = icon;
         } else if (favicon) favicon.remove();
     }
+
+    holdWorkspaceForRestore();
+    document.addEventListener("click", function (event) {
+        var tab = event.target && event.target.closest && event.target.closest("[data-device-tab]");
+        if (tab) saveDeviceTab(tab.getAttribute("data-device-tab"));
+    }, true);
+    window.addEventListener("sirkportal:languagechange", refreshWorkspaceLanguage, true);
+    window.addEventListener("sirkportal:languagechange", propagateLanguage);
+    window.addEventListener("storage", function (event) {
+        if (event.key !== LANGUAGE_STORAGE) return;
+        refreshWorkspaceLanguage(new CustomEvent("sirkportal:languagechange", { detail: { language: language() } }));
+    });
+    new MutationObserver(function () { restoreDeviceTab(); }).observe(document.documentElement, { childList: true, subtree: true });
 
     fetch(base + "/portal-branding.json?v=" + encodeURIComponent(String(window.__MYCOMPANY_PORTAL_VERSION__ || Date.now())), {
         credentials: "same-origin",
