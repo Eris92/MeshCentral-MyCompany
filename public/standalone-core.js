@@ -118,6 +118,16 @@
 
     core.assetVersion = String(window.__MYCOMPANY_PORTAL_VERSION__ || "1.5.0");
 
+    (function loadBranding() {
+        var base = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
+        if (!base || document.getElementById("mycompany-portal-branding")) return;
+        var script = document.createElement("script");
+        script.id = "mycompany-portal-branding";
+        script.src = base + "/portal-branding.js?v=" + encodeURIComponent(core.assetVersion);
+        script.async = false;
+        (document.head || document.documentElement).appendChild(script);
+    }());
+
     core.redirectToLogin = function () {
         if (core.loginRedirectPending) return;
         core.loginRedirectPending = true;
