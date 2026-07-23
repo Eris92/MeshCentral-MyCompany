@@ -10,22 +10,26 @@ var standalone = read("public/portal-standalone.html");
     'name: "ALL | Wszystkie"',
     'className = "sirk-device-tab-close"',
     'className = "sirk-device-tab-store"',
-    'moveChildren(state.view, pane.store)',
-    'moveChildren(pane.store, state.view)',
+    'document.getElementById("sirkStandaloneContent")',
+    'content.closest(".sirk-standalone-main")',
+    'main.insertBefore(state.bar, content)',
+    '.sirk-standalone-sidebar .sirk-device-tabs',
+    'moveChildren(state.content, pane.store)',
+    'moveChildren(pane.store, state.content)',
     'window.MyCompanyDeviceTabs',
-    'new MutationObserver(scheduleEnsure)',
-    'window.setInterval(function () { ensureInfrastructure(); }, 1000)',
-    'disconnectPane(pane)',
-    '[data-view="devices"]'
-].forEach(function (value) { assert(tabs.indexOf(value) >= 0, "Missing persistent device tab contract: " + value); });
+    'disconnectPane(pane)'
+].forEach(function (value) { assert(tabs.indexOf(value) >= 0, "Missing persistent standalone device tab contract: " + value); });
 assert(tabs.indexOf("DocumentFragment") < 0, "Device tabs must not store live workspaces in consumable DocumentFragment objects");
+assert(tabs.indexOf('root.querySelector(\'[data-view="devices"]\')') < 0, "Standalone tabs must not resolve the sidebar navigation button as the Devices workspace");
 [
     ".sirk-device-tabs",
     "height:32px",
     ".sirk-device-tab.is-active",
     ".sirk-device-tab-close",
-    ".sirk-device-tab-cache"
+    ".sirk-device-tab-cache",
+    ".sirk-device-tabs-standalone:not([hidden]) + #sirkStandaloneContent"
 ].forEach(function (value) { assert(css.indexOf(value) >= 0, "Missing compact device tab CSS: " + value); });
+assert(css.indexOf('#sirkPortalRoot [data-view="devices"]') < 0, "Device workspace CSS must not resize the sidebar navigation button");
 assert(main.indexOf('style("mycompany-device-tabs-style", "portal-device-tabs.css")') >= 0, "Device tab CSS must load in native browser bootstrap");
 assert(main.indexOf('load("mycompany-device-tabs-script", asset("portal-device-tabs.js"))') >= 0, "Device tab script must load in native browser bootstrap");
 assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__') >= 0, "Standalone Portal must load device tab CSS");
