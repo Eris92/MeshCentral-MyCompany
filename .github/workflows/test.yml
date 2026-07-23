@@ -21,9 +21,12 @@ jobs:
         with:
           node-version: '24'
       - name: Apply final layout cleanup
+        id: cleanup
+        continue-on-error: true
         shell: bash
         run: |
-          node scripts/finalize-sirk-layout.js
+          set -o pipefail
+          node scripts/finalize-sirk-layout.js 2>&1 | tee cleanup-output.log
           cat > .github/workflows/test.yml <<'EOF'
           name: Test
 
@@ -50,6 +53,7 @@ jobs:
                 - run: npm test
           EOF
       - name: Validate final tree
+        if: steps.cleanup.outcome == 'success'
         shell: bash
         run: |
           set -o pipefail
@@ -62,10 +66,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: finalize-sirk-layout-output
-          path: finalize-test-output.log
-          if-no-files-found: ignore
+          path: |
+            cleanup-output.log
+            finalize-test-output.log
+          if-no-files-found: error
           retention-days: 1
       - name: Commit and push final tree
+        if: steps.cleanup.outcome == 'success' && success()
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
@@ -74,6 +81,7 @@ jobs:
           git commit -m 'refactor: finalize SIRK Platform repository layout'
           git push origin HEAD:chore/sirk-docs-1.5.140
       - name: Remove accidental helper branches
+        if: steps.cleanup.outcome == 'success' && success()
         continue-on-error: true
         shell: bash
         run: |
@@ -82,3 +90,6 @@ jobs:
             chore/sirk-docs-1.5.140-final \
             chore/sirk-docs-1.5.140-ready \
             chore/sirk-docs-1.5.140-merge
+      - name: Fail after cleanup error
+        if: steps.cleanup.outcome != 'success'
+        run: exit 1
