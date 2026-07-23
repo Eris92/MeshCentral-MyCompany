@@ -1,10 +1,35 @@
 "use strict";
 
+var fs = require("fs");
+var path = require("path");
 var originalFactory = require("./index.js");
 
 function portalSettings(context) {
     var current = context.settings.read();
     return current && current.modules && current.modules.portal || {};
+}
+
+function safeUrl(value) {
+    value = String(value || "").trim();
+    if (!value) return "";
+    try {
+        var parsed = new URL(value);
+        return /^https?:$/i.test(parsed.protocol) ? parsed.href : "";
+    } catch (error) { return ""; }
+}
+
+function writeBranding(context, settings) {
+    try {
+        var root = context && context.pluginRoot || path.resolve(__dirname, "../..");
+        var target = path.join(root, "public", "portal-branding.json");
+        var payload = {
+            siteName: String(settings.siteName || "SirK Portal").trim().slice(0, 80) || "SirK Portal",
+            siteIconUrl: safeUrl(settings.siteIconUrl),
+            showPasswordReset: settings.showPasswordReset !== false,
+            passwordResetUrl: safeUrl(settings.passwordResetUrl) || "https://passwordreset.microsoftonline.com/"
+        };
+        fs.writeFileSync(target, JSON.stringify(payload, null, 2), "utf8");
+    } catch (error) {}
 }
 
 module.exports.createModule = function (context) {
@@ -15,7 +40,10 @@ module.exports.createModule = function (context) {
     var originalClientConfig = module.clientConfig;
 
     module.initialize = function () {
-        return Promise.resolve(originalInitialize.call(module));
+        return Promise.resolve(originalInitialize.call(module)).then(function (value) {
+            writeBranding(context, portalSettings(context));
+            return value;
+        });
     };
 
     module.apiGet = function (asset, req, user) {
@@ -38,10 +66,15 @@ module.exports.createModule = function (context) {
             return context.settings.update(function (current) {
                 current.modules.portal = current.modules.portal || {};
                 if (typeof body.showNativeLink === "boolean") current.modules.portal.showNativeLink = body.showNativeLink;
+                if (typeof body.showPasswordReset === "boolean") current.modules.portal.showPasswordReset = body.showPasswordReset;
+                if (body.passwordResetUrl != null) current.modules.portal.passwordResetUrl = safeUrl(body.passwordResetUrl) || "https://passwordreset.microsoftonline.com/";
+                if (body.siteName != null) current.modules.portal.siteName = String(body.siteName || "SirK Portal").trim().slice(0, 80) || "SirK Portal";
+                if (body.siteIconUrl != null) current.modules.portal.siteIconUrl = safeUrl(body.siteIconUrl);
                 delete current.modules.portal.loginPanel;
                 return current;
             }).then(function () {
                 var settings = portalSettings(context);
+                writeBranding(context, settings);
                 if (value && typeof value === "object") value.module = settings;
                 return value;
             });
@@ -56,6 +89,10 @@ module.exports.createModule = function (context) {
         value.forceNewLogin = settings.forceNewLogin === true;
         value.forcePortalInterface = settings.forcePortalInterface === true;
         value.keepSessionsAfterRestart = settings.keepSessionsAfterRestart === true;
+        value.showPasswordReset = settings.showPasswordReset !== false;
+        value.passwordResetUrl = safeUrl(settings.passwordResetUrl) || "https://passwordreset.microsoftonline.com/";
+        value.siteName = String(settings.siteName || "SirK Portal").trim().slice(0, 80) || "SirK Portal";
+        value.siteIconUrl = safeUrl(settings.siteIconUrl);
         value.earlyOverlay = false;
         value.loginIntegration = false;
         return value;
