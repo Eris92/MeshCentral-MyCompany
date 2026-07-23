@@ -17,35 +17,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Collect layout diagnostics
-        shell: bash
-        run: |
-          {
-            echo "TREE=$(git rev-parse HEAD^{tree})"
-            echo "[core files]"
-            find core -type f -print 2>/dev/null || true
-            echo "[legacy path references]"
-            grep -RInE 'core/(atomic-json|script-library)\.js|portal-approval-layout-fix|portal-approval-style|portal-collapse-fix|portal-link-visibility|sirk-login\.(js|css)|Sync-SirKPortal-Vendor' . --exclude-dir=.git || true
-          } > ci-layout-diagnostics.txt
-      - name: Validate architecture
-        shell: bash
-        run: |
-          set +e
-          npm test > ci-test-output.log 2>&1
-          status=$?
-          cat ci-test-output.log
-          exit $status
-      - name: Upload validation output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sirk-validation-output
-          path: |
-            ci-test-output.log
-            ci-layout-diagnostics.txt
-          if-no-files-found: error
-          retention-days: 1
+          node-version: '24'
+      - name: Validate project
+        run: npm test
       - name: Check JavaScript syntax
         shell: bash
         run: |
