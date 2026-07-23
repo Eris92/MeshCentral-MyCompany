@@ -1,72 +1,71 @@
-# MyCompany 1.5.138
+# SIRK Management Platform 1.5.139
 
-Jeden skonsolidowany plugin MeshCentral zawierający wspólny backend, moduły administracyjne oraz nowy SirK Portal.
+**Plugin:** `SIRK-Portal`  
+**Nazwa skrócona w interfejsie:** `SIRK Platform`
+
+SIRK Management Platform jest skonsolidowanym pluginem MeshCentral zawierającym wspólny backend, moduły administracyjne, automatyzację, akceptacje, zarządzanie urządzeniami oraz samodzielny SIRK Portal.
 
 ## Dokumentacja
 
 - [Docelowa struktura repozytorium](docs/REPOSITORY-LAYOUT.md)
 - [Aktualny stan projektu](docs/PROJECT-STATE.md)
-- [Integracja MyCompany + SirK Portal](docs/portal-integration.md)
+- [Integracja SIRK Platform](docs/portal-integration.md)
 - [AGENTS.md](AGENTS.md)
-- [Reguły agenta dla MyCompany](docs/agent/11-Agent-MyCompany.md)
 
 ## Warstwy projektu
 
 ```text
-backend Node/MeshCentral       -> server/ (docelowo)
-nowy SirK Portal               -> public/portal/
+backend Node/MeshCentral       -> server/
+nowy SIRK Portal               -> public/portal/
 adapter natywnego MeshCentral  -> public/native/
 frontend wspólny               -> public/shared/ i public/modules/
 panel administracyjny          -> web/admin/
+ikony                          -> assets/icons/
 narzędzia                      -> tools/
 ```
 
-Aktualne katalogi `core/`, `modules/`, płaski `public/` oraz płaski `web/` są migrowane etapami. Szczegóły i zasady zgodności opisuje `docs/REPOSITORY-LAYOUT.md`.
+Aktualne katalogi `core/`, `modules/` i część płaskiego `public/` są migrowane etapami. Nowy kod nie może dodawać kolejnych plików do starych lokalizacji.
 
 ## Backend i frontend modułu
 
-Pliki:
+Moduł biznesowy może mieć dwie warstwy:
 
 ```text
-modules/ApprovalCenter/index.js
-public/modules/approvalcenter.js
+server/modules/approvalcenter/index.js   # backend
+public/modules/approvalcenter/index.js   # frontend
 ```
 
-nie powinny być traktowane jako dwa niezależne moduły. Pierwszy jest backendem Node/MeshCentral, drugi rendererem przeglądarkowym. Obie warstwy używają klucza `approvalcenter` i wspólnego API.
+Nie są to dwa niezależne moduły. Backend obsługuje API, dane i uprawnienia, a frontend renderuje interfejs i korzysta ze wspólnego API.
 
-Audyt wykazał również starsze kopie rendererów w płaskim `public/`, dlatego migracja usuwa te duplikaty i pozostawia jeden kanoniczny frontend dla każdego modułu.
+## Moduły funkcjonalne
 
-## Moduły
+- Automation Scripts — skrypty i zarządzanie;
+- Commands — polecenia;
+- Approval Center — akceptacje;
+- Move Requests — przenoszenie urządzeń;
+- Jira Integration — integracja z Jira i Assets;
+- Defender XDR — bezpieczeństwo;
+- SIRK Portal — główny interfejs użytkownika.
 
-- My Scripts / Zarządzanie
-- My Commands / Automatyzacja i Polecenia
-- Approval Center / Akceptacje
-- Move Requests
-- My Jira / Assets
-- Defender Tools / Security
-- SirK Portal
+Klucze migracyjne `myscripts`, `mycommands`, `myjira` i `MyCompany` mogą występować wyłącznie w warstwie kompatybilności dla istniejących ustawień i instalacji. Nie są nazwami wyświetlanymi ani nazwami nowych plików.
 
-`MyScripts`, `MyCommands`, `MyJira`, `DefenderTools`, `ApprovalCenter` i `MoveRequests` są modułami wewnętrznymi jednego pluginu.
+## Entry pointy
+
+Kanoniczny entrypoint pluginu:
+
+```text
+SIRK-Portal.js
+```
+
+`MyCompany.js` pozostaje czasowo jako mały shim dla istniejących instalacji. Nowa instalacja nie powinna go używać.
 
 ## Instalacja
 
-Kanoniczny installer znajduje się w:
+Docelowe nazwy narzędzi instalacyjnych będą znajdować się w `tools/install/`. Historyczne launchery `Install-MyCompany-*` są utrzymywane wyłącznie do czasu zakończenia migracji aktualizatora.
 
-```powershell
-.\tools\install\Install-MyCompany-FromGit_RUN.ps1
-```
+## SIRK Portal
 
-Dla zgodności pozostają krótkie launchery w root:
-
-```powershell
-.\Install-MyCompany-FromGit_RUN.ps1
-```
-
-Launchery w root nie zawierają logiki instalacji.
-
-## SirK Portal
-
-SirK Portal jest niezależnym dokumentem frontendowym udostępnianym przez MyCompany. Nie modyfikuje core MeshCentral i korzysta z tego samego backendu co adapter natywnego interfejsu.
+SIRK Portal jest niezależnym dokumentem frontendowym. Nie modyfikuje core MeshCentral i korzysta z tego samego backendu co adapter natywnego interfejsu.
 
 Widoki:
 
@@ -83,8 +82,10 @@ Widoki:
 
 ## Dane trwałe
 
+Kanoniczny katalog danych:
+
 ```text
-meshcentral-data/mycompany-data
+meshcentral-data/sirk-platform-data
 ├── settings.json
 ├── requests.json
 ├── secrets.json
@@ -93,7 +94,7 @@ meshcentral-data/mycompany-data
 └── scripts/
 ```
 
-Dane runtime nie są częścią repozytorium i nie mogą być usuwane podczas aktualizacji pluginu.
+Przy pierwszym uruchomieniu po zmianie nazwy dane z `mycompany-data` są przenoszone do `sirk-platform-data`. Dane runtime nie są częścią repozytorium i nie mogą być usuwane podczas aktualizacji pluginu.
 
 ## Testy
 
@@ -101,4 +102,4 @@ Dane runtime nie są częścią repozytorium i nie mogą być usuwane podczas ak
 npm test
 ```
 
-Test `scripts/validate-repository-layout.js` blokuje dokładanie pełnych skryptów PowerShell do root i dokumentuje rozdział backend/frontend. Pozostałe testy walidują runtime, Portal, bezpieczeństwo, uprawnienia i sesje urządzeń.
+Walidator struktury kontroluje nazwę `SIRK-Portal`, nazwę wyświetlaną `SIRK Management Platform`, centralne ikony, pojedynczy renderer każdego modułu, katalog `web/admin/` i brak nowych implementacji pod historycznymi nazwami.
