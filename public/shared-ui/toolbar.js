@@ -10,10 +10,10 @@
     function button(definition) {
         var value = document.createElement("button");
         value.type = "button";
-        value.className = "btn btn-secondary btn-sm mc-shared-toolbar-button";
+        value.className = "btn btn-secondary btn-sm mc-shared-toolbar-button mc-portal-toolbar-button";
         value.title = definition.title || definition.key;
         value.setAttribute("aria-label", value.title);
-        value.innerHTML = '<span class="mc-shared-toolbar-icon"></span>';
+        value.innerHTML = '<span class="mc-shared-toolbar-icon mc-portal-toolbar-icon"></span>';
         var icon = definition.icon || definition.title || definition.key;
         if (String(icon).indexOf("<svg") === 0) value.firstChild.innerHTML = icon;
         else value.firstChild.textContent = icon;
@@ -27,7 +27,7 @@
             if (!host) throw new Error("Toolbar container not found.");
 
             var root = document.createElement("div");
-            root.className = "mc-shared-toolbar";
+            root.className = "mc-shared-toolbar mc-portal-toolbar";
             var left = document.createElement("div");
             left.className = "mc-shared-toolbar-group mc-shared-toolbar-left";
             var center = document.createElement("div");
@@ -43,6 +43,7 @@
             searchWrap.hidden = true;
             var searchInput = document.createElement("input");
             searchInput.type = "search";
+            searchInput.className = "mc-portal-filter";
             searchInput.placeholder = options.searchPlaceholder || "Search";
             searchWrap.appendChild(searchInput);
 
@@ -69,9 +70,7 @@
                         return;
                     }
                     var handler = definition.onClick || handlers[definition.handler];
-                    if (typeof handler === "function") {
-                        handler(api, event, definition);
-                    }
+                    if (typeof handler === "function") handler(api, event, definition);
                 };
                 return item;
             }
@@ -85,8 +84,7 @@
                 return Number(a.order || 500) - Number(b.order || 500);
             }).forEach(function (definition) {
                 definition.side = definition.side || "right";
-                definition.key = definition.key ||
-                    ("custom-" + Object.keys(context.buttons).length);
+                definition.key = definition.key || ("custom-" + Object.keys(context.buttons).length);
                 add(definition);
             });
 
@@ -98,19 +96,12 @@
                 context.state.search = searchInput.value || "";
                 clearTimeout(timer);
                 timer = setTimeout(function () {
-                    if (typeof handlers.onSearch === "function") {
-                        handlers.onSearch(context.state.search, api);
-                    }
+                    if (typeof handlers.onSearch === "function") handlers.onSearch(context.state.search, api);
                 }, 120);
             };
 
-            if (
-                context.buttons.clear &&
-                typeof handlers.onClear !== "function"
-            ) {
-                context.buttons.clear.onclick = function () {
-                    api.clearSearch(true);
-                };
+            if (context.buttons.clear && typeof handlers.onClear !== "function") {
+                context.buttons.clear.onclick = function () { api.clearSearch(true); };
             }
 
             center.hidden = center.childNodes.length === 0;
