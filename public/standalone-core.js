@@ -1,6 +1,50 @@
 (function () {
     "use strict";
 
+    (function prepareInitialView() {
+        var content = document.getElementById("sirkStandaloneContent");
+        var child = false;
+        var savedActive = "all";
+
+        try {
+            child = new URL(window.location.href).searchParams.get("sirkWorkspaceChild") === "1";
+        } catch (error) {}
+
+        try {
+            var saved = JSON.parse(localStorage.getItem("mycompany.sirkportal.deviceTabs") || "{}");
+            savedActive = String(saved && saved.active || "all");
+        } catch (error) {}
+
+        if (child && window.location.hash !== "#devices") {
+            try {
+                var url = new URL(window.location.href);
+                url.hash = "devices";
+                history.replaceState(history.state, "", url.href);
+            } catch (error) {
+                window.location.hash = "devices";
+            }
+        }
+
+        var requested = String(window.location.hash || "#overview").replace(/^#/, "") || "overview";
+        var buttons = document.querySelectorAll(".sirk-standalone-nav [data-view]");
+        Array.prototype.forEach.call(buttons, function (button) {
+            var active = button.getAttribute("data-view") === requested;
+            button.classList.toggle("is-active", active);
+            button.setAttribute("aria-current", active ? "page" : "false");
+        });
+
+        var requestedButton = document.querySelector('.sirk-standalone-nav [data-view="' + requested.replace(/"/g, "\\\"") + '"] b');
+        var title = document.getElementById("sirkStandaloneTitle");
+        if (title && requestedButton) title.textContent = requestedButton.textContent;
+
+        if (content && (child || (requested === "devices" && savedActive !== "all"))) {
+            document.documentElement.classList.add("sirk-device-restore-pending");
+            content.style.visibility = "hidden";
+            content.style.pointerEvents = "none";
+            content.setAttribute("aria-busy", "true");
+        }
+    }());
+
     window.MyCompanyCore = window.MyCompanyCore || {};
     window.MyCompanyModules = window.MyCompanyModules || {};
     var core = window.MyCompanyCore;
