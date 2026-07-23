@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyStandaloneDeviceTabsV2Loaded) return;
-    window.__myCompanyStandaloneDeviceTabsV2Loaded = true;
+    if (window.__myCompanyStandaloneDeviceTabsV3Loaded) return;
+    window.__myCompanyStandaloneDeviceTabsV3Loaded = true;
 
     var state = {
         root: null,
@@ -13,12 +13,17 @@
         panes: Object.create(null),
         active: "all",
         pending: null,
-        finalizeTimer: 0,
-        observer: null
+        observer: null,
+        finalizeTimer: 0
     };
 
     function text(value) { return String(value || "").replace(/\s+/g, " ").trim(); }
     function safeKey(value) { return text(value).replace(/[^a-z0-9._:-]/gi, "_").slice(0, 180); }
+    function language() {
+        try { return localStorage.getItem("sirkPortal.language") === "en" ? "en" : "pl"; }
+        catch (error) { return document.documentElement.lang === "en" ? "en" : "pl"; }
+    }
+    function allLabel() { return language() === "en" ? "All" : "Wszystkie"; }
 
     function currentView() {
         var active = document.querySelector('.sirk-standalone-nav button.is-active[data-view]');
@@ -37,6 +42,14 @@
     function moveChildren(source, target) {
         if (!source || !target) return;
         while (source.firstChild) target.appendChild(source.firstChild);
+    }
+
+    function cloneChildren(source, target) {
+        if (!source || !target) return;
+        target.textContent = "";
+        Array.prototype.forEach.call(source.childNodes, function (node) {
+            target.appendChild(node.cloneNode(true));
+        });
     }
 
     function ensureInfrastructure() {
@@ -63,19 +76,25 @@
             state.bar = document.createElement("div");
             state.bar.className = "sirk-device-tabs sirk-device-tabs-standalone";
             state.bar.setAttribute("role", "tablist");
-            state.bar.setAttribute("aria-label", "Otwarte urządzenia");
             main.insertBefore(state.bar, content);
         }
 
         if (!state.panes.all) {
-            state.panes.all = { key: "all", name: "ALL | Wszystkie", nodeId: "", store: createStore("all") };
+            state.panes.all = { key: "all", name: allLabel(), nodeId: "", store: createStore("all") };
             state.cache.appendChild(state.panes.all.store);
         }
 
+        updateLanguage();
         syncVisibility();
         renderTabs();
         bind();
         return true;
+    }
+
+    function updateLanguage() {
+        if (!state.panes.all) return;
+        state.panes.all.name = allLabel();
+        if (state.bar) state.bar.setAttribute("aria-label", language() === "en" ? "Open devices" : "Otwarte urządzenia");
     }
 
     function syncVisibility() {
@@ -150,7 +169,7 @@
                 close.className = "sirk-device-tab-close";
                 close.textContent = "×";
                 close.setAttribute("role", "button");
-                close.setAttribute("aria-label", "Zamknij " + pane.name);
+                close.setAttribute("aria-label", (language() === "en" ? "Close " : "Zamknij ") + pane.name);
                 close.addEventListener("click", function (event) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -180,9 +199,8 @@
 
     function candidate(target) {
         if (!devicesActive() || state.active !== "all" || !state.content || !target || !target.closest) return null;
-        var element = target.closest('[data-node-id],[data-nodeid],[data-device-id],[data-deviceid],[data-node],[data-device],.sirk-device-row,.sirk-device-card,.sirk-device-item,.device-row,.device-card,[role="row"]');
+        var element = target.closest('[data-device-id],[data-node-id],[data-nodeid],[data-deviceid],[data-node],[data-device],.sirk-device-row,.sirk-device-card,.sirk-device-item,.device-row,.device-card,[role="row"]');
         if (!element || !state.content.contains(element)) return null;
-        if (target.closest("button,input,select,textarea") && !target.closest(".sirk-device-row,.sirk-device-card,.sirk-device-item,.device-row,.device-card")) return null;
 
         var nodeId = attributeValue(element);
         var nameNode = element.querySelector && element.querySelector('[data-device-name],.sirk-device-name,.device-name,[data-host-name],strong,b');
@@ -193,24 +211,29 @@
         return { key: "node:" + safeKey(nodeId), nodeId: nodeId, name: name.slice(0, 64) };
     }
 
-    function beginOpen(info) {
+    function beginOpen(info, event) {
         if (state.panes[info.key]) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
             activate(info.key);
-            return false;
+            return;
         }
+
+        cloneChildren(state.content, state.panes.all.store);
         state.pending = info;
-        stashActive();
         window.clearTimeout(state.finalizeTimer);
-        state.finalizeTimer = window.setTimeout(finalizeOpen, 180);
-        return true;
+        state.finalizeTimer = window.setTimeout(finalizeOpen, 100);
     }
 
     function finalizeOpen() {
         if (!state.pending || !state.content) return;
-        if (!state.content.childNodes.length) {
-            state.finalizeTimer = window.setTimeout(finalizeOpen, 120);
+        var workspace = state.content.querySelector(".sirk-device-workspace");
+        if (!workspace) {
+            state.finalizeTimer = window.setTimeout(finalizeOpen, 100);
             return;
         }
+
         var info = state.pending;
         state.pending = null;
         var pane = { key: info.key, name: info.name, nodeId: info.nodeId, store: createStore(info.key) };
@@ -222,34 +245,28 @@
     }
 
     function bind() {
-        if (!state.root || state.root.__myCompanyStandaloneDeviceTabsBound) return;
-        state.root.__myCompanyStandaloneDeviceTabsBound = true;
+        if (!state.root || state.root.__myCompanyStandaloneDeviceTabsV3Bound) return;
+        state.root.__myCompanyStandaloneDeviceTabsV3Bound = true;
 
         state.root.addEventListener("click", function (event) {
             ensureInfrastructure();
             var info = candidate(event.target);
             if (!info) return;
-            if (state.panes[info.key]) {
-                event.preventDefault();
-                event.stopPropagation();
-                if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
-                activate(info.key);
-                return;
-            }
-            beginOpen(info);
+            beginOpen(info, event);
         }, true);
 
         state.root.addEventListener("click", function () { window.setTimeout(syncVisibility, 0); });
+        window.addEventListener("sirkportal:languagechange", function () {
+            updateLanguage();
+            renderTabs();
+        });
     }
 
     function schedule() {
         window.setTimeout(function () {
             ensureInfrastructure();
             syncVisibility();
-            if (state.pending) {
-                window.clearTimeout(state.finalizeTimer);
-                state.finalizeTimer = window.setTimeout(finalizeOpen, 100);
-            }
+            if (state.pending) finalizeOpen();
         }, 20);
     }
 
