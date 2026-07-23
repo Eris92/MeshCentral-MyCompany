@@ -31,25 +31,3 @@ html.sirk-device-workspace-child #sirkStandaloneContent .sirk-device-workspace{h
 html.sirk-device-workspace-child #sirkStandaloneContent .sirk-device-compact-header{margin:0!important;border-radius:11px 11px 0 0!important}
 html.sirk-device-workspace-child #sirkStandaloneContent .sirk-device-tabs{margin:0!important;padding-left:12px!important;padding-right:12px!important}
 html.sirk-device-workspace-child #sirkStandaloneContent canvas{max-height:calc(100vh - 136px)!important}
-
-/* Management primary column: keep colored glyphs without icon tiles and collapse the real grid track. */
-#sirkPortalRoot .is-management-collapsed .sirk-management-shell.mc-portal-module-shell .sirk-management-workspace.mc-portal-module-layout{grid-template-columns:56px var(--portal-secondary-width,236px) minmax(0,1fr)!important}
-#sirkPortalRoot .is-management-collapsed .sirk-management-workspace>.sirk-management-column:first-child{width:56px!important;min-width:56px!important;max-width:56px!important;padding:6px!important;overflow-x:hidden!important;box-sizing:border-box!important}
-#sirkPortalRoot .is-management-collapsed .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item{width:42px!important;min-width:42px!important;max-width:42px!important;min-height:42px!important;margin-left:auto!important;margin-right:auto!important;padding:6px!important;justify-content:center!important;gap:0!important}
-#sirkPortalRoot .is-management-collapsed .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item>span:last-child{display:none!important}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-nav-icon{display:grid;place-items:center;width:24px!important;min-width:24px!important;height:24px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:inherit}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item-icon svg,#sirkPortalRoot .mc-shared-primary .mc-nav-icon svg{width:20px;height:20px;stroke:currentColor!important;fill:none}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(1) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(1) .mc-nav-icon{color:#356ae6}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(2) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(2) .mc-nav-icon{color:#f0a000}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(3) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(3) .mc-nav-icon{color:#16879a}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(4) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(4) .mc-nav-icon{color:#7357d9}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(5) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(5) .mc-nav-icon{color:#ef6c00}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(6) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(6) .mc-nav-icon{color:#168d75}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(7) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(7) .mc-nav-icon{color:#5977e8}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(8) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(8) .mc-nav-icon{color:#2878c7}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(9) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(9) .mc-nav-icon{color:#7b61e8}
-#sirkPortalRoot .sirk-management-workspace>.sirk-management-column:first-child .sirk-management-item:nth-child(10) .sirk-management-item-icon,#sirkPortalRoot .mc-shared-primary .mc-shared-nav-item:nth-child(10) .mc-nav-icon{color:#248d83}
-
-/* Management edit mode: widen the real second grid track in both primary-column states. */
-#sirkPortalRoot .mycompany-management-host.is-management-edit-mode .sirk-management-shell.mc-portal-module-shell .sirk-management-workspace.mc-portal-module-layout{grid-template-columns:var(--portal-primary-width,184px) 440px minmax(0,1fr)!important}
-#sirkPortalRoot .mycompany-management-host.is-management-edit-mode.is-management-collapsed .sirk-management-shell.mc-portal-module-shell .sirk-management-workspace.mc-portal-module-layout{grid-template-columns:56px 440px minmax(0,1fr)!important}
