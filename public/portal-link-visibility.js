@@ -34,9 +34,9 @@
             ".sirk-device-tabs-standalone{position:relative!important;padding-right:54px!important;overflow:visible!important}",
             ".sirk-device-view-mode{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2147483000}",
             ".sirk-device-view-mode-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:32px;height:32px;padding:0!important;line-height:0!important;border:1px solid var(--sirk-border,#dce3ec);border-radius:9px;background:var(--sirk-panel,#fff);color:var(--sirk-muted,#657187);cursor:pointer;box-shadow:0 3px 10px rgba(15,23,42,.08)}",
-            ".sirk-device-view-mode-toggle:hover,.sirk-device-view-mode-toggle:focus-visible{border-color:#60a5fa;color:#2563eb;outline:none}",
+            ".sirk-device-view-mode-toggle:hover,.sirk-device-view-mode-toggle:focus-visible,.sirk-device-view-mode-toggle.is-active{border-color:#60a5fa;color:#2563eb;outline:none}",
             ".sirk-device-view-mode-toggle svg{display:block!important;flex:0 0 auto;width:17px;height:17px;margin:0!important;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}",
-            ".sirk-device-view-mode-menu{position:fixed!important;z-index:2147483647!important;display:grid;min-width:230px;padding:6px;border:1px solid var(--sirk-border,#dce3ec);border-radius:10px;background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033);box-shadow:0 14px 35px rgba(15,23,42,.28)}",
+            ".sirk-device-view-mode-menu{position:fixed!important;z-index:2147483647!important;display:grid;min-width:285px;padding:6px;border:1px solid var(--sirk-border,#dce3ec);border-radius:10px;background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033);box-shadow:0 14px 35px rgba(15,23,42,.28)}",
             ".sirk-device-view-mode-menu[hidden]{display:none!important}",
             ".sirk-device-view-mode-menu button{display:flex;align-items:center;gap:9px;min-height:36px;padding:8px 10px;border:0;border-radius:7px;background:transparent;color:inherit;text-align:left;font:600 13px Segoe UI,Arial,sans-serif;cursor:pointer}",
             ".sirk-device-view-mode-menu button:hover,.sirk-device-view-mode-menu button:focus-visible{background:var(--sirk-hover,#eef3f9);outline:none}",
@@ -46,36 +46,38 @@
             "html.sirk-device-focus-mode .sirk-standalone-main>header,html.sirk-device-focus-mode .sirk-standalone-topbar{display:none!important}",
             "html.sirk-device-focus-mode #sirkPortalRoot,html.sirk-device-focus-mode #sirkStandaloneRoot,html.sirk-device-focus-mode .sirk-standalone-main{width:100%!important;height:100%!important;min-height:100%!important}",
             "html.sirk-device-focus-mode #sirkStandaloneContent{min-height:0!important}",
+            "html.sirk-device-connection-mode .sirk-standalone-sidebar,html.sirk-device-connection-mode .sirk-standalone-main>header,html.sirk-device-connection-mode .sirk-standalone-topbar,html.sirk-device-connection-mode .sirk-device-tabs-standalone{display:none!important}",
+            "html.sirk-device-connection-mode .sirk-standalone-root{grid-template-columns:minmax(0,1fr)!important}",
+            "html.sirk-device-connection-mode #sirkPortalRoot,html.sirk-device-connection-mode #sirkStandaloneRoot,html.sirk-device-connection-mode .sirk-standalone-main{width:100%!important;height:100%!important;min-height:100%!important}",
+            "html.sirk-device-connection-mode #sirkStandaloneContent{padding:0!important;margin:0!important}",
+            "html.sirk-device-connection-mode .sirk-device-session-layer{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147482000!important}",
+            "html.sirk-device-connection-mode .sirk-device-session-pane.is-active,html.sirk-device-connection-mode .sirk-device-session-pane.is-active iframe{width:100%!important;height:100%!important}",
             "html.sirk-device-workspace-child .sirk-device-view-mode{display:none!important}"
         ].join("");
         (document.head || document.documentElement).appendChild(style);
     }
 
-    function activeSessionFrame() {
-        return document.querySelector(".sirk-device-session-pane.is-active iframe,.sirk-device-isolated-workspace.is-active iframe");
-    }
-
-    function enterConnectionFullscreen() {
-        var frame = activeSessionFrame();
-        if (!frame) return;
-        try {
-            var doc = frame.contentDocument;
-            var target = doc && (doc.querySelector("#sirkDeviceTabBody .sirk-native-bridge-stage") || doc.querySelector("#sirkDeviceTabBody") || doc.documentElement);
-            if (target && typeof target.requestFullscreen === "function") {
-                target.requestFullscreen().catch(function () {
-                    if (typeof frame.requestFullscreen === "function") frame.requestFullscreen().catch(function () {});
-                });
-                return;
-            }
-        } catch (error) {}
-        if (typeof frame.requestFullscreen === "function") frame.requestFullscreen().catch(function () {});
-    }
-
     function setFocusMode(enabled) {
         document.documentElement.classList.toggle("sirk-device-focus-mode", enabled);
+        if (enabled) document.documentElement.classList.remove("sirk-device-connection-mode");
         try { localStorage.setItem("mycompany.sirkportal.focusMode", enabled ? "1" : "0"); }
         catch (error) {}
         window.dispatchEvent(new Event("resize"));
+    }
+
+    function setConnectionMode(enabled) {
+        document.documentElement.classList.toggle("sirk-device-connection-mode", enabled);
+        if (enabled) document.documentElement.classList.remove("sirk-device-focus-mode");
+        window.dispatchEvent(new Event("resize"));
+    }
+
+    function requestPortalFullscreen() {
+        var target = document.getElementById("sirkPortalRoot") || document.documentElement;
+        if (document.fullscreenElement) return Promise.resolve();
+        if (target && typeof target.requestFullscreen === "function") {
+            return target.requestFullscreen().catch(function () {});
+        }
+        return Promise.resolve();
     }
 
     function restoreFocusMode() {
@@ -103,23 +105,28 @@
         menu.hidden = true;
         menu.setAttribute("role", "menu");
 
-        var focus = document.createElement("button");
-        focus.type = "button";
-        focus.setAttribute("role", "menuitem");
-        focus.innerHTML = '<span>▣</span><span></span>';
+        function createItem(icon, pl, en) {
+            var button = document.createElement("button");
+            button.type = "button";
+            button.setAttribute("role", "menuitem");
+            button.innerHTML = "<span>" + icon + "</span><span>" + text(pl, en) + "</span>";
+            return button;
+        }
 
-        var fullscreen = document.createElement("button");
-        fullscreen.type = "button";
-        fullscreen.setAttribute("role", "menuitem");
-        fullscreen.innerHTML = '<span>⛶</span><span>' + text("Pełny ekran połączenia", "Connection fullscreen") + '</span>';
-
+        var focus = createItem("▣", "Widok szeroki", "Wide view");
+        var focusFullscreen = createItem("⛶", "Widok szeroki + tryb pełnoekranowy", "Wide view + fullscreen mode");
+        var connection = createItem("◫", "Pełny ekran połączenia", "Connection full view");
+        var connectionFullscreen = createItem("⛶", "Pełny ekran połączenia + tryb pełnoekranowy", "Connection full view + fullscreen mode");
         var openedAt = 0;
 
         function refresh() {
-            var active = document.documentElement.classList.contains("sirk-device-focus-mode");
-            focus.classList.toggle("is-active", active);
-            focus.lastChild.textContent = active ? text("Widok normalny", "Normal view") : text("Widok szeroki", "Wide view");
-            toggle.classList.toggle("is-active", active);
+            var focusActive = document.documentElement.classList.contains("sirk-device-focus-mode");
+            var connectionActive = document.documentElement.classList.contains("sirk-device-connection-mode");
+            focus.classList.toggle("is-active", focusActive && !document.fullscreenElement);
+            focusFullscreen.classList.toggle("is-active", focusActive && !!document.fullscreenElement);
+            connection.classList.toggle("is-active", connectionActive && !document.fullscreenElement);
+            connectionFullscreen.classList.toggle("is-active", connectionActive && !!document.fullscreenElement);
+            toggle.classList.toggle("is-active", focusActive || connectionActive);
         }
 
         function hideMenu() {
@@ -130,10 +137,11 @@
         function positionMenu() {
             if (menu.hidden) return;
             var rect = toggle.getBoundingClientRect();
-            var menuWidth = Math.max(menu.offsetWidth || 230, 230);
+            var menuWidth = Math.max(menu.offsetWidth || 285, 285);
+            var menuHeight = menu.offsetHeight || 176;
             var left = Math.min(window.innerWidth - menuWidth - 8, Math.max(8, rect.right - menuWidth));
             var top = rect.bottom + 7;
-            if (top + (menu.offsetHeight || 92) > window.innerHeight - 8) top = Math.max(8, rect.top - (menu.offsetHeight || 92) - 7);
+            if (top + menuHeight > window.innerHeight - 8) top = Math.max(8, rect.top - menuHeight - 7);
             menu.style.left = left + "px";
             menu.style.top = top + "px";
         }
@@ -160,9 +168,7 @@
             showMenu();
         });
 
-        menu.addEventListener("pointerdown", function (event) {
-            event.stopPropagation();
-        });
+        menu.addEventListener("pointerdown", function (event) { event.stopPropagation(); });
         menu.addEventListener("contextmenu", function (event) {
             event.preventDefault();
             event.stopPropagation();
@@ -170,15 +176,34 @@
 
         focus.addEventListener("click", function (event) {
             event.stopPropagation();
-            setFocusMode(!document.documentElement.classList.contains("sirk-device-focus-mode"));
+            setConnectionMode(false);
+            setFocusMode(true);
             hideMenu();
             refresh();
         });
 
-        fullscreen.addEventListener("click", function (event) {
+        focusFullscreen.addEventListener("click", function (event) {
             event.stopPropagation();
+            setConnectionMode(false);
+            setFocusMode(true);
             hideMenu();
-            enterConnectionFullscreen();
+            requestPortalFullscreen().then(refresh);
+        });
+
+        connection.addEventListener("click", function (event) {
+            event.stopPropagation();
+            setFocusMode(false);
+            setConnectionMode(true);
+            hideMenu();
+            refresh();
+        });
+
+        connectionFullscreen.addEventListener("click", function (event) {
+            event.stopPropagation();
+            setFocusMode(false);
+            setConnectionMode(true);
+            hideMenu();
+            requestPortalFullscreen().then(refresh);
         });
 
         document.addEventListener("pointerdown", function (event) {
@@ -189,15 +214,14 @@
             if (toggle.contains(event.target) || menu.contains(event.target)) return;
             hideMenu();
         }, true);
-        window.addEventListener("resize", function () {
-            if (!menu.hidden) positionMenu();
-        });
-        window.addEventListener("scroll", function () {
-            if (!menu.hidden) positionMenu();
-        }, true);
+        document.addEventListener("fullscreenchange", refresh);
+        window.addEventListener("resize", function () { if (!menu.hidden) positionMenu(); });
+        window.addEventListener("scroll", function () { if (!menu.hidden) positionMenu(); }, true);
 
         menu.appendChild(focus);
-        menu.appendChild(fullscreen);
+        menu.appendChild(focusFullscreen);
+        menu.appendChild(connection);
+        menu.appendChild(connectionFullscreen);
         host.appendChild(toggle);
         bar.appendChild(host);
         document.body.appendChild(menu);
