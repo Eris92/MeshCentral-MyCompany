@@ -15,9 +15,11 @@ var standalone = read("public/portal-standalone.html");
     'className = "sirk-device-tab-close"',
     'className = "sirk-device-tab-store"',
     'state.panes.all = { key: "all"',
+    'function activeKeyFromDom()',
+    'function stashVisible()',
     'function activateAll()',
-    'function stashCurrent()',
     'function showStored(key)',
+    'if (!contentIsDeviceList()) stashVisible()',
     'moveChildren(state.content, pane.store)',
     'moveChildren(pane.store, state.content)',
     'data-device-workspace-key',
@@ -28,6 +30,7 @@ var standalone = read("public/portal-standalone.html");
     'findDeviceRow(pane.nodeId)',
     'contentIsWorkspace()',
     'window.MyCompanyDeviceTabs',
+    'debug: function ()',
     'disconnectPane(pane)',
     'sirkportal:languagechange'
 ].forEach(function (value) { assert(tabs.indexOf(value) >= 0, "Missing persistent standalone device tab contract: " + value); });
