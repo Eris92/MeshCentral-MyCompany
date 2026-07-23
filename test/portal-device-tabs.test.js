@@ -39,6 +39,10 @@ assert(tabs.indexOf('tab.addEventListener("click"') < 0, "Tab actions must use t
     "html.sirk-device-workspace-child"
 ].forEach(function (value) { assert(css.indexOf(value) >= 0, "Missing persistent workspace CSS: " + value); });
 assert(css.indexOf('#sirkPortalRoot [data-view="devices"]') < 0, "Device workspace CSS must not resize the sidebar navigation button");
+assert(css.indexOf("background:color-mix") < 0, "Management primary icons must not have colored background tiles");
+assert(css.indexOf(".is-management-collapsed .sirk-management-shell.mc-portal-module-shell .sirk-management-workspace.mc-portal-module-layout") >= 0, "Management collapse must target the actual shared grid track");
+assert(css.indexOf("grid-template-columns:56px var(--portal-secondary-width,236px) minmax(0,1fr)!important") >= 0, "Collapsed Management primary column must be exactly 56px");
+assert(css.indexOf("background:transparent!important") >= 0, "Management primary icon containers must stay transparent");
 assert(main.indexOf('style("mycompany-device-tabs-style", "portal-device-tabs.css")') >= 0, "Device tab CSS must load in native browser bootstrap");
 assert(main.indexOf('load("mycompany-device-tabs-script", asset("portal-device-tabs.js"))') >= 0, "Device tab script must load in native browser bootstrap");
 assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__') >= 0, "Standalone Portal must load device tab CSS");
@@ -55,4 +59,4 @@ assert(standaloneCore.indexOf("function menuReady()") >= 0, "Portal must wait un
 assert(standaloneCore.indexOf("function childWorkspaceReady()") >= 0, "Child workspace must restore its selected device tab before reveal");
 assert(standaloneCore.indexOf("function parentWorkspaceReady()") >= 0, "Parent Portal must wait for the selected host iframe");
 assert(standaloneCore.indexOf('childDocument.getElementById("sirkStandaloneRoot")') >= 0, "Parent Portal must verify that the child workspace finished booting");
-console.log("Persistent multi-host Portal startup and sessions: OK");
+console.log("Persistent multi-host Portal startup, Management collapse and icon contract: OK");
