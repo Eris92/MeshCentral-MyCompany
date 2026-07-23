@@ -33,6 +33,10 @@ jobs:
               'walk(".github"), walk("public"), walk("server"), walk("scripts"), walk("test"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")',
               'walk(".github"), walk("public"), walk("server"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")'
           )
+          source = source.replace(
+              'observe\\(document\\.documentElement/',
+              'observe\\\\(document\\\\.documentElement/'
+          )
           path.write_text(source, encoding='utf-8')
           PY
           set -o pipefail
