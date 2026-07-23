@@ -21,6 +21,67 @@
         catch (error) { return false; }
     }
 
+    function moveChildren(source, target) {
+        if (!source || !target) return;
+        while (source.firstChild) target.appendChild(source.firstChild);
+    }
+
+    function activeDeviceKey() {
+        var active = document.querySelector(".sirk-device-tabs-standalone .sirk-device-tab.is-active[data-device-workspace-key]");
+        if (active) return String(active.getAttribute("data-device-workspace-key") || "all");
+        return String(readSavedDeviceTabs().active || "all");
+    }
+
+    function deviceStore(key) {
+        var stores = document.querySelectorAll(".sirk-device-tab-cache [data-device-tab-store]");
+        for (var i = 0; i < stores.length; i += 1) {
+            if (String(stores[i].getAttribute("data-device-tab-store") || "") === String(key || "")) return stores[i];
+        }
+        return null;
+    }
+
+    function deviceViewActive() {
+        var active = document.querySelector('.sirk-standalone-nav [data-view="devices"].is-active');
+        return !!active;
+    }
+
+    function contentHasDeviceList(content) {
+        return !!(content && content.querySelector("[data-device-id],#sirkDevicesHost,.sirk-device-groups"));
+    }
+
+    function preserveActiveDeviceWorkspace() {
+        if (workspaceChild() || !deviceViewActive()) return;
+        var key = activeDeviceKey();
+        if (!key || key === "all") return;
+        var content = document.getElementById("sirkStandaloneContent");
+        var store = deviceStore(key);
+        if (!content || !store || !content.querySelector(".sirk-device-isolated-workspace iframe")) return;
+        moveChildren(content, store);
+        store.setAttribute("data-session-preserved", "1");
+    }
+
+    function restoreActiveDeviceWorkspace() {
+        if (workspaceChild() || !deviceViewActive()) return false;
+        var key = activeDeviceKey();
+        if (!key || key === "all") return false;
+        var content = document.getElementById("sirkStandaloneContent");
+        var store = deviceStore(key);
+        var allStore = deviceStore("all");
+        if (!content || !store || !store.querySelector(".sirk-device-isolated-workspace iframe")) return false;
+        if (!contentHasDeviceList(content)) return false;
+
+        if (allStore) {
+            allStore.textContent = "";
+            moveChildren(content, allStore);
+        } else {
+            content.textContent = "";
+        }
+        moveChildren(store, content);
+        store.removeAttribute("data-session-preserved");
+        window.dispatchEvent(new Event("resize"));
+        return true;
+    }
+
     function installRestoreGuard() {
         var child = workspaceChild();
         var saved = readSavedDeviceTabs();
@@ -140,6 +201,7 @@
     }
 
     function normalizeLayouts() {
+        restoreActiveDeviceWorkspace();
         normalizeDeviceWorkspace();
         flattenManagementHost();
     }
@@ -160,6 +222,7 @@
 
     function navigate(view) {
         view = String(view || "overview");
+        if (view !== "devices") preserveActiveDeviceWorkspace();
         var next = "#" + view;
         if (window.location.hash === next) {
             window.dispatchEvent(new HashChangeEvent("hashchange"));
