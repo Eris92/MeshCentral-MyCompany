@@ -17,7 +17,6 @@ var standalone = read("public/portal-standalone.html");
     'state.panes.all = { key: "all"',
     'function visibleKey()',
     'function markVisible(key)',
-    'data-device-workspace-key',
     'function stashVisible()',
     'function activateAll()',
     'function showStored(key)',
@@ -25,6 +24,11 @@ var standalone = read("public/portal-standalone.html");
     'moveChildren(pane.store, state.content)',
     'state.content.setAttribute("data-device-workspace-key", key)',
     'state.content.removeAttribute("data-device-workspace-key")',
+    'function bindTabBar()',
+    'state.bar.addEventListener("pointerdown"',
+    'state.bar.addEventListener("click"',
+    'function handleTabAction(event, fromPointer)',
+    'data-device-tab-close',
     'activate(key)',
     'localStorage.setItem(STORAGE_KEY',
     'function restoreMetadata()',
@@ -36,9 +40,10 @@ var standalone = read("public/portal-standalone.html");
     'disconnectPane(pane)',
     'sirkportal:languagechange'
 ].forEach(function (value) { assert(tabs.indexOf(value) >= 0, "Missing persistent standalone device tab contract: " + value); });
-assert(tabs.indexOf('document.getElementById("sirkPortalRoot")') < 0, "Workspace cache must stay inside sirkStandaloneRoot so the native renderer still owns moved device rows");
-assert(tabs.indexOf("DocumentFragment") < 0, "Device tabs must not store live workspaces in consumable DocumentFragment objects");
-assert(tabs.indexOf("cloneChildren") < 0, "All devices must be stored as live DOM, not a cloned snapshot");
+assert(tabs.indexOf('document.getElementById("sirkPortalRoot")') < 0, "Workspace cache must stay inside sirkStandaloneRoot");
+assert(tabs.indexOf("DocumentFragment") < 0, "Device tabs must keep live DOM containers");
+assert(tabs.indexOf("cloneChildren") < 0, "All devices must be stored as live DOM");
+assert(tabs.indexOf('tab.addEventListener("click"') < 0, "Individual tab listeners must not be recreated during renderTabs");
 [
     ".sirk-device-tabs",
     "height:32px",
