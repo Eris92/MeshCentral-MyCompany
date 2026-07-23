@@ -18,6 +18,7 @@ module.exports.admin = function (plugin) {
         path: path,
         meshRoot: path.dirname(path.dirname(plugin.parent.pluginPath))
     });
+
     var assets = {
         "admin.css": ["web/admin.css", "text/css; charset=utf-8"],
         "admin-ui-enhancements.css": ["web/admin-ui-enhancements.css", "text/css; charset=utf-8"],
@@ -27,13 +28,17 @@ module.exports.admin = function (plugin) {
         "admin-ui-enhancements.js": ["web/admin-ui-enhancements.js", "text/javascript; charset=utf-8"],
         "admin-plugin-updates.js": ["web/admin-plugin-updates.js", "text/javascript; charset=utf-8"],
         "admin-marketplace.js": ["web/admin-marketplace.js", "text/javascript; charset=utf-8"],
-        "marketplace.json": ["marketplace.json", "application/json; charset=utf-8"],
         "admin-move-mesh-levels.js": ["web/admin-move-mesh-levels.js", "text/javascript; charset=utf-8"],
         "admin-portal.js": ["web/admin-portal.js", "text/javascript; charset=utf-8"],
+        "marketplace.json": ["marketplace.json", "application/json; charset=utf-8"],
+
         "core.js": ["public/core.js", "text/javascript; charset=utf-8"],
         "mesh-plugin-core.js": ["public/mesh-plugin-core.js", "text/javascript; charset=utf-8"],
         "module-shell.js": ["public/module-shell.js", "text/javascript; charset=utf-8"],
         "runtime.js": ["public/runtime.js", "text/javascript; charset=utf-8"],
+        "shared/icon-registry.js": ["public/shared/icon-registry.js", "text/javascript; charset=utf-8"],
+        "icons/sirk-ui.svg": ["assets/icons/sirk-ui.svg", "image/svg+xml; charset=utf-8"],
+
         "native-portal-launcher.js": ["public/native-portal-launcher.js", "text/javascript; charset=utf-8"],
         "portal.js": ["public/portal.js", "text/javascript; charset=utf-8"],
         "portal-device-tabs.js": ["public/portal-device-tabs.js", "text/javascript; charset=utf-8"],
@@ -49,15 +54,17 @@ module.exports.admin = function (plugin) {
         "portal-ui-fix.js": ["public/portal-ui-fix.js", "text/javascript; charset=utf-8"],
         "portal.css": ["public/portal.css", "text/css; charset=utf-8"],
         "native-approval.css": ["public/native-approval.css", "text/css; charset=utf-8"],
+
         "myscripts.js": ["public/myscripts.js", "text/javascript; charset=utf-8"],
         "myscripts.css": ["public/myscripts.css", "text/css; charset=utf-8"],
         "myscripts-menu.svg": ["assets/myscripts-menu.svg", "image/svg+xml; charset=utf-8"],
         "mycommands.js": ["public/mycommands.js", "text/javascript; charset=utf-8"],
         "myjira.js": ["public/myjira.js", "text/javascript; charset=utf-8"],
         "defendertools.js": ["public/defendertools.js", "text/javascript; charset=utf-8"],
-        "approvalcenter.js": ["public/approvalcenter.js", "text/javascript; charset=utf-8"],
+        "approvalcenter.js": ["public/modules/approvalcenter.js", "text/javascript; charset=utf-8"],
         "moverequests.js": ["public/moverequests.js", "text/javascript; charset=utf-8"],
         "main.css": ["public/main.css", "text/css; charset=utf-8"],
+
         "shared-ui/toolbar-config.js": ["public/shared-ui/toolbar-config.js", "text/javascript; charset=utf-8"],
         "shared-ui/toolbar-api.js": ["public/shared-ui/toolbar-api.js", "text/javascript; charset=utf-8"],
         "shared-ui/toolbar.js": ["public/shared-ui/toolbar.js", "text/javascript; charset=utf-8"],
@@ -136,24 +143,21 @@ module.exports.admin = function (plugin) {
         if (moduleName) { plugin.runtime.request("GET", moduleName, asset, req, res, user); return; }
         if (!shared.isSiteAdmin(user)) { shared.send(res, 403, "text/plain; charset=utf-8", "Forbidden"); return; }
         if (action === "plugin-state") {
-            pluginAdmin.list(user).then(function (plugins) {
-                shared.sendJson(res, 200, { ok: true, plugins: plugins });
-            }).catch(function (error) {
-                shared.sendJson(res, 500, { ok: false, error: String(error && error.message || error) });
-            });
+            pluginAdmin.list(user).then(function (plugins) { shared.sendJson(res, 200, { ok: true, plugins: plugins }); })
+                .catch(function (error) { shared.sendJson(res, 500, { ok: false, error: String(error && error.message || error) }); });
             return;
         }
         if (action === "server-state") {
-            serverAdmin.services(user).then(function (services) {
-                shared.sendJson(res, 200, { ok: true, services: services });
-            }).catch(function (error) {
-                shared.sendJson(res, 500, { ok: false, error: String(error && error.message || error) });
-            });
+            serverAdmin.services(user).then(function (services) { shared.sendJson(res, 200, { ok: true, services: services }); })
+                .catch(function (error) { shared.sendJson(res, 500, { ok: false, error: String(error && error.message || error) }); });
             return;
         }
-        var data = plugin.runtime.adminSnapshot(user);
         try {
-            res.render("MyCompany", { title: "My Company", pluginShortName: String(req && req.query && req.query.pin || plugin.shortName || "MyCompany"), adminDataJson: safeAdminJson(data) });
+            res.render("MyCompany", {
+                title: "My Company",
+                pluginShortName: String(req && req.query && req.query.pin || plugin.shortName || "MyCompany"),
+                adminDataJson: safeAdminJson(plugin.runtime.adminSnapshot(user))
+            });
         } catch (error) {
             console.error("MyCompany admin render failed", error);
             shared.send(res, 500, "text/plain; charset=utf-8", "Internal error");
@@ -169,7 +173,9 @@ module.exports.admin = function (plugin) {
             var module = moduleObject(moduleName);
             if (asset === "settings" && shared.isSiteAdmin(user) && module && !module.__loadError && typeof module.apiPost === "function") {
                 try {
-                    Promise.resolve(module.apiPost(asset, req, user)).then(function (value) { shared.sendJson(res, 200, value || { ok: true }); }).catch(function (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); });
+                    Promise.resolve(module.apiPost(asset, req, user))
+                        .then(function (value) { shared.sendJson(res, 200, value || { ok: true }); })
+                        .catch(function (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); });
                 } catch (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); }
                 return;
             }
@@ -183,29 +189,25 @@ module.exports.admin = function (plugin) {
                 integrations: shared.parseJsonObject(req && req.body && req.body.integrations, {}),
                 secrets: shared.parseJsonObject(req && req.body && req.body.secrets, {})
             };
-            plugin.runtime.saveAdminSettings(user, payload).then(function (snapshot) { shared.sendJson(res, 200, { ok: true, snapshot: snapshot }); }).catch(function (error) { shared.sendJson(res, 403, { ok: false, error: String(error && error.message || error) }); });
+            plugin.runtime.saveAdminSettings(user, payload)
+                .then(function (snapshot) { shared.sendJson(res, 200, { ok: true, snapshot: snapshot }); })
+                .catch(function (error) { shared.sendJson(res, 403, { ok: false, error: String(error && error.message || error) }); });
             return;
         }
         if (action === "plugin-operation") {
             if (!sameOrigin(req)) { shared.sendJson(res, 403, { ok: false, error: "Cross-origin request rejected." }); return; }
             var pluginPayload = shared.parseJsonObject(req && req.body && req.body.payload, {});
             pluginAdmin.operate(user, pluginPayload.operation, pluginPayload).then(function (result) {
-                return pluginAdmin.list(user).then(function (plugins) {
-                    shared.sendJson(res, 200, { ok: true, result: result, plugins: plugins });
-                });
-            }).catch(function (error) {
-                shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) });
-            });
+                return pluginAdmin.list(user).then(function (plugins) { shared.sendJson(res, 200, { ok: true, result: result, plugins: plugins }); });
+            }).catch(function (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); });
             return;
         }
         if (action === "server-restart") {
             if (!sameOrigin(req)) { shared.sendJson(res, 403, { ok: false, error: "Cross-origin request rejected." }); return; }
             var serverPayload = shared.parseJsonObject(req && req.body && req.body.payload, {});
-            serverAdmin.restart(user, serverPayload.serviceName).then(function (result) {
-                shared.sendJson(res, 202, { ok: true, result: result });
-            }).catch(function (error) {
-                shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) });
-            });
+            serverAdmin.restart(user, serverPayload.serviceName)
+                .then(function (result) { shared.sendJson(res, 202, { ok: true, result: result }); })
+                .catch(function (error) { shared.sendJson(res, 400, { ok: false, error: String(error && error.message || error) }); });
             return;
         }
         shared.sendJson(res, 400, { ok: false, error: "Unknown MyCompany action." });
