@@ -1,16 +1,17 @@
 #sirkPortalRoot .sirk-standalone-main{display:flex!important;flex-direction:column!important}
 #sirkPortalRoot .sirk-standalone-header{flex:0 0 69px!important;border-bottom:0!important}
 #sirkPortalRoot .sirk-standalone-content{flex:1 1 auto!important;height:auto!important;min-height:0!important}
-#sirkPortalRoot .sirk-device-tabs{display:flex;align-items:flex-end;gap:2px;height:32px;min-height:32px;padding:2px 12px 0;border-bottom:1px solid var(--sirk-border,#dce3ec);background:var(--sirk-panel,#fff);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;box-sizing:border-box}
+#sirkPortalRoot .sirk-device-tabs{display:flex;align-items:flex-end;gap:2px;height:30px;min-height:30px;padding:2px 12px 0;border-bottom:1px solid var(--sirk-border,#dce3ec);background:var(--sirk-panel,#fff);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;box-sizing:border-box}
 #sirkPortalRoot .sirk-device-tabs[hidden]{display:none!important}
-#sirkPortalRoot .sirk-device-tabs-standalone{flex:0 0 32px;width:100%;margin:0;z-index:3}
-#sirkPortalRoot .sirk-device-tab{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;max-width:190px;height:29px;min-height:29px;padding:0 8px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;background:transparent;color:var(--sirk-muted,#657187);font:600 12px/1.1 Segoe UI,Arial,sans-serif;cursor:pointer;box-sizing:border-box;pointer-events:auto!important;position:relative;z-index:4}
-#sirkPortalRoot .sirk-device-tab[data-device-workspace-key="all"]{border-color:var(--sirk-border,#dce3ec);border-bottom:0;background:var(--sirk-panel,#fff);color:var(--sirk-muted,#657187);box-shadow:none}
+#sirkPortalRoot .sirk-device-tabs-standalone{flex:0 0 30px;width:100%;margin:0;z-index:3}
+#sirkPortalRoot .sirk-device-tab{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;max-width:190px;height:27px;min-height:27px;padding:0 7px;border:1px solid transparent;border-bottom:0;border-radius:6px 6px 0 0;background:transparent;color:var(--sirk-muted,#657187);font:600 12px/1.1 Segoe UI,Arial,sans-serif;cursor:pointer;box-sizing:border-box;pointer-events:auto!important;position:relative;z-index:4}
+#sirkPortalRoot .sirk-device-tab[data-device-workspace-key="all"]{height:27px;min-height:27px;padding:0 4px;border-color:transparent!important;border-radius:0;background:transparent!important;color:var(--sirk-muted,#657187);font-weight:500;box-shadow:none!important}
 #sirkPortalRoot .sirk-device-tab:hover{background:rgba(96,165,250,.09);color:var(--sirk-text,#172033)}
 #sirkPortalRoot .sirk-device-tab.is-active{border-color:var(--sirk-border,#dce3ec);background:var(--sirk-bg,#f3f6fb);color:var(--sirk-text,#172033);box-shadow:inset 0 2px 0 var(--portal-accent,#60a5fa)}
-#sirkPortalRoot .sirk-device-tab[data-device-workspace-key="all"].is-active{background:var(--sirk-bg,#f3f6fb);color:var(--sirk-text,#172033);box-shadow:inset 0 2px 0 var(--portal-accent,#60a5fa)}
+#sirkPortalRoot .sirk-device-tab[data-device-workspace-key="all"]:hover{background:transparent!important;color:var(--sirk-text,#172033)}
+#sirkPortalRoot .sirk-device-tab[data-device-workspace-key="all"].is-active{border-color:transparent!important;background:transparent!important;color:var(--portal-accent,#4d6bd8);box-shadow:none!important}
 #sirkPortalRoot .sirk-device-tab-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#sirkPortalRoot .sirk-device-tab-close{display:grid;place-items:center;flex:0 0 16px;width:16px;height:16px;margin-right:-3px;border-radius:4px;font-size:15px;font-weight:400;line-height:16px;color:inherit;opacity:.7}
+#sirkPortalRoot .sirk-device-tab-close{display:grid;place-items:center;flex:0 0 15px;width:15px;height:15px;margin-right:-3px;border-radius:4px;font-size:14px;font-weight:400;line-height:15px;color:inherit;opacity:.7}
 #sirkPortalRoot .sirk-device-tab-close:hover{background:rgba(220,38,38,.14);color:#dc2626;opacity:1}
 #sirkPortalRoot .sirk-device-tab-cache{position:absolute!important;left:-100000px!important;top:0!important;width:1px!important;height:1px!important;overflow:hidden!important;visibility:hidden!important;pointer-events:none!important}
 #sirkPortalRoot .sirk-device-tabs-standalone:not([hidden]) + #sirkStandaloneContent{flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow:hidden!important;padding:0!important;margin:0!important}
