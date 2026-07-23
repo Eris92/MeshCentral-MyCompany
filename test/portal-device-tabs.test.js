@@ -45,7 +45,10 @@ assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__')
 assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.js?v=__VERSION__') >= 0, "Standalone Portal must load device tab script");
 assert(admin.indexOf('"portal-device-tabs.js"') >= 0 && admin.indexOf('"portal-device-tabs.css"') >= 0, "Admin asset server must expose device tab assets");
 assert(standaloneCore.indexOf('root.style.visibility = "hidden"') < 0, "F5 startup must never hide the complete Portal root");
+assert(standaloneCore.indexOf('content.style.visibility = "hidden"') < 0, "Device child startup must not blank the complete workspace content");
 assert(standaloneCore.indexOf("15000") < 0, "F5 startup must not use a 15 second reveal timeout");
 assert(standaloneCore.indexOf('window.setTimeout(reveal, 1200)') >= 0, "Child workspace restore must have a short bounded fallback");
 assert(standaloneCore.indexOf('if (!child) {\n                reveal();') >= 0, "Main Portal must reveal immediately without waiting for host restore");
+assert(standaloneCore.indexOf('nav.style.visibility = "hidden"') >= 0, "Only the unconfigured navigation list may be hidden during bootstrap");
+assert(standaloneCore.indexOf('runtime.state.bootstrap') >= 0, "Navigation must reveal only after bootstrap permissions are available");
 console.log("Isolated multi-host Portal device sessions: OK");
