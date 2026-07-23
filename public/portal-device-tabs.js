@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyDeviceTabsV6Loaded) return;
-    window.__myCompanyDeviceTabsV6Loaded = true;
+    if (window.__myCompanyDeviceTabsV7Loaded) return;
+    window.__myCompanyDeviceTabsV7Loaded = true;
 
     var STORAGE_KEY = "mycompany.sirkportal.deviceTabs";
     var state = {
@@ -141,12 +141,25 @@
         return !!(state.content && state.content.querySelector(".sirk-device-workspace"));
     }
 
-    function stashCurrent() {
-        var pane = state.panes[state.active];
-        if (!pane || !state.content) return;
-        if (!state.content.childNodes.length) return;
+    function activeKeyFromDom() {
+        var activeTab = state.bar && state.bar.querySelector('.sirk-device-tab.is-active[data-device-workspace-key]');
+        var key = activeTab && activeTab.getAttribute("data-device-workspace-key");
+        if (key && state.panes[key]) return key;
+        if (contentIsDeviceList()) return "all";
+        if (contentIsWorkspace() && state.active !== "all" && state.panes[state.active]) return state.active;
+        return state.active;
+    }
+
+    function stashVisible() {
+        if (!state.content || !state.content.childNodes.length) return false;
+        var key = activeKeyFromDom();
+        if (contentIsDeviceList()) key = "all";
+        if (!key || !state.panes[key]) return false;
+        var pane = state.panes[key];
         moveChildren(state.content, pane.store);
         pane.loaded = pane.store.childNodes.length > 0;
+        state.active = key;
+        return pane.loaded;
     }
 
     function showStored(key) {
@@ -164,7 +177,7 @@
 
     function activateAll() {
         if (!state.panes.all || !state.content) return;
-        if (state.active !== "all") stashCurrent();
+        if (!contentIsDeviceList()) stashVisible();
         state.pending = null;
         if (!showStored("all")) {
             state.active = "all";
@@ -188,8 +201,8 @@
 
     function openUnloadedPane(pane) {
         if (!pane || !state.content || !state.panes.all) return;
-        if (state.active !== "all") stashCurrent();
-        if (!showStored("all")) return;
+        if (!contentIsDeviceList()) stashVisible();
+        if (!showStored("all") && !contentIsDeviceList()) return;
         var row = findDeviceRow(pane.nodeId);
         if (!row) return;
         state.pending = { key: pane.key, nodeId: pane.nodeId, name: pane.name };
@@ -202,9 +215,9 @@
         var pane = state.panes[key];
         if (!pane || !state.content) return;
         if (key === "all") { activateAll(); return; }
-        if (state.active === key) return;
+        if (activeKeyFromDom() === key && contentIsWorkspace()) return;
         if (pane.loaded && pane.store.childNodes.length) {
-            stashCurrent();
+            stashVisible();
             showStored(key);
             return;
         }
@@ -225,11 +238,12 @@
     function closeTab(key) {
         if (key === "all" || !state.panes[key]) return;
         var pane = state.panes[key];
-        var wasActive = state.active === key;
-        if (wasActive) stashCurrent();
+        var visibleKey = activeKeyFromDom();
+        var wasVisible = visibleKey === key && contentIsWorkspace();
+        if (wasVisible) stashVisible();
         disconnectPane(pane);
         delete state.panes[key];
-        if (wasActive) {
+        if (wasVisible) {
             state.active = "all";
             showStored("all");
         }
@@ -281,7 +295,8 @@
     }
 
     function candidate(target) {
-        if (!devicesActive() || state.active !== "all" || !state.content || !target || !target.closest) return null;
+        if (!devicesActive() || !state.content || !target || !target.closest) return null;
+        if (!contentIsDeviceList()) return null;
         var row = target.closest("[data-device-id],.sirk-device-row");
         if (!row || !state.shell.contains(row)) return null;
         var nodeId = clean(row.getAttribute("data-device-id"));
@@ -322,13 +337,13 @@
         state.pending = null;
         var pane = state.panes[info.key];
         if (!pane) {
-            pane = { key: info.key, name: info.name, nodeId: info.nodeId, store: createStore(info.key), loaded: true };
+            pane = { key: info.key, name: info.name, nodeId: info.nodeId, store: createStore(info.key), loaded: false };
             state.cache.appendChild(pane.store);
             state.panes[info.key] = pane;
         }
         pane.name = info.name || pane.name;
         pane.nodeId = info.nodeId || pane.nodeId;
-        pane.loaded = true;
+        pane.loaded = false;
         state.active = info.key;
         renderTabs();
         persist();
@@ -336,9 +351,10 @@
     }
 
     function captureInitialList() {
-        if (!devicesActive() || state.active !== "all" || !contentIsDeviceList()) return;
-        if (state.panes.all.store.childNodes.length) return;
+        if (!devicesActive() || !contentIsDeviceList()) return;
+        state.active = "all";
         state.panes.all.loaded = true;
+        renderTabs();
     }
 
     function scheduleRestore() {
@@ -354,8 +370,8 @@
     }
 
     function bind() {
-        if (!state.shell || state.shell.__myCompanyDeviceTabsV6Bound) return;
-        state.shell.__myCompanyDeviceTabsV6Bound = true;
+        if (!state.shell || state.shell.__myCompanyDeviceTabsV7Bound) return;
+        state.shell.__myCompanyDeviceTabsV7Bound = true;
 
         state.shell.addEventListener("click", function (event) {
             ensureInfrastructure();
@@ -392,7 +408,17 @@
         window.setInterval(function () { ensureInfrastructure(); syncVisibility(); captureInitialList(); scheduleRestore(); }, 1000);
     }
 
-    window.MyCompanyDeviceTabs = { mount: ensureInfrastructure, activateAll: activateAll, activate: activate, close: closeTab };
+    window.MyCompanyDeviceTabs = {
+        mount: ensureInfrastructure,
+        activateAll: activateAll,
+        activate: activate,
+        close: closeTab,
+        debug: function () {
+            var result = { active: state.active, visible: activeKeyFromDom(), content: contentIsWorkspace() ? "workspace" : contentIsDeviceList() ? "all" : "other", stores: {} };
+            Object.keys(state.panes).forEach(function (key) { result.stores[key] = state.panes[key].store.childElementCount; });
+            return result;
+        }
+    };
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
     else start();
