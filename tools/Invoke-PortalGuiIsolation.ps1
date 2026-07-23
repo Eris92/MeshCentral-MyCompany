@@ -3,21 +3,16 @@
 Audits, removes or restores the old native GUI or the new standalone SirK Portal assets.
 
 .DESCRIPTION
-The file lists are discovered from the real loading chains instead of a fixed manual list:
+The script discovers file lists from the real loading chains:
 
 - Old: browser assets loaded by plugin-main.js.
 - New: assets loaded by public/portal-standalone.html and public/portal-login.html.
 
-Exclusive scope selects only files not used by the other GUI.
-Full scope selects the complete dependency graph, including shared files.
+Exclusive selects only files not used by the other GUI.
+Full selects the complete graph, including shared files.
 
-Remove always creates:
-- a directory backup,
-- a ZIP backup,
-- manifest.json with SHA256 hashes,
-- reports with remaining asset references and legacy class usage.
-
-The script never restarts MeshCentral.
+Remove creates a directory backup, ZIP archive, SHA256 manifest and dependency reports.
+The script never stops or restarts MeshCentral.
 
 .EXAMPLE
 ./tools/Invoke-PortalGuiIsolation.ps1 -Portal Old -Action Audit
@@ -58,60 +53,75 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
-function Normalize-Rel {
+function ConvertTo-NormalizedRelativePath {
     param([Parameter(Mandatory = $true)][string]$Path)
 
     $value = $Path.Replace([char]92, '/').Trim()
-    while ($value.StartsWith('./', [StringComparison]::Ordinal)) {
+    while ($value.StartsWith('./', [System.StringComparison]::Ordinal)) {
         $value = $value.Substring(2)
     }
     return $value.TrimStart([char[]]@('/', [char]92))
 }
 
-function Join-PluginPath {
+function Get-PluginFilePath {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][string]$Relative
+        [Parameter(Mandatory = $true)][string]$RelativePath
     )
 
-    $native = (Normalize-Rel $Relative).Replace('/', [IO.Path]::DirectorySeparatorChar)
-    return [IO.Path]::GetFullPath((Join-Path $Root $native))
+    $normalized = ConvertTo-NormalizedRelativePath -Path $RelativePath
+    $nativePath = $normalized.Replace('/', [System.IO.Path]::DirectorySeparatorChar)
+    return [System.IO.Path]::GetFullPath((Join-Path -Path $Root -ChildPath $nativePath))
 }
 
-function Test-InRoot {
+function Test-PathUnderRoot {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][string]$Path
+        [Parameter(Mandatory = $true)][string]$Candidate
     )
 
-    $trimChars = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
-    $rootFull = [IO.Path]::GetFullPath($Root).TrimEnd($trimChars)
-    $pathFull = [IO.Path]::GetFullPath($Path)
-    if ($pathFull.Equals($rootFull, [StringComparison]::OrdinalIgnoreCase)) { return $true }
-    return $pathFull.StartsWith($rootFull + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)
+    $trimChars = [char[]]@(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    )
+    $rootFull = [System.IO.Path]::GetFullPath($Root).TrimEnd($trimChars)
+    $candidateFull = [System.IO.Path]::GetFullPath($Candidate)
+
+    if ($candidateFull.Equals($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return $true
+    }
+
+    $prefix = $rootFull + [System.IO.Path]::DirectorySeparatorChar
+    return $candidateFull.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)
 }
 
-function Get-RelFromRoot {
+function Get-RelativePathFromRoot {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][string]$Path
+        [Parameter(Mandatory = $true)][string]$FullPath
     )
 
-    $trimChars = [char[]]@([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
-    $rootFull = [IO.Path]::GetFullPath($Root).TrimEnd($trimChars)
-    $pathFull = [IO.Path]::GetFullPath($Path)
-    if (-not (Test-InRoot -Root $rootFull -Path $pathFull)) {
+    $trimChars = [char[]]@(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    )
+    $rootFull = [System.IO.Path]::GetFullPath($Root).TrimEnd($trimChars)
+    $pathFull = [System.IO.Path]::GetFullPath($FullPath)
+
+    if (-not (Test-PathUnderRoot -Root $rootFull -Candidate $pathFull)) {
         throw "Path is outside plugin root: $pathFull"
     }
-    return Normalize-Rel $pathFull.Substring($rootFull.Length)
+
+    $relative = $pathFull.Substring($rootFull.Length)
+    return ConvertTo-NormalizedRelativePath -Path $relative
 }
 
-function Read-Text {
+function Read-Utf8Text {
     param([Parameter(Mandatory = $true)][string]$Path)
-    return [IO.File]::ReadAllText($Path)
+    return [System.IO.File]::ReadAllText($Path)
 }
 
-function Write-Json {
+function Write-JsonReport {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
         [Parameter(Mandatory = $true)][AllowNull()][AllowEmptyCollection()]$Value
@@ -122,11 +132,12 @@ function Write-Json {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
     }
 
+    $encoding = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false
     $json = ConvertTo-Json -InputObject $Value -Depth 14
-    [IO.File]::WriteAllText($Path, $json, (New-Object Text.UTF8Encoding($false)))
+    [System.IO.File]::WriteAllText($Path, $json, $encoding)
 }
 
-function Export-Rows {
+function Export-CsvReport {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
         [Parameter(Mandatory = $true)][AllowEmptyCollection()]$Rows
@@ -134,113 +145,129 @@ function Export-Rows {
 
     $rowsArray = @($Rows)
     if ($rowsArray.Count -eq 0) {
-        [IO.File]::WriteAllText($Path, '', (New-Object Text.UTF8Encoding($false)))
+        $encoding = New-Object -TypeName System.Text.UTF8Encoding -ArgumentList $false
+        [System.IO.File]::WriteAllText($Path, '', $encoding)
         return
     }
+
     $rowsArray | Export-Csv -LiteralPath $Path -NoTypeInformation -Encoding UTF8
 }
 
-function Get-AssetMap {
+function Get-AdminAssetMap {
     param([Parameter(Mandatory = $true)][string]$Root)
 
-    $source = Read-Text (Join-Path $Root 'MyCompanyAdmin.js')
+    $adminPath = Join-Path -Path $Root -ChildPath 'MyCompanyAdmin.js'
+    $source = Read-Utf8Text -Path $adminPath
     $map = @{}
     $pattern = '(?ms)"(?<asset>[^"]+)"\s*:\s*\[\s*"(?<path>[^"]+)"\s*,'
 
-    foreach ($match in [regex]::Matches($source, $pattern)) {
-        $key = (Normalize-Rel $match.Groups['asset'].Value).ToLowerInvariant()
-        $map[$key] = Normalize-Rel $match.Groups['path'].Value
+    foreach ($match in [System.Text.RegularExpressions.Regex]::Matches($source, $pattern)) {
+        $asset = ConvertTo-NormalizedRelativePath -Path $match.Groups['asset'].Value
+        $mappedPath = ConvertTo-NormalizedRelativePath -Path $match.Groups['path'].Value
+        $map[$asset.ToLowerInvariant()] = $mappedPath
     }
+
     return $map
 }
 
-function Get-AssetTokens {
+function Get-ReferencedAssetTokens {
     param([Parameter(Mandatory = $true)][string]$Text)
 
-    $tokens = New-Object 'System.Collections.Generic.List[string]'
-    $quoted = '(?i)["''](?<value>[^"'']+\.(?:js|css|html?|json|svg|png|jpe?g|webp))(?:\?[^"'']*)?["'']'
-    $cssUrl = '(?i)url\(\s*["'']?(?<value>[^\)"'']+\.(?:svg|png|jpe?g|webp))(?:\?[^\)"'']*)?["'']?\s*\)'
+    $tokens = New-Object -TypeName 'System.Collections.Generic.List[string]'
+    $quotedPattern = '(?i)["''](?<value>[^"'']+\.(?:js|css|html?|json|svg|png|jpe?g|webp))(?:\?[^"'']*)?["'']'
+    $cssUrlPattern = '(?i)url\(\s*["'']?(?<value>[^\)"'']+\.(?:svg|png|jpe?g|webp))(?:\?[^\)"'']*)?["'']?\s*\)'
 
-    foreach ($match in [regex]::Matches($Text, $quoted)) {
+    foreach ($match in [System.Text.RegularExpressions.Regex]::Matches($Text, $quotedPattern)) {
         [void]$tokens.Add($match.Groups['value'].Value)
     }
-    foreach ($match in [regex]::Matches($Text, $cssUrl)) {
+    foreach ($match in [System.Text.RegularExpressions.Regex]::Matches($Text, $cssUrlPattern)) {
         [void]$tokens.Add($match.Groups['value'].Value)
     }
 
     return @($tokens | Sort-Object -Unique)
 }
 
-function Resolve-Asset {
+function Resolve-AssetPath {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][hashtable]$Map,
+        [Parameter(Mandatory = $true)][hashtable]$AssetMap,
         [Parameter(Mandatory = $true)][string]$Token
     )
 
     $value = $Token.Replace([char]92, '/').Trim()
     $value = $value -replace '^__ASSET_BASE__/', ''
     $value = ($value -split '[?#]', 2)[0]
-    $value = Normalize-Rel $value
-    if (-not $value -or $value.Contains('..')) { return $null }
+    $value = ConvertTo-NormalizedRelativePath -Path $value
+
+    if (-not $value -or $value.Contains('..')) {
+        return $null
+    }
 
     $key = $value.ToLowerInvariant()
-    if ($Map.ContainsKey($key)) {
-        $mapped = Normalize-Rel $Map[$key]
-        if (Test-Path -LiteralPath (Join-PluginPath -Root $Root -Relative $mapped) -PathType Leaf) {
+    if ($AssetMap.ContainsKey($key)) {
+        $mapped = ConvertTo-NormalizedRelativePath -Path $AssetMap[$key]
+        $mappedFull = Get-PluginFilePath -Root $Root -RelativePath $mapped
+        if (Test-Path -LiteralPath $mappedFull -PathType Leaf) {
             return $mapped
         }
     }
 
-    $candidates = @()
-    if ($value.StartsWith('public/', [StringComparison]::OrdinalIgnoreCase)) {
-        $candidates += $value
+    $candidate = if ($value.StartsWith('public/', [System.StringComparison]::OrdinalIgnoreCase)) {
+        $value
     } else {
-        $candidates += 'public/' + $value
+        'public/' + $value
     }
 
-    foreach ($candidate in $candidates) {
-        $full = Join-PluginPath -Root $Root -Relative $candidate
-        if ((Test-InRoot -Root $Root -Path $full) -and (Test-Path -LiteralPath $full -PathType Leaf)) {
-            return Normalize-Rel $candidate
-        }
+    $candidateFull = Get-PluginFilePath -Root $Root -RelativePath $candidate
+    if ((Test-PathUnderRoot -Root $Root -Candidate $candidateFull) -and
+        (Test-Path -LiteralPath $candidateFull -PathType Leaf)) {
+        return ConvertTo-NormalizedRelativePath -Path $candidate
     }
 
     return $null
 }
 
-function Expand-Graph {
+function Expand-AssetGraph {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][hashtable]$Map,
-        [Parameter(Mandatory = $true)][string[]]$Seeds
+        [Parameter(Mandatory = $true)][hashtable]$AssetMap,
+        [Parameter(Mandatory = $true)][string[]]$SeedPaths
     )
 
-    $queue = New-Object 'System.Collections.Generic.Queue[string]'
+    $queue = New-Object -TypeName 'System.Collections.Generic.Queue[string]'
     $seen = @{}
 
-    foreach ($seed in $Seeds) {
-        if ($seed) { $queue.Enqueue((Normalize-Rel $seed)) }
+    foreach ($seed in $SeedPaths) {
+        if ($seed) {
+            $queue.Enqueue((ConvertTo-NormalizedRelativePath -Path $seed))
+        }
     }
 
     while ($queue.Count -gt 0) {
-        $relative = Normalize-Rel $queue.Dequeue()
+        $relative = ConvertTo-NormalizedRelativePath -Path $queue.Dequeue()
         $key = $relative.ToLowerInvariant()
-        if ($seen.ContainsKey($key)) { continue }
+        if ($seen.ContainsKey($key)) {
+            continue
+        }
 
-        $full = Join-PluginPath -Root $Root -Relative $relative
-        if (-not (Test-Path -LiteralPath $full -PathType Leaf)) { continue }
-        if (-not (Test-InRoot -Root $Root -Path $full)) {
+        $fullPath = Get-PluginFilePath -Root $Root -RelativePath $relative
+        if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf)) {
+            continue
+        }
+        if (-not (Test-PathUnderRoot -Root $Root -Candidate $fullPath)) {
             throw "Resolved asset escaped plugin root: $relative"
         }
 
         $seen[$key] = $relative
-        if ([IO.Path]::GetExtension($full).ToLowerInvariant() -notin @('.js', '.css', '.html', '.htm')) {
+        $extension = [System.IO.Path]::GetExtension($fullPath).ToLowerInvariant()
+        if ($extension -notin @('.js', '.css', '.html', '.htm')) {
             continue
         }
 
-        foreach ($token in Get-AssetTokens (Read-Text $full)) {
-            $resolved = Resolve-Asset -Root $Root -Map $Map -Token $token
+        $text = Read-Utf8Text -Path $fullPath
+        $tokens = @(Get-ReferencedAssetTokens -Text $text)
+        foreach ($token in $tokens) {
+            $resolved = Resolve-AssetPath -Root $Root -AssetMap $AssetMap -Token $token
             if ($resolved -and -not $seen.ContainsKey($resolved.ToLowerInvariant())) {
                 $queue.Enqueue($resolved)
             }
@@ -250,94 +277,114 @@ function Expand-Graph {
     return @($seen.Values | Sort-Object)
 }
 
-function Get-OldGraph {
+function Get-OldPortalGraph {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][hashtable]$Map
+        [Parameter(Mandatory = $true)][hashtable]$AssetMap
     )
 
-    $source = Read-Text (Join-Path $Root 'plugin-main.js')
-    $start = $source.IndexOf('obj.onWebUIStartupEnd', [StringComparison]::Ordinal)
-    $end = if ($start -ge 0) { $source.IndexOf('obj.goPageStart', $start, [StringComparison]::Ordinal) } else { -1 }
+    $entryPath = Join-Path -Path $Root -ChildPath 'plugin-main.js'
+    $source = Read-Utf8Text -Path $entryPath
+    $start = $source.IndexOf('obj.onWebUIStartupEnd', [System.StringComparison]::Ordinal)
+    $end = if ($start -ge 0) {
+        $source.IndexOf('obj.goPageStart', $start, [System.StringComparison]::Ordinal)
+    } else {
+        -1
+    }
+
     if ($start -lt 0 -or $end -le $start) {
         throw 'Native browser bootstrap was not found in plugin-main.js.'
     }
 
-    $seeds = New-Object 'System.Collections.Generic.List[string]'
-    foreach ($token in Get-AssetTokens $source.Substring($start, $end - $start)) {
-        $resolved = Resolve-Asset -Root $Root -Map $Map -Token $token
-        if ($resolved) { [void]$seeds.Add($resolved) }
+    $bootstrap = $source.Substring($start, $end - $start)
+    $seedList = New-Object -TypeName 'System.Collections.Generic.List[string]'
+    $tokens = @(Get-ReferencedAssetTokens -Text $bootstrap)
+    foreach ($token in $tokens) {
+        $resolved = Resolve-AssetPath -Root $Root -AssetMap $AssetMap -Token $token
+        if ($resolved) {
+            [void]$seedList.Add($resolved)
+        }
     }
 
-    return Expand-Graph -Root $Root -Map $Map -Seeds @($seeds)
+    return Expand-AssetGraph -Root $Root -AssetMap $AssetMap -SeedPaths @($seedList)
 }
 
-function Get-NewGraph {
+function Get-NewPortalGraph {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][hashtable]$Map
+        [Parameter(Mandatory = $true)][hashtable]$AssetMap
     )
 
-    return Expand-Graph -Root $Root -Map $Map -Seeds @(
+    return Expand-AssetGraph -Root $Root -AssetMap $AssetMap -SeedPaths @(
         'public/portal-standalone.html',
         'public/portal-login.html'
     )
 }
 
-function Convert-ToSet {
-    param([Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$Values)
+function ConvertTo-PathSet {
+    param([Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$Paths)
 
     $set = @{}
-    foreach ($value in $Values) {
-        $normalized = Normalize-Rel $value
+    foreach ($path in $Paths) {
+        $normalized = ConvertTo-NormalizedRelativePath -Path $path
         $set[$normalized.ToLowerInvariant()] = $normalized
     }
     return $set
 }
 
-function Get-TextFiles {
+function Get-ScannableFiles {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
         [string[]]$ExcludedRoots = @()
     )
 
     $extensions = @('.js', '.css', '.html', '.htm', '.handlebars', '.json', '.md', '.ps1', '.txt')
-    $excluded = @($ExcludedRoots | Where-Object { $_ } | ForEach-Object { [IO.Path]::GetFullPath($_) })
+    $excluded = @($ExcludedRoots | Where-Object { $_ } | ForEach-Object {
+        [System.IO.Path]::GetFullPath($_)
+    })
 
-    return @(Get-ChildItem -LiteralPath $Root -Recurse -File | Where-Object {
+    $files = Get-ChildItem -LiteralPath $Root -Recurse -File
+    return @($files | Where-Object {
         $item = $_
-        if ($extensions -notcontains $item.Extension.ToLowerInvariant()) { return $false }
-        if ($item.FullName -match '[\\/](?:\.git|node_modules)[\\/]') { return $false }
-        foreach ($excludedRoot in $excluded) {
-            if ($item.FullName.StartsWith($excludedRoot, [StringComparison]::OrdinalIgnoreCase)) {
-                return $false
+        $include = $extensions -contains $item.Extension.ToLowerInvariant()
+        if ($include -and $item.FullName -match '[\\/](?:\.git|node_modules)[\\/]') {
+            $include = $false
+        }
+        if ($include) {
+            foreach ($excludedRoot in $excluded) {
+                if ($item.FullName.StartsWith($excludedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $include = $false
+                    break
+                }
             }
         }
-        return $true
+        $include
     })
 }
 
-function Find-AssetRefs {
+function Find-AssetReferences {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][IO.FileInfo[]]$Files,
+        [Parameter(Mandatory = $true)][System.IO.FileInfo[]]$Files,
         [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$Assets,
-        [string]$ExcludeFile
+        [string]$ExcludedFile
     )
 
-    $rows = New-Object 'System.Collections.Generic.List[object]'
+    $rows = New-Object -TypeName 'System.Collections.Generic.List[object]'
     foreach ($file in $Files) {
-        $relativeFile = Get-RelFromRoot -Root $Root -Path $file.FullName
-        if ($ExcludeFile -and $relativeFile.Equals($ExcludeFile, [StringComparison]::OrdinalIgnoreCase)) { continue }
+        $relativeFile = Get-RelativePathFromRoot -Root $Root -FullPath $file.FullName
+        if ($ExcludedFile -and $relativeFile.Equals($ExcludedFile, [System.StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
 
         $lineNumber = 0
-        foreach ($line in [IO.File]::ReadLines($file.FullName)) {
+        foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
             $lineNumber++
             foreach ($asset in $Assets) {
-                $normalized = Normalize-Rel $asset
-                $fileName = [IO.Path]::GetFileName($normalized)
-                if ($line.IndexOf($normalized, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
-                    $line.IndexOf($fileName, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                $normalized = ConvertTo-NormalizedRelativePath -Path $asset
+                $fileName = [System.IO.Path]::GetFileName($normalized)
+                if ($line.IndexOf($normalized, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+                    $line.IndexOf($fileName, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
                     [void]$rows.Add([pscustomobject]@{
                         Asset = $normalized
                         File = $relativeFile
@@ -348,14 +395,15 @@ function Find-AssetRefs {
             }
         }
     }
+
     return @($rows)
 }
 
-function Find-LegacyRefs {
+function Find-LegacyClassReferences {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
-        [Parameter(Mandatory = $true)][IO.FileInfo[]]$Files,
-        [string]$ExcludeFile
+        [Parameter(Mandatory = $true)][System.IO.FileInfo[]]$Files,
+        [string]$ExcludedFile
     )
 
     $patterns = @(
@@ -367,16 +415,23 @@ function Find-LegacyRefs {
         [pscustomobject]@{ Category = 'BootstrapCompatibility'; Name = 'Bootstrap button classes'; Regex = '\bbtn-(?:primary|secondary|success|danger|warning|info|light|dark|sm|lg)\b' }
     )
 
-    $rows = New-Object 'System.Collections.Generic.List[object]'
+    $rows = New-Object -TypeName 'System.Collections.Generic.List[object]'
     foreach ($file in $Files) {
-        $relativeFile = Get-RelFromRoot -Root $Root -Path $file.FullName
-        if ($ExcludeFile -and $relativeFile.Equals($ExcludeFile, [StringComparison]::OrdinalIgnoreCase)) { continue }
+        $relativeFile = Get-RelativePathFromRoot -Root $Root -FullPath $file.FullName
+        if ($ExcludedFile -and $relativeFile.Equals($ExcludedFile, [System.StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
 
         $lineNumber = 0
-        foreach ($line in [IO.File]::ReadLines($file.FullName)) {
+        foreach ($line in [System.IO.File]::ReadLines($file.FullName)) {
             $lineNumber++
             foreach ($pattern in $patterns) {
-                if ([regex]::IsMatch($line, $pattern.Regex, [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
+                $matched = [System.Text.RegularExpressions.Regex]::IsMatch(
+                    $line,
+                    $pattern.Regex,
+                    [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+                )
+                if ($matched) {
                     [void]$rows.Add([pscustomobject]@{
                         Category = $pattern.Category
                         Pattern = $pattern.Name
@@ -388,10 +443,11 @@ function Find-LegacyRefs {
             }
         }
     }
+
     return @($rows)
 }
 
-function New-PortalBackup {
+function New-PortalGuiBackup {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
         [Parameter(Mandatory = $true)][string]$DestinationRoot,
@@ -401,22 +457,24 @@ function New-PortalBackup {
     )
 
     New-Item -ItemType Directory -Path $DestinationRoot -Force | Out-Null
-    $id = '{0}-{1}-{2}' -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $PortalName, $ScopeName
-    $directory = Join-Path $DestinationRoot $id
-    $fileRoot = Join-Path $directory 'files'
-    New-Item -ItemType Directory -Path $fileRoot -Force | Out-Null
+    $backupId = '{0}-{1}-{2}' -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $PortalName, $ScopeName
+    $backupDirectory = Join-Path -Path $DestinationRoot -ChildPath $backupId
+    $backupFilesRoot = Join-Path -Path $backupDirectory -ChildPath 'files'
+    New-Item -ItemType Directory -Path $backupFilesRoot -Force | Out-Null
 
-    $entries = New-Object 'System.Collections.Generic.List[object]'
+    $entries = New-Object -TypeName 'System.Collections.Generic.List[object]'
     foreach ($relative in $Files) {
-        $source = Join-PluginPath -Root $Root -Relative $relative
-        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
+        $source = Get-PluginFilePath -Root $Root -RelativePath $relative
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            continue
+        }
 
-        $destination = Join-PluginPath -Root $fileRoot -Relative $relative
+        $destination = Get-PluginFilePath -Root $backupFilesRoot -RelativePath $relative
         New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
         Copy-Item -LiteralPath $source -Destination $destination -Force
 
         [void]$entries.Add([pscustomobject]@{
-            RelativePath = Normalize-Rel $relative
+            RelativePath = ConvertTo-NormalizedRelativePath -Path $relative
             Sha256 = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
             Length = (Get-Item -LiteralPath $source).Length
         })
@@ -430,71 +488,81 @@ function New-PortalBackup {
         Scope = $ScopeName
         Files = @($entries)
     }
-    Write-Json -Path (Join-Path $directory 'manifest.json') -Value $manifest
+    Write-JsonReport -Path (Join-Path $backupDirectory 'manifest.json') -Value $manifest
 
-    $zip = $directory + '.zip'
-    if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
-    Compress-Archive -Path (Join-Path $directory '*') -DestinationPath $zip -CompressionLevel Optimal
+    $zipPath = $backupDirectory + '.zip'
+    if (Test-Path -LiteralPath $zipPath) {
+        Remove-Item -LiteralPath $zipPath -Force
+    }
+    Compress-Archive -Path (Join-Path $backupDirectory '*') -DestinationPath $zipPath -CompressionLevel Optimal
 
     return [pscustomobject]@{
-        Directory = $directory
-        Zip = $zip
+        Directory = $backupDirectory
+        Zip = $zipPath
         Manifest = $manifest
     }
 }
 
-function Open-Backup {
+function Open-PortalGuiBackup {
     param([Parameter(Mandatory = $true)][string]$Path)
 
-    $full = [IO.Path]::GetFullPath($Path)
-    if (Test-Path -LiteralPath $full -PathType Container) {
-        return [pscustomobject]@{ Directory = $full; Temporary = $false }
-    }
-    if (-not (Test-Path -LiteralPath $full -PathType Leaf) -or [IO.Path]::GetExtension($full) -ne '.zip') {
-        throw 'BackupPath must point to an existing backup directory or ZIP file.'
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    if (Test-Path -LiteralPath $fullPath -PathType Container) {
+        return [pscustomobject]@{ Directory = $fullPath; Temporary = $false }
     }
 
-    $temporary = Join-Path ([IO.Path]::GetTempPath()) ('MyCompany-PortalRestore-' + [Guid]::NewGuid().ToString('N'))
+    if (-not (Test-Path -LiteralPath $fullPath -PathType Leaf) -or
+        [System.IO.Path]::GetExtension($fullPath) -ne '.zip') {
+        throw 'BackupPath must point to an existing backup directory or ZIP archive.'
+    }
+
+    $temporary = Join-Path ([System.IO.Path]::GetTempPath()) ('MyCompany-PortalRestore-' + [Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $temporary -Force | Out-Null
-    Expand-Archive -LiteralPath $full -DestinationPath $temporary -Force
+    Expand-Archive -LiteralPath $fullPath -DestinationPath $temporary -Force
     return [pscustomobject]@{ Directory = $temporary; Temporary = $true }
 }
 
-function Restore-PortalBackup {
+function Restore-PortalGuiBackup {
     param(
         [Parameter(Mandatory = $true)][string]$Root,
         [Parameter(Mandatory = $true)][string]$PortalName,
         [Parameter(Mandatory = $true)][string]$Path
     )
 
-    $opened = Open-Backup $Path
+    $opened = Open-PortalGuiBackup -Path $Path
     try {
         $manifestFile = Get-ChildItem -LiteralPath $opened.Directory -Filter manifest.json -Recurse -File | Select-Object -First 1
-        if (-not $manifestFile) { throw 'manifest.json was not found in the backup.' }
-
-        $backupDirectory = Split-Path -Parent $manifestFile.FullName
-        $fileRoot = Join-Path $backupDirectory 'files'
-        $manifest = Get-Content -LiteralPath $manifestFile.FullName -Raw | ConvertFrom-Json
-        if ([string]$manifest.Portal -ne $PortalName) {
-            throw "Backup Portal '$($manifest.Portal)' does not match '$PortalName'."
+        if (-not $manifestFile) {
+            throw 'manifest.json was not found in the backup.'
         }
 
-        $restored = New-Object 'System.Collections.Generic.List[string]'
+        $backupDirectory = Split-Path -Parent $manifestFile.FullName
+        $backupFilesRoot = Join-Path -Path $backupDirectory -ChildPath 'files'
+        $manifest = Get-Content -LiteralPath $manifestFile.FullName -Raw | ConvertFrom-Json
+        if ([string]$manifest.Portal -ne $PortalName) {
+            throw "Backup Portal '$($manifest.Portal)' does not match requested Portal '$PortalName'."
+        }
+
+        $restored = New-Object -TypeName 'System.Collections.Generic.List[string]'
         foreach ($entry in @($manifest.Files)) {
-            $relative = Normalize-Rel ([string]$entry.RelativePath)
-            $source = Join-PluginPath -Root $fileRoot -Relative $relative
-            $destination = Join-PluginPath -Root $Root -Relative $relative
+            $relative = ConvertTo-NormalizedRelativePath -Path ([string]$entry.RelativePath)
+            $source = Get-PluginFilePath -Root $backupFilesRoot -RelativePath $relative
+            $destination = Get-PluginFilePath -Root $Root -RelativePath $relative
+
             if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
                 throw "Backup file is missing: $relative"
             }
 
             New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force | Out-Null
             Copy-Item -LiteralPath $source -Destination $destination -Force
-            if ((Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash -ne [string]$entry.Sha256) {
+
+            $actualHash = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash
+            if ($actualHash -ne [string]$entry.Sha256) {
                 throw "Restored file hash mismatch: $relative"
             }
             [void]$restored.Add($relative)
         }
+
         return @($restored)
     }
     finally {
@@ -504,151 +572,179 @@ function Restore-PortalBackup {
     }
 }
 
-function Complete-Script {
+function Complete-PortalGuiOperation {
     param(
         [Parameter(Mandatory = $true)]$Result,
-        [Parameter(Mandatory = $true)][int]$Code
+        [Parameter(Mandatory = $true)][int]$ExitCode
     )
 
-    $Result.ExitCode = $Code
+    $Result.ExitCode = $ExitCode
     if ($OutputFormat -eq 'Json') {
         $Result | ConvertTo-Json -Depth 14 -Compress
     } else {
         $Result
     }
-    exit $Code
+    exit $ExitCode
 }
 
 try {
-    $root = [IO.Path]::GetFullPath($RootPath)
+    $root = [System.IO.Path]::GetFullPath($RootPath)
     if (-not (Test-Path -LiteralPath $root -PathType Container)) {
         throw "Plugin root does not exist: $root"
     }
 
-    foreach ($required in @('plugin-main.js', 'MyCompanyAdmin.js')) {
-        if (-not (Test-Path -LiteralPath (Join-PluginPath -Root $root -Relative $required) -PathType Leaf)) {
-            throw "Required MyCompany file is missing: $required"
+    foreach ($requiredFile in @('plugin-main.js', 'MyCompanyAdmin.js')) {
+        $requiredPath = Get-PluginFilePath -Root $root -RelativePath $requiredFile
+        if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+            throw "Required MyCompany file is missing: $requiredFile"
         }
     }
 
     if (-not $BackupRoot) {
         $BackupRoot = Join-Path (Split-Path -Parent $root) 'MyCompany-PortalGuiBackups'
     }
-    $BackupRoot = [IO.Path]::GetFullPath($BackupRoot)
+    $BackupRoot = [System.IO.Path]::GetFullPath($BackupRoot)
 
     if (-not $ReportPath) {
         $reportName = '{0}-{1}-{2}-{3}' -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $Portal, $Scope, $Action
-        $ReportPath = Join-Path (Join-Path ([IO.Path]::GetTempPath()) 'MyCompany-PortalGuiAudit') $reportName
+        $ReportPath = Join-Path (Join-Path ([System.IO.Path]::GetTempPath()) 'MyCompany-PortalGuiAudit') $reportName
     }
-    $ReportPath = [IO.Path]::GetFullPath($ReportPath)
+    $ReportPath = [System.IO.Path]::GetFullPath($ReportPath)
     New-Item -ItemType Directory -Path $ReportPath -Force | Out-Null
 
-    if ($Force) { $ConfirmPreference = 'None' }
+    if ($Force) {
+        $ConfirmPreference = 'None'
+    }
 
     $changed = $false
     $skipped = $false
     $skipReason = $null
     $exitCode = 0
     $backup = $null
-    $removed = New-Object 'System.Collections.Generic.List[string]'
+    $removed = New-Object -TypeName 'System.Collections.Generic.List[string]'
     $restored = @()
     $verificationFailures = @()
 
     if ($Action -eq 'Restore') {
-        if (-not $BackupPath) { throw 'BackupPath is required for Restore.' }
-        if (-not $PSCmdlet.ShouldProcess($root, "Restore $Portal GUI files from '$BackupPath'")) {
+        if (-not $BackupPath) {
+            throw 'BackupPath is required for Restore.'
+        }
+
+        $restoreDescription = "Restore $Portal GUI files from '$BackupPath'"
+        if (-not $PSCmdlet.ShouldProcess($root, $restoreDescription)) {
             $skipped = $true
             $skipReason = 'Restore was not approved or was run with -WhatIf.'
-            $exitCode = 10
-        } else {
-            $restored = @(Restore-PortalBackup -Root $root -PortalName $Portal -Path $BackupPath)
-            $changed = $restored.Count -gt 0
-        }
-    }
-
-    $portalDocuments = @('public/portal-standalone.html', 'public/portal-login.html')
-    if ($Action -ne 'Restore' -or -not $skipped) {
-        foreach ($document in $portalDocuments) {
-            if (-not (Test-Path -LiteralPath (Join-PluginPath -Root $root -Relative $document) -PathType Leaf)) {
-                throw "Required Portal document is missing: $document. Use Restore with the matching backup first."
+            $result = [pscustomobject]@{
+                Success = $false
+                Changed = $false
+                Skipped = $true
+                SkipReason = $skipReason
+                Operation = 'PortalGuiRestore'
+                Portal = $Portal
+                Scope = $Scope
+                PluginRoot = $root
+                ReportPath = $ReportPath
+                Message = $skipReason
+                ExitCode = 10
             }
+            Write-JsonReport -Path (Join-Path $ReportPath 'summary.json') -Value $result
+            Complete-PortalGuiOperation -Result $result -ExitCode 10
+        }
+
+        $restored = @(Restore-PortalGuiBackup -Root $root -PortalName $Portal -Path $BackupPath)
+        $changed = $restored.Count -gt 0
+    }
+
+    foreach ($portalDocument in @('public/portal-standalone.html', 'public/portal-login.html')) {
+        $documentPath = Get-PluginFilePath -Root $root -RelativePath $portalDocument
+        if (-not (Test-Path -LiteralPath $documentPath -PathType Leaf)) {
+            throw "Required Portal document is missing: $portalDocument. Use Restore with the matching backup first."
         }
     }
 
-    $map = Get-AssetMap $root
-    $oldGraph = @(Get-OldGraph -Root $root -Map $map)
-    $newGraph = @(Get-NewGraph -Root $root -Map $map)
-    $oldSet = Convert-ToSet $oldGraph
-    $newSet = Convert-ToSet $newGraph
+    $assetMap = Get-AdminAssetMap -Root $root
+    $oldGraph = @(Get-OldPortalGraph -Root $root -AssetMap $assetMap)
+    $newGraph = @(Get-NewPortalGraph -Root $root -AssetMap $assetMap)
+    $oldSet = ConvertTo-PathSet -Paths $oldGraph
+    $newSet = ConvertTo-PathSet -Paths $newGraph
 
-    $common = New-Object 'System.Collections.Generic.List[string]'
+    $common = New-Object -TypeName 'System.Collections.Generic.List[string]'
     foreach ($key in $oldSet.Keys) {
-        if ($newSet.ContainsKey($key)) { [void]$common.Add($oldSet[$key]) }
+        if ($newSet.ContainsKey($key)) {
+            [void]$common.Add($oldSet[$key])
+        }
     }
 
     $targetSet = if ($Portal -eq 'Old') { $oldSet } else { $newSet }
     $otherSet = if ($Portal -eq 'Old') { $newSet } else { $oldSet }
-    $selected = New-Object 'System.Collections.Generic.List[string]'
+    $selected = New-Object -TypeName 'System.Collections.Generic.List[string]'
 
     foreach ($key in $targetSet.Keys) {
         if ($Scope -eq 'Full' -or -not $otherSet.ContainsKey($key)) {
             $relative = $targetSet[$key]
-            if ($relative.StartsWith('public/', [StringComparison]::OrdinalIgnoreCase)) {
+            if ($relative.StartsWith('public/', [System.StringComparison]::OrdinalIgnoreCase)) {
                 [void]$selected.Add($relative)
             }
         }
     }
 
     $selectedFiles = @($selected | Sort-Object -Unique)
-    $existing = @($selectedFiles | Where-Object {
-        Test-Path -LiteralPath (Join-PluginPath -Root $root -Relative $_) -PathType Leaf
+    $existingFiles = @($selectedFiles | Where-Object {
+        $candidate = Get-PluginFilePath -Root $root -RelativePath $_
+        Test-Path -LiteralPath $candidate -PathType Leaf
     })
-    $missing = @($selectedFiles | Where-Object {
-        -not (Test-Path -LiteralPath (Join-PluginPath -Root $root -Relative $_) -PathType Leaf)
+    $missingFiles = @($selectedFiles | Where-Object {
+        $candidate = Get-PluginFilePath -Root $root -RelativePath $_
+        -not (Test-Path -LiteralPath $candidate -PathType Leaf)
     })
 
-    $scriptRelative = $null
-    if ($PSCommandPath -and (Test-InRoot -Root $root -Path $PSCommandPath)) {
-        $scriptRelative = Get-RelFromRoot -Root $root -Path $PSCommandPath
+    $scriptRelativePath = $null
+    if ($PSCommandPath -and (Test-PathUnderRoot -Root $root -Candidate $PSCommandPath)) {
+        $scriptRelativePath = Get-RelativePathFromRoot -Root $root -FullPath $PSCommandPath
     }
 
-    $textFiles = @(Get-TextFiles -Root $root -ExcludedRoots @($BackupRoot, $ReportPath))
-    $refsBefore = @(Find-AssetRefs -Root $root -Files $textFiles -Assets $selectedFiles -ExcludeFile $scriptRelative)
-    $legacyRefs = @(Find-LegacyRefs -Root $root -Files $textFiles -ExcludeFile $scriptRelative)
+    $textFiles = @(Get-ScannableFiles -Root $root -ExcludedRoots @($BackupRoot, $ReportPath))
+    $referencesBefore = @(Find-AssetReferences -Root $root -Files $textFiles -Assets $selectedFiles -ExcludedFile $scriptRelativePath)
+    $legacyReferences = @(Find-LegacyClassReferences -Root $root -Files $textFiles -ExcludedFile $scriptRelativePath)
 
-    Write-Json -Path (Join-Path $ReportPath 'old-manifest.json') -Value $oldGraph
-    Write-Json -Path (Join-Path $ReportPath 'new-manifest.json') -Value $newGraph
-    Write-Json -Path (Join-Path $ReportPath 'common-manifest.json') -Value @($common | Sort-Object -Unique)
-    Write-Json -Path (Join-Path $ReportPath 'selected-manifest.json') -Value $selectedFiles
-    Export-Rows -Path (Join-Path $ReportPath 'asset-references-before.csv') -Rows $refsBefore
-    Export-Rows -Path (Join-Path $ReportPath 'legacy-class-usage.csv') -Rows $legacyRefs
+    Write-JsonReport -Path (Join-Path $ReportPath 'old-manifest.json') -Value $oldGraph
+    Write-JsonReport -Path (Join-Path $ReportPath 'new-manifest.json') -Value $newGraph
+    Write-JsonReport -Path (Join-Path $ReportPath 'common-manifest.json') -Value @($common | Sort-Object -Unique)
+    Write-JsonReport -Path (Join-Path $ReportPath 'selected-manifest.json') -Value $selectedFiles
+    Export-CsvReport -Path (Join-Path $ReportPath 'asset-references-before.csv') -Rows $referencesBefore
+    Export-CsvReport -Path (Join-Path $ReportPath 'legacy-class-usage.csv') -Rows $legacyReferences
 
     if ($Action -eq 'Remove') {
-        $description = "Backup and remove $($existing.Count) $Portal GUI file(s), scope $Scope"
-        if (-not $PSCmdlet.ShouldProcess($root, $description)) {
+        $removeDescription = "Backup and remove $($existingFiles.Count) $Portal GUI file(s), scope $Scope"
+        if (-not $PSCmdlet.ShouldProcess($root, $removeDescription)) {
             $skipped = $true
             $skipReason = 'Remove was not approved or was run with -WhatIf.'
             $exitCode = 10
-        } elseif ($existing.Count -gt 0) {
-            $backup = New-PortalBackup -Root $root -DestinationRoot $BackupRoot -PortalName $Portal -ScopeName $Scope -Files $existing
-            foreach ($relative in $existing) {
-                Remove-Item -LiteralPath (Join-PluginPath -Root $root -Relative $relative) -Force
+        } elseif ($existingFiles.Count -gt 0) {
+            $backup = New-PortalGuiBackup -Root $root -DestinationRoot $BackupRoot -PortalName $Portal -ScopeName $Scope -Files $existingFiles
+
+            foreach ($relative in $existingFiles) {
+                $filePath = Get-PluginFilePath -Root $root -RelativePath $relative
+                Remove-Item -LiteralPath $filePath -Force
                 [void]$removed.Add($relative)
             }
             $changed = $removed.Count -gt 0
 
             foreach ($relative in $removed) {
-                if (Test-Path -LiteralPath (Join-PluginPath -Root $root -Relative $relative)) {
+                $filePath = Get-PluginFilePath -Root $root -RelativePath $relative
+                if (Test-Path -LiteralPath $filePath) {
                     $verificationFailures += $relative
                 }
             }
-            if ($verificationFailures.Count -gt 0) { $exitCode = 5 }
+            if ($verificationFailures.Count -gt 0) {
+                $exitCode = 5
+            }
         }
     }
 
-    $textFilesAfter = @(Get-TextFiles -Root $root -ExcludedRoots @($BackupRoot, $ReportPath))
-    $refsAfter = @(Find-AssetRefs -Root $root -Files $textFilesAfter -Assets $selectedFiles -ExcludeFile $scriptRelative)
-    Export-Rows -Path (Join-Path $ReportPath 'asset-references-after.csv') -Rows $refsAfter
+    $textFilesAfter = @(Get-ScannableFiles -Root $root -ExcludedRoots @($BackupRoot, $ReportPath))
+    $referencesAfter = @(Find-AssetReferences -Root $root -Files $textFilesAfter -Assets $selectedFiles -ExcludedFile $scriptRelativePath)
+    Export-CsvReport -Path (Join-Path $ReportPath 'asset-references-after.csv') -Rows $referencesAfter
 
     $result = [pscustomobject]@{
         Success = $exitCode -eq 0
@@ -663,13 +759,13 @@ try {
         NewManifestCount = $newGraph.Count
         CommonManifestCount = $common.Count
         SelectedManifestCount = $selectedFiles.Count
-        ExistingSelectedCount = $existing.Count
-        MissingSelectedCount = $missing.Count
+        ExistingSelectedCount = $existingFiles.Count
+        MissingSelectedCount = $missingFiles.Count
         RemovedCount = $removed.Count
         RestoredCount = $restored.Count
-        LegacyClassReferenceCount = $legacyRefs.Count
-        AssetReferenceBeforeCount = $refsBefore.Count
-        AssetReferenceAfterCount = $refsAfter.Count
+        LegacyClassReferenceCount = $legacyReferences.Count
+        AssetReferenceBeforeCount = $referencesBefore.Count
+        AssetReferenceAfterCount = $referencesAfter.Count
         VerificationFailures = @($verificationFailures)
         RemovedFiles = @($removed)
         RestoredFiles = @($restored)
@@ -688,8 +784,8 @@ try {
         ExitCode = $exitCode
     }
 
-    Write-Json -Path (Join-Path $ReportPath 'summary.json') -Value $result
-    Complete-Script -Result $result -Code $exitCode
+    Write-JsonReport -Path (Join-Path $ReportPath 'summary.json') -Value $result
+    Complete-PortalGuiOperation -Result $result -ExitCode $exitCode
 }
 catch {
     $message = $_.Exception.Message
