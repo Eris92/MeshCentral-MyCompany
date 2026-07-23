@@ -10,26 +10,31 @@
         return base ? base + "/" + name + "?v=" + version : "";
     }
 
+    function loadStyle(id, name) {
+        var source = asset(name);
+        if (!source || document.getElementById(id)) return;
+        var link = document.createElement("link");
+        link.id = id;
+        link.rel = "stylesheet";
+        link.href = source;
+        (document.head || document.documentElement).appendChild(link);
+    }
+
+    function loadScript(id, name) {
+        var source = asset(name);
+        if (!source || document.getElementById(id)) return;
+        var script = document.createElement("script");
+        script.id = id;
+        script.src = source;
+        script.async = false;
+        (document.head || document.documentElement).appendChild(script);
+    }
+
     function loadUiContract() {
-        var head = document.head || document.documentElement;
-        var styleUrl = asset("vendor/sirk-portal/portal-ui-contract.css");
-        var scriptUrl = asset("vendor/sirk-portal/portal-ui-contract.js");
-
-        if (styleUrl && !document.getElementById("mycompany-portal-ui-contract-style")) {
-            var link = document.createElement("link");
-            link.id = "mycompany-portal-ui-contract-style";
-            link.rel = "stylesheet";
-            link.href = styleUrl;
-            head.appendChild(link);
-        }
-
-        if (scriptUrl && !document.getElementById("mycompany-portal-ui-contract-script")) {
-            var script = document.createElement("script");
-            script.id = "mycompany-portal-ui-contract-script";
-            script.src = scriptUrl;
-            script.async = false;
-            head.appendChild(script);
-        }
+        loadStyle("mycompany-portal-ui-contract-style", "vendor/sirk-portal/portal-ui-contract.css");
+        loadStyle("mycompany-portal-cleanup-style", "portal-cleanup.css");
+        loadScript("mycompany-portal-ui-contract-script", "vendor/sirk-portal/portal-ui-contract.js");
+        loadScript("mycompany-portal-cleanup-script", "portal-cleanup.js");
     }
 
     function normalizeDeviceWorkspace() {
@@ -95,14 +100,7 @@
     }
 
     function loadTerminalConnect() {
-        if (document.getElementById("mycompany-portal-terminal-connect")) return;
-        var source = asset("portal-terminal-connect.js");
-        if (!source) return;
-        var script = document.createElement("script");
-        script.id = "mycompany-portal-terminal-connect";
-        script.src = source;
-        script.async = false;
-        (document.head || document.documentElement).appendChild(script);
+        loadScript("mycompany-portal-terminal-connect", "portal-terminal-connect.js");
     }
 
     loadUiContract();
