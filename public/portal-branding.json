@@ -1,0 +1,6 @@
+{
+  "siteName": "SirK Portal",
+  "siteIconUrl": "",
+  "showPasswordReset": true,
+  "passwordResetUrl": "https://passwordreset.microsoftonline.com/"
+}
