@@ -31,7 +31,7 @@
     }
     function moduleSettings() {
         var settings = data().moduleSettings || {};
-        return settings.portal || { enabled: false, defaultView: "overview", showLauncher: false, showNativeLink: true, forceNewLogin: false, forcePortalInterface: false, views: {} };
+        return settings.portal || { enabled: false, defaultView: "overview", showLauncher: false, showNativeLink: true, forceNewLogin: false, forcePortalInterface: false, showPasswordReset: true, passwordResetUrl: "https://passwordreset.microsoftonline.com/", siteName: "SirK Portal", siteIconUrl: "", views: {} };
     }
     function checkbox(host, labelText, checked, description) {
         var label = element("label", "mc-admin-check");
@@ -45,6 +45,17 @@
         label.appendChild(text);
         host.appendChild(label);
         return input;
+    }
+    function input(host, labelText, value, type, description) {
+        var wrapper = element("label", "mc-admin-field");
+        wrapper.appendChild(element("span", "mc-admin-field-label", labelText));
+        var field = element("input", "mc-admin-input");
+        field.type = type || "text";
+        field.value = value || "";
+        wrapper.appendChild(field);
+        if (description) wrapper.appendChild(element("small", "", description));
+        host.appendChild(wrapper);
+        return field;
     }
     function select(host, labelText, value) {
         var wrapper = element("div", "mc-admin-field");
@@ -67,12 +78,8 @@
         heading.appendChild(element("strong", "", definition.label));
         heading.appendChild(element("code", "", definition.key));
         row.appendChild(heading);
-
-        var enabled = checkbox(row, "Pokaż zakładkę", value.enabled !== false,
-            definition.styleNote || "Ukrycie usuwa pozycję z menu i blokuje bezpośrednie otwarcie widoku.");
-        var personalized = checkbox(row, "Włącz personalizację", value.personalized === true,
-            "Pozwala użyć własnej nazwy i koloru akcentu tylko dla tej zakładki.");
-
+        var enabled = checkbox(row, "Pokaż zakładkę", value.enabled !== false, definition.styleNote || "Ukrycie usuwa pozycję z menu i blokuje bezpośrednie otwarcie widoku.");
+        var personalized = checkbox(row, "Włącz personalizację", value.personalized === true, "Pozwala użyć własnej nazwy i koloru akcentu tylko dla tej zakładki.");
         var controls = element("div", "mc-admin-portal-view-controls");
         var labelWrapper = element("label", "mc-admin-field");
         labelWrapper.appendChild(element("span", "mc-admin-field-label", "Własna nazwa"));
@@ -83,7 +90,6 @@
         label.value = value.label || "";
         labelWrapper.appendChild(label);
         controls.appendChild(labelWrapper);
-
         var accentWrapper = element("label", "mc-admin-field mc-admin-portal-color-field");
         accentWrapper.appendChild(element("span", "mc-admin-field-label", "Kolor akcentu"));
         var accent = element("input", "mc-admin-input mc-admin-portal-color");
@@ -92,7 +98,6 @@
         accentWrapper.appendChild(accent);
         controls.appendChild(accentWrapper);
         row.appendChild(controls);
-
         function updateDisabled() {
             var editable = personalized.checked;
             label.disabled = !editable;
@@ -111,12 +116,7 @@
         url.searchParams.set("asset", "settings");
         var body = new URLSearchParams();
         body.set("payload", JSON.stringify(values));
-        return fetch(url.href, {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-            body: body.toString()
-        }).then(function (response) {
+        return fetch(url.href, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }, body: body.toString() }).then(function (response) {
             return response.text().then(function (text) {
                 var result;
                 try { result = JSON.parse(text || "{}"); }
@@ -128,50 +128,44 @@
     }
     function reloadMeshCentral() {
         window.setTimeout(function () {
-            try {
-                if (window.top && window.top.location) window.top.location.reload();
-                else window.location.reload();
-            } catch (error) { window.location.reload(); }
+            try { if (window.top && window.top.location) window.top.location.reload(); else window.location.reload(); }
+            catch (error) { window.location.reload(); }
         }, 700);
     }
     function render(panel) {
         var record = moduleRecord();
         var current = moduleSettings();
         panel.innerHTML = "";
-
         var header = element("div", "mc-admin-section-header");
         header.appendChild(element("h3", "", "SirK Portal"));
         header.appendChild(element("p", "", "Niezależny frontend korzystający z sesji, uprawnień i backendu MyCompany."));
         panel.appendChild(header);
-
         var card = element("section", "mc-admin-card");
         card.appendChild(element("h3", "", "Portal interface"));
         card.appendChild(element("div", "mc-admin-card-description", "Portal działa w osobnym dokumencie i nie ładuje swojego layoutu, CSS ani loginu do natywnego interfejsu MeshCentral."));
-        var enabled = checkbox(card, "Enable SirK Portal", current.enabled === true || record.enabled === true,
-            "Udostępnia portal pod adresem /sirkportal/. Wyłączenie nie usuwa danych MyCompany.");
+        var enabled = checkbox(card, "Enable SirK Portal", current.enabled === true || record.enabled === true, "Udostępnia portal pod adresem /sirkportal/. Wyłączenie nie usuwa danych MyCompany.");
         var defaultView = select(card, "Default start view", current.defaultView || "overview");
-        var showNativeLink = checkbox(card, "Show MeshCentral link in SirK Portal", current.showNativeLink !== false,
-            "Pokazuje link MeshCentral na dole menu SirK Portal.");
-        var showLauncher = checkbox(card, "Show SirK Portal launcher in native Mesh", current.showLauncher === true,
-            "Opcjonalny link nawigacyjny, domyślnie wyłączony.");
-        var forceNewLogin = checkbox(card, "Wymuszaj nowy ekran logowania", current.forceNewLogin === true,
-            "Wejście na ekran logowania MeshCentral otwiera niezależny ekran SirK Portal z osadzonym natywnym uwierzytelnianiem.");
-        var forcePortalInterface = checkbox(card, "Wymuszaj nowy interfejs", current.forcePortalInterface === true,
-            "Wejście do starego interfejsu przekierowuje użytkownika z powrotem do SirK Portal.");
-        var keepSessionsAfterRestart = checkbox(card, "Utrzymuj sesje po restarcie MeshCentral", current.keepSessionsAfterRestart === true,
-            "Zapisuje stały SessionKey MeshCentral. Zmiana wymaga restartu usługi; klucz pozostaje sekretem i nie jest wyświetlany w interfejsie.");
-
+        var showNativeLink = checkbox(card, "Show MeshCentral link in SirK Portal", current.showNativeLink !== false, "Pokazuje link MeshCentral na dole menu SirK Portal.");
+        var showLauncher = checkbox(card, "Show SirK Portal launcher in native Mesh", current.showLauncher === true, "Opcjonalny link nawigacyjny, domyślnie wyłączony.");
+        var forceNewLogin = checkbox(card, "Wymuszaj nowy ekran logowania", current.forceNewLogin === true, "Wejście na ekran logowania MeshCentral otwiera niezależny ekran SirK Portal z osadzonym natywnym uwierzytelnianiem.");
+        var forcePortalInterface = checkbox(card, "Wymuszaj nowy interfejs", current.forcePortalInterface === true, "Wejście do starego interfejsu przekierowuje użytkownika z powrotem do SirK Portal.");
+        var keepSessionsAfterRestart = checkbox(card, "Utrzymuj sesje po restarcie MeshCentral", current.keepSessionsAfterRestart === true, "Zapisuje stały SessionKey MeshCentral. Zmiana wymaga restartu usługi; klucz pozostaje sekretem i nie jest wyświetlany w interfejsie.");
+        var showPasswordReset = checkbox(card, "Pokazuj przycisk resetu hasła", current.showPasswordReset !== false, "Pokazuje przycisk na ekranie logowania SirK Portal.");
+        var passwordResetUrl = input(card, "Adres resetu hasła", current.passwordResetUrl || "https://passwordreset.microsoftonline.com/", "url", "Adres HTTP/HTTPS otwierany po kliknięciu Resetuj hasło.");
+        var siteName = input(card, "Nazwa witryny", current.siteName || "SirK Portal", "text", "Nazwa w menu, ekranie logowania i tytule karty przeglądarki.");
+        siteName.maxLength = 80;
+        var siteIconUrl = input(card, "Adres ikony witryny", current.siteIconUrl || "", "url", "Ikona używana jako favicon oraz logo na stronie i ekranie logowania.");
+        function updateResetUrl() { passwordResetUrl.disabled = !showPasswordReset.checked; }
+        showPasswordReset.addEventListener("change", updateResetUrl);
+        updateResetUrl();
         var viewCard = element("section", "mc-admin-card");
         viewCard.appendChild(element("h3", "", "Zakładki i personalizacja"));
         viewCard.appendChild(element("div", "mc-admin-card-description", "Wszystkie zakładki poza Urządzeniami używają jednego wspólnego stylu. Każdą pozycję można niezależnie pokazać, ukryć i spersonalizować."));
         var viewList = element("div", "mc-admin-portal-view-list");
         var viewInputs = {};
-        PORTAL_VIEWS.forEach(function (definition) {
-            viewInputs[definition.key] = viewEditor(viewList, definition, current.views && current.views[definition.key]);
-        });
+        PORTAL_VIEWS.forEach(function (definition) { viewInputs[definition.key] = viewEditor(viewList, definition, current.views && current.views[definition.key]); });
         viewCard.appendChild(viewList);
         panel.appendChild(viewCard);
-
         var actions = element("div", "mc-admin-actions mc-admin-settings-savebar");
         var save = element("button", "mc-admin-primary", "Save settings");
         save.type = "button";
@@ -183,30 +177,14 @@
             var views = {};
             PORTAL_VIEWS.forEach(function (definition) {
                 var fields = viewInputs[definition.key];
-                views[definition.key] = {
-                    enabled: fields.enabled.checked,
-                    personalized: fields.personalized.checked,
-                    label: fields.label.value,
-                    accent: fields.accent.value
-                };
+                views[definition.key] = { enabled: fields.enabled.checked, personalized: fields.personalized.checked, label: fields.label.value, accent: fields.accent.value };
             });
-            post({
-                enabled: enabled.checked,
-                defaultView: defaultView.value,
-                showNativeLink: showNativeLink.checked,
-                showLauncher: showLauncher.checked,
-                forceNewLogin: forceNewLogin.checked,
-                forcePortalInterface: forcePortalInterface.checked,
-                keepSessionsAfterRestart: keepSessionsAfterRestart.checked,
-                views: views
-            }).then(function (result) {
+            post({ enabled: enabled.checked, defaultView: defaultView.value, showNativeLink: showNativeLink.checked, showLauncher: showLauncher.checked, forceNewLogin: forceNewLogin.checked, forcePortalInterface: forcePortalInterface.checked, keepSessionsAfterRestart: keepSessionsAfterRestart.checked, showPasswordReset: showPasswordReset.checked, passwordResetUrl: passwordResetUrl.value, siteName: siteName.value, siteIconUrl: siteIconUrl.value, views: views }).then(function (result) {
                 var state = result.module || {};
                 data().moduleSettings = data().moduleSettings || {};
                 data().moduleSettings.portal = state;
                 moduleRecord().enabled = state.enabled === true;
-                status.textContent = result.serviceRestartRequired
-                    ? "Saved — restart MeshCentral to apply persistent sessions."
-                    : "Saved — reloading MeshCentral UI.";
+                status.textContent = result.serviceRestartRequired ? "Saved — restart MeshCentral to apply persistent sessions." : "Saved — reloading MeshCentral UI.";
                 reloadMeshCentral();
             }).catch(function (error) {
                 status.className = "mc-admin-save-status mc-admin-error";
