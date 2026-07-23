@@ -1,4 +1,4 @@
-# MyCompany 1.5.134
+# MyCompany 1.5.137
 
 Jeden skonsolidowany plugin MeshCentral zawierający backend, moduły administracyjne, biblioteki skryptów i opcjonalny SirK Portal.
 
@@ -17,7 +17,7 @@ Repozytorium jest kompletnym źródłem instalacyjnym. Runtime nie ładuje kodu 
 ```text
 MyCompany
 ├── My Scripts / Zarządzanie
-├── My Commands / Automatyzacja
+├── My Commands / Automatyzacja i Polecenia
 ├── Approval Center / Akceptacje
 ├── Move Requests
 ├── My Jira / Assets
@@ -56,6 +56,64 @@ Główne widoki:
 
 Każdy widok może zostać ukryty albo ograniczony do grup użytkowników MeshCentral. Backend ponownie sprawdza dostęp do endpointów i zasobów; ukrycie elementu UI nie jest jedyną kontrolą bezpieczeństwa.
 
+## Jeden kontrakt UI
+
+Wszystkie podobne moduły SirK Portal korzystają z jednego kontraktu:
+
+```text
+mc-portal-module-shell
+├── mc-portal-module-toolbar
+└── mc-portal-module-workspace
+    └── mc-portal-module-layout
+        ├── mc-portal-module-primary
+        ├── mc-portal-module-secondary
+        └── mc-portal-module-details
+```
+
+Wspólne komponenty:
+
+```text
+mc-portal-toolbar-button
+mc-portal-nav-item
+mc-portal-nav-icon
+mc-portal-nav-label
+mc-portal-card
+mc-portal-button
+mc-portal-filter
+mc-portal-table-wrap
+mc-portal-table
+```
+
+Kontrakt jest zdefiniowany w:
+
+```text
+public/vendor/sirk-portal/portal-ui-contract.css
+public/vendor/sirk-portal/portal-ui-contract.js
+```
+
+Domyślna geometria:
+
+```text
+pierwsza kolumna:       184 px
+druga kolumna:          236 px
+droga kolumna w Edit:   440 px
+pierwsza po zwinięciu:   56 px
+wysokość toolbara:       48 px
+wysokość pozycji menu:   42 px
+```
+
+Zasady:
+
+- Polecenia, Zarządzanie, Akceptacje, Ustawienia i inne trzykolumnowe moduły mają ten sam shell, toolbar, nawigację, karty, formularze i tabele.
+- Zwinięcie zawsze zmienia rzeczywisty track pierwszej kolumny.
+- Edit Mode zawsze zwiększa drugi track do wspólnej szerokości.
+- Ikony pierwszej kolumny nie mają kolorowego tła; mogą różnić się samym kolorem lub grafiką.
+- Moduł może nadpisać zmienne `--portal-primary-width`, `--portal-secondary-width` lub akcent, ale nie może budować drugiego równoległego systemu layoutu.
+- Stare klasy `mc-shared-*`, `sirk-management-*` i `mc-admin-*` mogą pozostać jako klasy funkcjonalne, lecz w Portalu otrzymują również odpowiadające im klasy `mc-portal-*`.
+- CSS Portalu jest ograniczony do `#sirkPortalRoot` i nie może zmieniać oryginalnego interfejsu MeshCentral.
+- Ustawienia są osadzone w same-origin iframe, ale otrzymują końcowy kontrakt CSS, motyw i zmienne Portalu. Style iframe nie mogą wpływać na pozostałe widoki.
+- Wyjątkiem jest `Urządzenia`, które zachowuje własny układ sesji i zakładek, ale nie może przechowywać stylów Zarządzania ani innych modułów.
+
 ## Zakładki hostów i trwałe sesje
 
 Widok Urządzenia posiada dwa poziomy nawigacji:
@@ -67,33 +125,13 @@ Widok Urządzenia posiada dwa poziomy nawigacji:
 Ogólne | Pulpit | Terminal | Polecenia | Pliki | Rejestr | Oprogramowanie | Intel AMT
 ```
 
-Każdy otwarty host ma osobny iframe umieszczony w stałej warstwie sesji. Przełączenie hosta, `All` albo innego widoku Portalu nie powinno usuwać ani przeładowywać iframe.
+Każdy otwarty host ma osobny iframe umieszczony w stałej warstwie sesji. Przełączenie hosta, `All` albo innego widoku Portalu nie powinno usuwać, przenosić ani przeładowywać iframe.
 
 Aktywny host i jego podzakładka są zapisywane. Po `F5` Portal ma wrócić bezpośrednio do właściwego hosta i podzakładki, bez pośredniego pokazania `Overview` lub `Ogólne`.
 
-Szczegółowy kontrakt znajduje się w [docs/PROJECT-STATE.md](docs/PROJECT-STATE.md).
-
-## Start Portalu po F5
-
-Przed pierwszą widoczną klatką Portal powinien:
-
-- pobrać bootstrap i access state;
-- zastosować widoczność pozycji menu;
-- ustalić aktywny widok;
-- odtworzyć aktywnego hosta i jego workspace;
-- zastosować zapisany język, motyw i branding.
-
-Nie powinny pojawiać się:
-
-- wyłączone funkcje menu;
-- chwilowy inny widok;
-- biały ekran;
-- sekwencja `Overview → host → zniknięcie → host`;
-- długie oczekiwanie wynikające wyłącznie z timeoutu.
-
 ## PL/EN, motyw i branding
 
-PL/EN oraz jasny/ciemny są wspólne dla głównego Portalu i otwartych workspace’ów hostów. Zmiana nie powinna wymagać wyjścia z hosta ani przeładowania iframe.
+PL/EN oraz jasny/ciemny są wspólne dla głównego Portalu, otwartych workspace’ów hostów i osadzonych Ustawień. Zmiana nie powinna wymagać opuszczenia bieżącego widoku ani przeładowania aktywnej sesji.
 
 `Settings → SirK Portal → Portal interface` zawiera między innymi:
 
@@ -106,30 +144,9 @@ PL/EN oraz jasny/ciemny są wspólne dla głównego Portalu i otwartych workspac
 - wymuszenie nowego interfejsu;
 - utrzymywanie sesji po restarcie MeshCentral.
 
-## Desktop i Terminal
+## Zarządzanie i Polecenia
 
-Desktop i Terminal używają natywnej logiki MeshCentral przez plugin-local bridge.
-
-Menu strzałki obok `Połącz / Connect` jest renderowane nad iframe i nie może być przycinane przez toolbar. Przełączanie metod połączenia nie powinno przeładowywać aktywnego workspace.
-
-Przycisk trybu widoku:
-
-- lewy klik przełącza widok szeroki;
-- prawy klik otwiera menu:
-  - Widok szeroki;
-  - Widok szeroki + tryb pełnoekranowy;
-  - Pełny ekran połączenia;
-  - Pełny ekran połączenia + tryb pełnoekranowy.
-
-## Zarządzanie
-
-Zarządzanie korzysta z trzykolumnowego układu:
-
-- pierwsza kolumna: kolorowe ikony głównych kategorii;
-- druga kolumna: foldery i skrypty;
-- trzecia kolumna: wykonanie, edycja albo wyniki.
-
-Zwinięcie pierwszej kolumny ma zmieniać jej rzeczywistą szerokość, a nie tylko ukrywać nazwy.
+Zarządzanie i Polecenia korzystają z tego samego trzykolumnowego systemu, wspólnego toolbara, katalogu, Favorites, Edit Mode, Results i formularzy.
 
 My Scripts obsługuje:
 
@@ -140,8 +157,6 @@ My Scripts obsługuje:
 - potwierdzenie wykonania;
 - Approval Levels;
 - Results i Debug.
-
-## My Commands
 
 My Commands obsługuje:
 
@@ -189,18 +204,6 @@ meshcentral-data/mycompany-data
 
 Portal nie tworzy osobnego storage. Sekrety nie są wysyłane do przeglądarki. Panel administracyjny pokazuje wyłącznie stan `configured`.
 
-## Dwujęzyczne metadane skryptów
-
-```powershell
-#PL Polska nazwa | Polski opis
-#EN English name | English description
-
-# VariableRequiredPL: $UserName, Użytkownik | Login użytkownika
-# VariableRequiredEN: $UserName, User | User login
-```
-
-Folder może posiadać plik `<NazwaFolderu>.menu` oraz grafikę o tej samej nazwie bazowej. Obsługiwane grafiki: SVG, PNG, JPG, JPEG i WEBP.
-
 ## Instalacja z Git
 
 Uruchom jako Administrator:
@@ -210,12 +213,6 @@ Uruchom jako Administrator:
 ```
 
 Installer pobiera `main`, waliduje źródło, wykonuje atomową podmianę katalogu pluginu i uruchamia MeshCentral ponownie.
-
-Instalacja ręczna:
-
-```text
-meshcentral-data/plugins/MyCompany
-```
 
 Nie nadpisuj `meshcentral-data/mycompany-data` podczas aktualizacji pluginu.
 
@@ -230,28 +227,18 @@ Po zmianach Portalu obowiązkowa jest również ręczna kontrola:
 1. `F5` na `All`;
 2. `F5` na aktywnym hoście i aktywnej podzakładce;
 3. `Devices → inny widok → Devices` bez utraty sesji;
-4. przełączenie pomiędzy co najmniej dwoma hostami;
-5. PL/EN bez opuszczania hosta;
-6. jasny/ciemny bez opuszczania hosta;
-7. Desktop i Terminal wraz z menu Connect;
-8. tryby szerokie i pełnoekranowe;
-9. widoczność tylko dozwolonych pozycji menu;
-10. Management → Results z danymi widocznymi w Approval.
+4. Polecenia, Zarządzanie, Akceptacje i Ustawienia w trybie rozwiniętym oraz zwiniętym;
+5. Edit Mode i szerokość drugiej kolumny;
+6. PL/EN bez opuszczania bieżącego widoku;
+7. jasny/ciemny bez opuszczania bieżącego widoku;
+8. tabele, filtry, karty i przyciski w każdym module;
+9. Desktop i Terminal wraz z menu Connect;
+10. widoczność tylko dozwolonych pozycji menu.
+
+Test `test/portal-ui-contract.test.js` blokuje powrót wielu niezależnych layoutów, stylów Zarządzania w arkuszu Devices oraz starego globalnego mutatora DOM.
 
 ## Praca agenta
 
 Każdy nowy wątek dotyczący MyCompany zaczyna się od `AGENTS.md` oraz `docs/agent/11-Agent-MyCompany.md`.
 
-Najważniejsze Skills:
-
-- `test-mycompany`;
-- `check-mycompany-version`;
-- `deploy-mycompany-local`;
-- `read-meshcentral-log`;
-- `restart-meshcentral-service`.
-
-Zmiana runtime wymaga testów, spójnej wersji, changelogu, historii wersji oraz kontrolowanego deploymentu. Zmiana wyłącznie dokumentacji nie wymaga podnoszenia wersji pluginu.
-
-## Repository policy
-
-Repozytorium zawiera kompletny instalowalny plugin oraz biblioteki `seed/MyScripts` i `seed/MyCommands`. Runtime nie ładuje zewnętrznego źródła pluginów ani kodu legacy.
+Zmiana runtime wymaga testów, spójnej wersji, changelogu, historii wersji oraz kontrolowanego deploymentu.
