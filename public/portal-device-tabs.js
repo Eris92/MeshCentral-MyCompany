@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyDeviceTabsV7Loaded) return;
-    window.__myCompanyDeviceTabsV7Loaded = true;
+    if (window.__myCompanyDeviceTabsV8Loaded) return;
+    window.__myCompanyDeviceTabsV8Loaded = true;
 
     var STORAGE_KEY = "mycompany.sirkportal.deviceTabs";
     var state = {
@@ -141,24 +141,29 @@
         return !!(state.content && state.content.querySelector(".sirk-device-workspace"));
     }
 
-    function activeKeyFromDom() {
-        var activeTab = state.bar && state.bar.querySelector('.sirk-device-tab.is-active[data-device-workspace-key]');
-        var key = activeTab && activeTab.getAttribute("data-device-workspace-key");
+    function visibleKey() {
+        if (!state.content) return state.active;
+        var key = state.content.getAttribute("data-device-workspace-key");
         if (key && state.panes[key]) return key;
         if (contentIsDeviceList()) return "all";
-        if (contentIsWorkspace() && state.active !== "all" && state.panes[state.active]) return state.active;
         return state.active;
+    }
+
+    function markVisible(key) {
+        if (!state.content) return;
+        state.content.setAttribute("data-device-workspace-key", key);
+        state.active = key;
     }
 
     function stashVisible() {
         if (!state.content || !state.content.childNodes.length) return false;
-        var key = activeKeyFromDom();
+        var key = visibleKey();
         if (contentIsDeviceList()) key = "all";
         if (!key || !state.panes[key]) return false;
         var pane = state.panes[key];
         moveChildren(state.content, pane.store);
+        state.content.removeAttribute("data-device-workspace-key");
         pane.loaded = pane.store.childNodes.length > 0;
-        state.active = key;
         return pane.loaded;
     }
 
@@ -168,7 +173,7 @@
         state.content.textContent = "";
         moveChildren(pane.store, state.content);
         pane.loaded = true;
-        state.active = key;
+        markVisible(key);
         renderTabs();
         persist();
         window.dispatchEvent(new Event("resize"));
@@ -177,10 +182,10 @@
 
     function activateAll() {
         if (!state.panes.all || !state.content) return;
-        if (!contentIsDeviceList()) stashVisible();
+        if (visibleKey() !== "all") stashVisible();
         state.pending = null;
         if (!showStored("all")) {
-            state.active = "all";
+            markVisible("all");
             renderTabs();
             persist();
         }
@@ -201,22 +206,22 @@
 
     function openUnloadedPane(pane) {
         if (!pane || !state.content || !state.panes.all) return;
-        if (!contentIsDeviceList()) stashVisible();
-        if (!showStored("all") && !contentIsDeviceList()) return;
+        if (visibleKey() !== "all") stashVisible();
+        if (!contentIsDeviceList() && !showStored("all")) return;
         var row = findDeviceRow(pane.nodeId);
         if (!row) return;
         state.pending = { key: pane.key, nodeId: pane.nodeId, name: pane.name };
         row.click();
         window.clearTimeout(state.finalizeTimer);
-        state.finalizeTimer = window.setTimeout(finalizeOpen, 80);
+        state.finalizeTimer = window.setTimeout(finalizeOpen, 50);
     }
 
     function activate(key) {
         var pane = state.panes[key];
         if (!pane || !state.content) return;
         if (key === "all") { activateAll(); return; }
-        if (activeKeyFromDom() === key && contentIsWorkspace()) return;
-        if (pane.loaded && pane.store.childNodes.length) {
+        if (visibleKey() === key && contentIsWorkspace()) return;
+        if (pane.store.childNodes.length) {
             stashVisible();
             showStored(key);
             return;
@@ -238,15 +243,11 @@
     function closeTab(key) {
         if (key === "all" || !state.panes[key]) return;
         var pane = state.panes[key];
-        var visibleKey = activeKeyFromDom();
-        var wasVisible = visibleKey === key && contentIsWorkspace();
+        var wasVisible = visibleKey() === key;
         if (wasVisible) stashVisible();
         disconnectPane(pane);
         delete state.panes[key];
-        if (wasVisible) {
-            state.active = "all";
-            showStored("all");
-        }
+        if (wasVisible) showStored("all");
         renderTabs();
         persist();
     }
@@ -295,8 +296,7 @@
     }
 
     function candidate(target) {
-        if (!devicesActive() || !state.content || !target || !target.closest) return null;
-        if (!contentIsDeviceList()) return null;
+        if (!devicesActive() || !state.content || !target || !target.closest || !contentIsDeviceList()) return null;
         var row = target.closest("[data-device-id],.sirk-device-row");
         if (!row || !state.shell.contains(row)) return null;
         var nodeId = clean(row.getAttribute("data-device-id"));
@@ -308,7 +308,7 @@
 
     function beginOpen(info, event) {
         var existing = state.panes[info.key];
-        if (existing && existing.loaded && existing.store.childNodes.length) {
+        if (existing && existing.store.childNodes.length) {
             event.preventDefault();
             event.stopPropagation();
             if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
@@ -318,18 +318,19 @@
 
         if (state.panes.all.store.childNodes.length === 0 && contentIsDeviceList()) {
             moveChildren(state.content, state.panes.all.store);
+            state.content.removeAttribute("data-device-workspace-key");
             state.panes.all.loaded = true;
         }
 
         state.pending = info;
         window.clearTimeout(state.finalizeTimer);
-        state.finalizeTimer = window.setTimeout(finalizeOpen, 80);
+        state.finalizeTimer = window.setTimeout(finalizeOpen, 50);
     }
 
     function finalizeOpen() {
         if (!state.pending || !state.content) return;
         if (!contentIsWorkspace()) {
-            state.finalizeTimer = window.setTimeout(finalizeOpen, 100);
+            state.finalizeTimer = window.setTimeout(finalizeOpen, 75);
             return;
         }
 
@@ -337,22 +338,22 @@
         state.pending = null;
         var pane = state.panes[info.key];
         if (!pane) {
-            pane = { key: info.key, name: info.name, nodeId: info.nodeId, store: createStore(info.key), loaded: false };
+            pane = { key: info.key, name: info.name, nodeId: info.nodeId, store: createStore(info.key), loaded: true };
             state.cache.appendChild(pane.store);
             state.panes[info.key] = pane;
         }
         pane.name = info.name || pane.name;
         pane.nodeId = info.nodeId || pane.nodeId;
-        pane.loaded = false;
-        state.active = info.key;
+        pane.loaded = true;
+        markVisible(info.key);
         renderTabs();
         persist();
         window.dispatchEvent(new Event("resize"));
     }
 
     function captureInitialList() {
-        if (!devicesActive() || !contentIsDeviceList()) return;
-        state.active = "all";
+        if (!devicesActive() || !contentIsDeviceList() || state.pending) return;
+        markVisible("all");
         state.panes.all.loaded = true;
         renderTabs();
     }
@@ -370,8 +371,8 @@
     }
 
     function bind() {
-        if (!state.shell || state.shell.__myCompanyDeviceTabsV7Bound) return;
-        state.shell.__myCompanyDeviceTabsV7Bound = true;
+        if (!state.shell || state.shell.__myCompanyDeviceTabsV8Bound) return;
+        state.shell.__myCompanyDeviceTabsV8Bound = true;
 
         state.shell.addEventListener("click", function (event) {
             ensureInfrastructure();
@@ -393,8 +394,8 @@
         window.setTimeout(function () {
             ensureInfrastructure();
             syncVisibility();
-            captureInitialList();
             if (state.pending) finalizeOpen();
+            else captureInitialList();
             scheduleRestore();
         }, 20);
     }
@@ -405,7 +406,7 @@
             state.observer = new MutationObserver(schedule);
             state.observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "style"] });
         }
-        window.setInterval(function () { ensureInfrastructure(); syncVisibility(); captureInitialList(); scheduleRestore(); }, 1000);
+        window.setInterval(function () { ensureInfrastructure(); syncVisibility(); if (state.pending) finalizeOpen(); else captureInitialList(); scheduleRestore(); }, 1000);
     }
 
     window.MyCompanyDeviceTabs = {
@@ -414,7 +415,7 @@
         activate: activate,
         close: closeTab,
         debug: function () {
-            var result = { active: state.active, visible: activeKeyFromDom(), content: contentIsWorkspace() ? "workspace" : contentIsDeviceList() ? "all" : "other", stores: {} };
+            var result = { active: state.active, visible: visibleKey(), content: contentIsWorkspace() ? "workspace" : contentIsDeviceList() ? "all" : "other", stores: {} };
             Object.keys(state.panes).forEach(function (key) { result.stores[key] = state.panes[key].store.childElementCount; });
             return result;
         }
