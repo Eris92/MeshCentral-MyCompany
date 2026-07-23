@@ -1,140 +1,34 @@
-name: Finalize SIRK Layout
+name: Test
 
 on:
+  push:
+    branches: [main]
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  finalize:
-    if: github.head_ref == 'chore/sirk-docs-1.5.140'
+  validate-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: chore/sirk-docs-1.5.140
-          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Apply final layout cleanup
-        id: cleanup
-        continue-on-error: true
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('scripts/finalize-sirk-layout.js')
-          source = path.read_text(encoding='utf-8')
-          source = source.replace(
-              'walk(".github"), walk("public"), walk("server"), walk("scripts"), walk("test"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")',
-              'walk(".github"), walk("public"), walk("server"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")'
-          )
-          source = source.replace('observe\\(document\\.documentElement/', 'observe\\\\(document\\\\.documentElement/')
-          source = source.replace('"sirkPlatformPortalReturnHash", "sirkPortal.returnHash"', '"sirkPortalReturnHash", "sirkPortal.returnHash"')
-          path.write_text(source, encoding='utf-8')
-          PY
-          set -o pipefail
-          node scripts/finalize-sirk-layout.js 2>&1 | tee cleanup-output.log
-          python3 - <<'PY'
-          from pathlib import Path
-          replacements = [
-              ('../core/', '../server/core/'), ('../modules/', '../server/modules/'),
-              ('mycompany-data', 'sirk-platform-data'), ('meshcentral-mycompany', 'sirk-portal'),
-              ('__MYCOMPANY_', '__SIRK_PLATFORM_'), ('__myCompany', '__sirkPlatform'),
-              ('MYCOMPANY', 'SIRK_PLATFORM'), ('MyCompany', 'SirkPlatform'),
-              ('myCompany', 'sirkPlatform'), ('mycompany', 'sirkPlatform'),
-              ('/Only HTTPS/', '/HTTPS URL without credentials/'),
-              ('../server/modules/Portal/index-safe.js', '../server/modules/portal/safe.js'),
-              ('"core/', '"server/core/'), ("'core/", "'server/core/"),
-              ('SirkPlatformAdmin.js', 'admin.js'), ('views/SirkPlatform.handlebars', 'views/SIRK-Portal.handlebars'),
-              ('public/portal-standalone-nav.js', 'public/portal/standalone/scripts/navigation.js'),
-              ('public/portal-device-tabs.css', 'public/native/device-tabs.css'),
-              ('public/module-shell.js', 'public/shared/module-shell.js'),
-              ('public/shared-ui/page.js', 'public/shared/ui/page.js'),
-              ('public/portal-management.js', 'public/modules/automation/index.js'),
-              ('public/portal-standalone.html', 'public/portal/standalone/index.html'),
-              ('public/mycommands.js', 'public/modules/commands/index.js'),
-              ('public/approvalcenter.js', 'public/modules/approvals/index.js'),
-              ('public/myjira.js', 'public/modules/jira/index.js'),
-              ('public/defendertools.js', 'public/modules/security/index.js'),
-              ('public/portal-terminal-connect.js', 'public/portal/standalone/scripts/terminal-connect.js'),
-              ('public/portal-device-tabs.js', 'public/native/device-tabs.js'),
-              ('public/standalone-core.js', 'public/portal/standalone/scripts/core.js'),
-              ('web/admin-layout.js', 'web/admin/admin-layout.js'),
-              ('web/admin-marketplace.js', 'web/admin/admin-marketplace.js'),
-              ('web/admin-plugin-updates.js', 'web/admin/admin-plugin-updates.js'),
-              ('sirkPlatform.sirkportal.deviceTabs', 'sirkPortal.deviceTabs'),
-              ("assert(admin.indexOf('plugin-admin-service-rollback.js')>=0,\"Admin must load rollback adapter\");", "assert(admin.indexOf('plugin-admin-service-backup-discovery.js')>=0,\"Admin must load backup discovery adapter\");"),
-              ("assert(management.indexOf('state.host.classList.toggle(\"is-management-edit-mode\", state.editMode)') >= 0, \"Management must expose edit mode on the mounted host\");", "assert(management.indexOf('tools.toggleEdit(toolbar, module.api.render)') >= 0, \"Automation must expose Edit through the shared module shell\");"),
-              ('style("sirkPlatform-device-tabs-style", "portal-device-tabs.css")', 'style("sirk-platform-device-tabs-style", "portal-device-tabs.css")'),
-              ('load("sirkPlatform-device-tabs-script", asset("portal-device-tabs.js"))', '["sirk-platform-device-tabs", "portal-device-tabs.js"]'),
-              ("management.indexOf('\"sirk-management-shell mc-portal-module-shell\"') >= 0", "management.indexOf('window.SirkPlatformModuleShell.create') >= 0"),
-              ('management.indexOf("mc-portal-module-layout") >= 0', 'management.indexOf(\'preset: "myscripts"\') >= 0'),
-              ('"Management must expose the canonical three-column layout"', '"Automation must use the canonical shared shell preset"'),
-              ('path.join(root, "public", "portal-cleanup.css")', 'path.join(root, "public", "portal", "standalone", "styles", "cleanup.css")'),
-              ('path.join(root, "public", "portal-cleanup.js")', 'path.join(root, "public", "portal", "standalone", "scripts", "cleanup.js")'),
-              ('path.join(root, "public", "portal-standalone-nav.js")', 'path.join(root, "public", "portal", "standalone", "scripts", "navigation.js")'),
-              ('.sirkPlatform-management-host', '.sirk-platform-management-host'),
-              ('.sirkPlatform-native-ui', '.sirk-platform-native-ui')
-          ]
-          for path in Path('test').glob('*.js'):
-              source = path.read_text(encoding='utf-8')
-              for old, new in replacements: source = source.replace(old, new)
-              path.write_text(source, encoding='utf-8')
-          PY
-          git checkout HEAD -- .github/workflows/test.yml .github/workflows/validate.yml .github/workflows/finalize-layout.yml
-      - name: Validate final tree
-        if: steps.cleanup.outcome == 'success'
-        shell: bash
-        run: |
-          set -o pipefail
-          git diff --check
-          npm test 2>&1 | tee finalize-test-output.log
-          find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
-      - name: Commit and push code tree
-        id: publish
-        if: steps.cleanup.outcome == 'success' && success()
-        continue-on-error: true
-        shell: bash
-        run: |
-          set +e
-          rm -f cleanup-output.log finalize-test-output.log
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          {
-            echo '[status before commit]'
-            git status --short
-            echo '[changed workflow files]'
-            git diff --name-only HEAD -- .github/workflows
-            git add -A
-            git commit -m 'refactor: finalize SIRK Platform repository layout'
-            commit_status=$?
-            echo "commit_status=$commit_status"
-            if [ "$commit_status" -eq 0 ]; then
-              git push origin HEAD:chore/sirk-docs-1.5.140
-              push_status=$?
-            else
-              push_status=99
-            fi
-            echo "push_status=$push_status"
-            exit "$push_status"
-          } 2>&1 | tee publish-output.log
-          exit ${PIPESTATUS[0]}
-      - name: Upload diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Test
+        run: npm test
+
+  validate-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          name: finalize-sirk-layout-output
-          path: |
-            cleanup-output.log
-            finalize-test-output.log
-            publish-output.log
-          if-no-files-found: ignore
-          retention-days: 1
-      - name: Fail after publish error
-        if: steps.publish.outcome == 'failure'
-        run: exit 1
+          node-version: '24'
+      - name: Test
+        run: npm test
