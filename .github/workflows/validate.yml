@@ -1,4 +1,4 @@
-name: Validate MyCompany
+name: Validate SIRK-Portal
 
 on:
   push:
