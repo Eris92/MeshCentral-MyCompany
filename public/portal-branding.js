@@ -6,6 +6,7 @@
     var current = {};
     var DEVICE_TAB_STORAGE = "mycompany.sirkportal.deviceActiveTabs";
     var LANGUAGE_STORAGE = "sirkPortal.language";
+    var THEME_STORAGE = "mycompany.sirkportal.theme";
 
     function workspaceChild() {
         try { return new URL(window.location.href).searchParams.get("sirkWorkspaceChild") === "1"; }
@@ -83,6 +84,28 @@
         catch (error) { return "pl"; }
     }
 
+    function darkTheme() {
+        try { return localStorage.getItem(THEME_STORAGE) === "dark"; }
+        catch (error) { return false; }
+    }
+
+    function applyWorkspaceTheme() {
+        if (!workspaceChild()) return;
+        var dark = darkTheme();
+        var portalRoot = document.getElementById("sirkPortalRoot");
+        if (portalRoot) {
+            portalRoot.classList.toggle("sirk-theme-dark", dark);
+            portalRoot.classList.toggle("sirk-theme-light", !dark);
+        }
+        document.documentElement.classList.toggle("sirk-theme-dark", dark);
+        document.documentElement.classList.toggle("sirk-theme-light", !dark);
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+        if (document.body) {
+            document.body.classList.toggle("sirk-theme-dark", dark);
+            document.body.classList.toggle("sirk-theme-light", !dark);
+        }
+    }
+
     var WORKSPACE_TEXT = {
         pl: { general: "Ogólne", desktop: "Pulpit", terminal: "Terminal", commands: "Polecenia", files: "Pliki", registry: "Rejestr", software: "Oprogramowanie", amt: "Intel AMT", online: "Online", offline: "Offline", name: "Nazwa", status: "Status", group: "Grupa", system: "System", ip: "Adres IP", lastSeen: "Ostatnio widziany", agent: "Wersja agenta", nodeId: "Node ID", openMesh: "Otwórz w MeshCentral" },
         en: { general: "Overview", desktop: "Desktop", terminal: "Terminal", commands: "Commands", files: "Files", registry: "Registry", software: "Software", amt: "Intel AMT", online: "Online", offline: "Offline", name: "Name", status: "Status", group: "Group", system: "Operating system", ip: "IP address", lastSeen: "Last seen", agent: "Agent version", nodeId: "Node ID", openMesh: "Open in MeshCentral" }
@@ -90,6 +113,7 @@
 
     function translateWorkspace() {
         var text = WORKSPACE_TEXT[language()];
+        document.documentElement.lang = language();
         Array.prototype.forEach.call(document.querySelectorAll("[data-device-tab]"), function (button) {
             var key = button.getAttribute("data-device-tab");
             if (text[key]) button.textContent = text[key];
@@ -110,11 +134,9 @@
 
     function refreshWorkspaceLanguage(event) {
         if (!workspaceChild()) return;
-        if (event && typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
         translateWorkspace();
         var active = document.querySelector("[data-device-tab].is-active");
         var tab = active && active.getAttribute("data-device-tab");
-        if (tab === "general" && active) active.click();
         if (tab === "commands") {
             var module = window.MyCompanyModules && window.MyCompanyModules.mycommands;
             if (module && module.api && typeof module.api.render === "function") module.api.render();
@@ -173,6 +195,8 @@
             try { applyDocument(frame.contentDocument, current); }
             catch (error) {}
         }
+        applyWorkspaceTheme();
+        translateWorkspace();
         restoreDeviceTab();
     }
 
@@ -197,6 +221,7 @@
     }
 
     holdWorkspaceForRestore();
+    applyWorkspaceTheme();
     document.addEventListener("click", function (event) {
         var tab = event.target && event.target.closest && event.target.closest("[data-device-tab]");
         if (tab) saveDeviceTab(tab.getAttribute("data-device-tab"));
@@ -204,10 +229,10 @@
     window.addEventListener("sirkportal:languagechange", refreshWorkspaceLanguage, true);
     window.addEventListener("sirkportal:languagechange", propagateLanguage);
     window.addEventListener("storage", function (event) {
-        if (event.key !== LANGUAGE_STORAGE) return;
-        refreshWorkspaceLanguage(new CustomEvent("sirkportal:languagechange", { detail: { language: language() } }));
+        if (event.key === LANGUAGE_STORAGE) refreshWorkspaceLanguage();
+        if (event.key === THEME_STORAGE) applyWorkspaceTheme();
     });
-    new MutationObserver(function () { restoreDeviceTab(); }).observe(document.documentElement, { childList: true, subtree: true });
+    new MutationObserver(function () { synchronize(); }).observe(document.documentElement, { childList: true, subtree: true });
 
     fetch(base + "/portal-branding.json?v=" + encodeURIComponent(String(window.__MYCOMPANY_PORTAL_VERSION__ || Date.now())), {
         credentials: "same-origin",
@@ -217,5 +242,5 @@
         return response.json();
     }).then(apply).catch(function () { apply({}); });
 
-    window.setInterval(synchronize, 500);
+    window.setInterval(synchronize, 250);
 }());
