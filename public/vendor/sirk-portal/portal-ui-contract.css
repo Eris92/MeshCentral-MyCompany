@@ -1,0 +1,389 @@
+/* Canonical SirK Portal UI contract. Loaded last and scoped to the Portal/admin root. */
+#sirkPortalRoot {
+    --mc-ui-primary-width: 184px;
+    --mc-ui-secondary-width: 236px;
+    --mc-ui-secondary-edit-width: 440px;
+    --mc-ui-collapsed-width: 56px;
+    --mc-ui-toolbar-height: 48px;
+    --mc-ui-row-height: 42px;
+    --mc-ui-radius: 8px;
+    --mc-ui-gap: 4px;
+    --mc-ui-accent: var(--sirk-active-accent, #3867d6);
+    --mc-ui-panel: var(--sirk-panel, #fff);
+    --mc-ui-input: var(--sirk-input, #fff);
+    --mc-ui-text: var(--sirk-text, #172033);
+    --mc-ui-muted: var(--sirk-muted, #657187);
+    --mc-ui-border: var(--sirk-border, #dce3ec);
+    --mc-ui-hover: rgba(96, 165, 250, .09);
+    --mc-ui-active: rgba(96, 165, 250, .16);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+#sirkPortalRoot .mc-portal-module-shell {
+    --portal-primary-width: var(--mc-ui-primary-width);
+    --portal-secondary-width: var(--mc-ui-secondary-width);
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid var(--mc-ui-border) !important;
+    border-radius: 10px !important;
+    background: var(--mc-ui-panel) !important;
+    color: var(--mc-ui-text) !important;
+    box-sizing: border-box !important;
+    isolation: isolate;
+}
+
+#sirkPortalRoot .sirk-unified-content .mc-portal-module-shell,
+#sirkPortalRoot .sirk-portal-view-host > .mc-portal-module-shell,
+#sirkPortalRoot .sirk-portal-view-host > .mycompany-management-host > .mc-portal-module-shell {
+    height: 100% !important;
+}
+
+#sirkPortalRoot .mc-portal-module-toolbar {
+    flex: 0 0 var(--mc-ui-toolbar-height) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: var(--mc-ui-toolbar-height) !important;
+    overflow: hidden !important;
+    border-bottom: 1px solid var(--mc-ui-border) !important;
+    background: var(--mc-ui-panel) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-toolbar > .mc-shared-toolbar,
+#sirkPortalRoot .mc-portal-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    height: var(--mc-ui-toolbar-height) !important;
+    margin: 0 !important;
+    padding: 7px 10px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+}
+
+#sirkPortalRoot .mc-portal-toolbar-button,
+#sirkPortalRoot .mc-portal-module-toolbar .mc-shared-toolbar-button,
+#sirkPortalRoot .mc-portal-module-toolbar .sirk-management-tool,
+#sirkPortalRoot .mc-portal-module-toolbar .mc-admin-management-tool {
+    appearance: none !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+    color: var(--mc-ui-text) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+#sirkPortalRoot .mc-portal-toolbar-button:hover,
+#sirkPortalRoot .mc-portal-toolbar-button.is-active,
+#sirkPortalRoot .mc-portal-module-toolbar .mc-shared-toolbar-button:hover,
+#sirkPortalRoot .mc-portal-module-toolbar .mc-shared-toolbar-button.is-active,
+#sirkPortalRoot .mc-portal-module-toolbar .sirk-management-tool:hover,
+#sirkPortalRoot .mc-portal-module-toolbar .sirk-management-tool.is-active,
+#sirkPortalRoot .mc-portal-module-toolbar .mc-admin-management-tool:hover,
+#sirkPortalRoot .mc-portal-module-toolbar .mc-admin-management-tool.is-active {
+    border-color: rgba(96, 165, 250, .25) !important;
+    background: rgba(96, 165, 250, .14) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-workspace {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+#sirkPortalRoot .mc-portal-module-layout {
+    display: grid !important;
+    grid-template-columns: var(--portal-primary-width) var(--portal-secondary-width) minmax(0, 1fr) !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    gap: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    resize: none !important;
+    background: var(--mc-ui-panel) !important;
+    box-sizing: border-box !important;
+}
+
+#sirkPortalRoot .mc-portal-module-shell.is-edit-mode,
+#sirkPortalRoot .mc-portal-module-layout.is-edit-mode,
+#sirkPortalRoot .mycompany-management-host.is-management-edit-mode .mc-portal-module-shell {
+    --portal-secondary-width: var(--mc-ui-secondary-edit-width);
+}
+
+#sirkPortalRoot .mc-portal-module-layout.is-collapsed {
+    --portal-primary-width: var(--mc-ui-collapsed-width);
+    grid-template-columns: var(--mc-ui-collapsed-width) var(--portal-secondary-width) minmax(0, 1fr) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-primary,
+#sirkPortalRoot .mc-portal-module-secondary,
+#sirkPortalRoot .mc-portal-module-details {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    background: var(--mc-ui-panel) !important;
+    color: var(--mc-ui-text) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-primary,
+#sirkPortalRoot .mc-portal-module-secondary {
+    padding: 12px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border-right: 1px solid var(--mc-ui-border) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-details {
+    padding: 18px !important;
+    overflow: auto !important;
+}
+
+#sirkPortalRoot .mc-portal-module-layout.is-collapsed .mc-portal-module-primary {
+    width: var(--mc-ui-collapsed-width) !important;
+    min-width: var(--mc-ui-collapsed-width) !important;
+    max-width: var(--mc-ui-collapsed-width) !important;
+    padding: 8px 6px !important;
+}
+
+#sirkPortalRoot .mc-portal-nav-item {
+    appearance: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: var(--mc-ui-row-height) !important;
+    margin: 0 0 var(--mc-ui-gap) !important;
+    padding: 9px 11px !important;
+    border: 1px solid transparent !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+    color: var(--mc-ui-text) !important;
+    text-align: left !important;
+    font: 500 14px "Segoe UI", Arial, sans-serif !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+}
+
+#sirkPortalRoot .mc-portal-nav-item:hover {
+    background: var(--mc-ui-hover) !important;
+}
+
+#sirkPortalRoot .mc-portal-nav-item.active,
+#sirkPortalRoot .mc-portal-nav-item.is-active {
+    background: var(--mc-ui-active) !important;
+    box-shadow: inset 3px 0 0 var(--mc-ui-accent) !important;
+    font-weight: 700 !important;
+}
+
+#sirkPortalRoot .mc-portal-nav-icon {
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--mc-ui-accent);
+    font-size: 0 !important;
+    line-height: 0 !important;
+}
+
+#sirkPortalRoot .mc-portal-nav-icon svg,
+#sirkPortalRoot .mc-portal-toolbar-icon svg {
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    fill: none !important;
+    stroke: currentColor !important;
+    stroke-width: 1.8 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+}
+
+#sirkPortalRoot .mc-portal-nav-label {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+#sirkPortalRoot .mc-portal-module-layout.is-collapsed .mc-portal-module-primary .mc-portal-nav-item {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 8px !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+#sirkPortalRoot .mc-portal-module-layout.is-collapsed .mc-portal-module-primary .mc-portal-nav-label {
+    display: none !important;
+}
+
+#sirkPortalRoot .mc-portal-card {
+    margin: 0 0 10px !important;
+    padding: 14px !important;
+    border: 1px solid var(--mc-ui-border) !important;
+    border-radius: var(--mc-ui-radius) !important;
+    background: var(--mc-ui-panel) !important;
+    color: var(--mc-ui-text) !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+}
+
+#sirkPortalRoot .mc-portal-filter,
+#sirkPortalRoot .mc-portal-module-shell input[type="search"],
+#sirkPortalRoot .mc-portal-module-shell input[type="text"],
+#sirkPortalRoot .mc-portal-module-shell input[type="password"],
+#sirkPortalRoot .mc-portal-module-shell input[type="number"],
+#sirkPortalRoot .mc-portal-module-shell select,
+#sirkPortalRoot .mc-portal-module-shell textarea {
+    appearance: none;
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--mc-ui-border);
+    border-radius: 7px;
+    background: var(--mc-ui-input);
+    color: var(--mc-ui-text);
+    box-sizing: border-box;
+}
+
+#sirkPortalRoot .mc-portal-button {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 34px !important;
+    margin: 0 !important;
+    padding: 7px 13px !important;
+    border: 1px solid transparent !important;
+    border-radius: 7px !important;
+    background: var(--mc-ui-accent) !important;
+    color: #fff !important;
+    font: 500 14px "Segoe UI", Arial, sans-serif !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+#sirkPortalRoot .mc-portal-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: auto !important;
+    border: 1px solid var(--mc-ui-border) !important;
+    border-radius: var(--mc-ui-radius) !important;
+    box-sizing: border-box !important;
+}
+
+#sirkPortalRoot .mc-portal-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    border: 0 !important;
+    background: var(--mc-ui-panel) !important;
+    color: var(--mc-ui-text) !important;
+}
+
+#sirkPortalRoot .mc-portal-table th,
+#sirkPortalRoot .mc-portal-table td {
+    padding: 9px 10px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--mc-ui-border) !important;
+    background: transparent !important;
+    color: inherit !important;
+    text-align: left !important;
+    vertical-align: top !important;
+}
+
+#sirkPortalRoot .mc-portal-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--mc-ui-panel) !important;
+    white-space: nowrap;
+}
+
+#sirkPortalRoot .sirk-settings-module-toolbar {
+    display: none !important;
+}
+
+#sirkPortalRoot .sirk-settings-module-shell {
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#sirkPortalRoot .sirk-settings-module-workspace,
+#sirkPortalRoot .sirk-standalone-settings-frame {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#sirkPortalRoot .mc-admin-portal-embedded > h2,
+#sirkPortalRoot .mc-admin-portal-embedded > .mc-admin-subtitle {
+    display: none !important;
+}
+
+#sirkPortalRoot .mc-admin-portal-embedded {
+    padding: 0 !important;
+}
+
+@media (max-width: 1100px) {
+    #sirkPortalRoot {
+        --mc-ui-primary-width: 170px;
+        --mc-ui-secondary-width: 220px;
+        --mc-ui-secondary-edit-width: 400px;
+    }
+}
+
+@media (max-width: 800px) {
+    #sirkPortalRoot .mc-portal-module-shell {
+        height: auto !important;
+        min-height: 560px !important;
+        overflow: visible !important;
+    }
+
+    #sirkPortalRoot .mc-portal-module-layout,
+    #sirkPortalRoot .mc-portal-module-layout.is-collapsed {
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    #sirkPortalRoot .mc-portal-module-primary,
+    #sirkPortalRoot .mc-portal-module-secondary {
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        border-right: 0 !important;
+        border-bottom: 1px solid var(--mc-ui-border) !important;
+    }
+}
