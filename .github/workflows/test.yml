@@ -45,6 +45,14 @@ jobs:
           PY
           set -o pipefail
           node scripts/finalize-sirk-layout.js 2>&1 | tee cleanup-output.log
+          python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('test').glob('*.js'):
+              source = path.read_text(encoding='utf-8')
+              source = source.replace('../core/', '../server/core/')
+              source = source.replace('../modules/', '../server/modules/')
+              path.write_text(source, encoding='utf-8')
+          PY
           cat > .github/workflows/test.yml <<'EOF'
           name: Test
 
