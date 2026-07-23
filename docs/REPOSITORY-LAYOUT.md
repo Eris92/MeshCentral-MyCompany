@@ -1,167 +1,202 @@
-# MyCompany repository layout
+# SIRK Management Platform — struktura repozytorium
 
-## Cel
+## Nazwy produktu
 
-Repozytorium rozdziela backend MeshCentral, nowy SirK Portal, adapter starego GUI MeshCentral, współdzielony frontend oraz panel administracyjny.
+- nazwa techniczna pluginu: `SIRK-Portal`;
+- nazwa wyświetlana: `SIRK Management Platform`;
+- nazwa skrócona w interfejsie: `SIRK Platform`.
 
-## Docelowa struktura
+Repozytorium nie utrzymuje zgodności ze strukturą testową `MyCompany`. Stare entrypointy, shimy, aliasy, katalogi danych i ścieżki assetów są usunięte.
+
+## Struktura
 
 ```text
-MyCompany/
-├── MyCompany.js                  # jedyny entrypoint pluginu wymagany przez MeshCentral
-├── plugin-main.js                # cienki bootstrap pluginu
-├── MyCompanyAdmin.js             # cienki router panelu administracyjnego i assetów
+SIRK-Portal/
+├── SIRK-Portal.js
+├── plugin-main.js
+├── plugin-main-standalone.js
+├── admin.js
 ├── config.json
 ├── package.json
 ├── server/
-│   ├── core/                     # wspólne serwisy backendowe
+│   ├── core/
+│   │   ├── runtime.js
+│   │   ├── runtime-portal.js
+│   │   ├── settings-store.js
+│   │   ├── secret-store.js
+│   │   ├── approval-service.js
+│   │   ├── device-service.js
+│   │   ├── integration-service.js
+│   │   └── pozostałe usługi wspólne
 │   └── modules/
-│       ├── approvalcenter/
-│       ├── moverequests/
-│       ├── mycommands/
-│       ├── myscripts/
-│       ├── myjira/
-│       ├── defendertools/
-│       └── portal/
+│       ├── approval-center/
+│       ├── automation/
+│       ├── commands/
+│       ├── jira/
+│       ├── move-requests/
+│       ├── portal/
+│       └── security/
 ├── public/
-│   ├── portal/                   # wyłącznie samodzielny SirK Portal
-│   ├── native/                   # wyłącznie adapter natywnego GUI MeshCentral
-│   ├── shared/                   # frontend współdzielony przez portal i native
-│   │   └── icon-registry.js      # jedyny helper ikon przeglądarkowych
-│   └── modules/                  # dokładnie jeden renderer na moduł
-│       ├── approvalcenter/
-│       ├── moverequests/
-│       ├── mycommands/
-│       ├── myscripts/
-│       ├── myjira/
-│       └── defendertools/
+│   ├── portal/
+│   │   ├── standalone/
+│   │   │   ├── index.html
+│   │   │   ├── login.html
+│   │   │   ├── scripts/
+│   │   │   └── styles/
+│   │   ├── vendor/
+│   │   ├── index.js
+│   │   └── portal.css
+│   ├── native/
+│   │   ├── mesh-plugin-core.js
+│   │   ├── portal-launcher.js
+│   │   ├── device-tabs.js
+│   │   ├── device-tabs.css
+│   │   └── approval.css
+│   ├── shared/
+│   │   ├── core.js
+│   │   ├── runtime.js
+│   │   ├── module-shell.js
+│   │   ├── icon-registry.js
+│   │   ├── styles/
+│   │   └── ui/
+│   └── modules/
+│       ├── approvals/
+│       ├── automation/
+│       ├── commands/
+│       ├── jira/
+│       ├── move-requests/
+│       └── security/
 ├── web/
-│   └── admin/                    # panel administracyjny pluginu
+│   └── admin/
 ├── assets/
 │   └── icons/
-│       └── sirk-ui.svg           # kanoniczny sprite SVG
+│       └── sirk-ui.svg
+├── views/
+│   └── SIRK-Portal.handlebars
 ├── tools/
-│   ├── install/
-│   ├── deployment/
-│   ├── diagnostics/
-│   └── maintenance/
-├── scripts/                      # walidatory/build używane przez npm i CI
+│   └── install/
+├── scripts/
 ├── test/
 ├── docs/
-├── views/
 └── seed/
 ```
 
-## Backend i frontend modułu
+## Zasady backendu
 
-Jeden moduł biznesowy może mieć dwie warstwy, ale nie są to dwa niezależne moduły.
+Cały kod Node.js i integracje z MeshCentral znajdują się w `server/`.
 
-```text
-server/modules/approvalcenter/index.js
-```
+- `server/core/` zawiera runtime, storage, security, integracje i wspólne usługi;
+- `server/modules/` zawiera moduły funkcjonalne;
+- każdy moduł używa katalogu `kebab-case` i posiada `index.js`;
+- katalogi `core/` oraz `modules/` w root są zabronione;
+- backend nie może być umieszczany w `public/`.
 
-Backend Node/MeshCentral:
-
-- API GET/POST;
-- uprawnienia;
-- settings;
-- approval workflow;
-- dostęp do wspólnych serwisów z `server/core`.
+Kanoniczny katalog danych runtime:
 
 ```text
-public/modules/approvalcenter/index.js
+meshcentral-data/sirk-platform-data
 ```
 
-Frontend przeglądarkowy:
+Wtyczka testowa nie migruje i nie zachowuje danych z `mycompany-data`.
 
-- menu;
-- toolbar;
-- tabele i karty;
-- wywołania API backendu;
-- wspólny kontrakt UI.
+## Zasady frontendu
 
-Obie warstwy używają jednego klucza modułu: `approvalcenter`.
+`public/` zawiera wyłącznie cztery warstwy aplikacyjne:
 
-## Jedna implementacja renderera
+- `public/portal/` — samodzielny SIRK Portal;
+- `public/native/` — integracja z natywnym GUI MeshCentral;
+- `public/shared/` — wspólny runtime, komponenty i style;
+- `public/modules/` — pojedyncze renderery modułów.
 
-Dla jednego klucza modułu może istnieć dokładnie jeden plik rejestrujący:
+Pliki aplikacyjne nie mogą leżeć bezpośrednio w `public/`. Katalog `public/shared-ui/` jest usunięty; jego zawartość znajduje się w `public/shared/ui/`.
 
-```js
-window.MyCompanyModules.<key> = module;
-```
+## Moduły
 
-Nie wolno utrzymywać równolegle plików takich jak:
+Backend i frontend jednego modułu są oddzielnymi warstwami tego samego modułu:
 
 ```text
-public/approvalcenter.js
-public/modules/approvalcenter.js
+server/modules/approval-center/index.js
+public/modules/approvals/index.js
 ```
 
-Kanoniczna lokalizacja renderera to `public/modules/<key>/index.js`. Podczas migracji dopuszczalny jest chwilowo plik `public/modules/<key>.js`, ale nie może istnieć drugi renderer tego samego klucza.
+Dla jednego modułu może istnieć tylko jeden renderer. Zabronione jest utrzymywanie drugiego pliku w płaskim `public/`.
+
+## Loadery
+
+Przepływ ładowania:
+
+```text
+SIRK-Portal.js
+  → plugin-main-standalone.js
+    → plugin-main.js
+      → server/core/runtime-portal.js
+        → server/core/runtime.js
+          → server/modules/*
+```
+
+Frontend natywny jest ładowany przez jedną mapę assetów w `admin.js`. Publiczne nazwy endpointów mogą pozostać stabilne, ale każda nazwa wskazuje na dokładnie jeden plik w strukturze kanonicznej.
+
+Standalone Portal używa jednej mapy assetów w `plugin-main-standalone.js` i jednego endpointu API:
+
+```text
+/sirk/api/v1/approvals
+```
+
+## Panel administracyjny
+
+Wszystkie assety panelu administracyjnego znajdują się w:
+
+```text
+web/admin/
+```
+
+Jedyny widok panelu:
+
+```text
+views/SIRK-Portal.handlebars
+```
 
 ## Ikony
 
-Wszystkie standardowe ikony Portalu, native UI i modułów pochodzą z:
+Kanoniczny sprite:
 
 ```text
 assets/icons/sirk-ui.svg
 ```
 
-Kod przeglądarkowy korzysta z:
+Rejestr przeglądarkowy:
 
 ```text
 public/shared/icon-registry.js
 ```
 
-Przykład:
+Standardowe ikony nie powinny być kopiowane jako powtarzające się inline SVG w wielu modułach.
 
-```js
-window.SirkIcons.svg("settings", "mc-portal-nav-svg")
+## Instalacja
+
+Kanoniczne instalatory:
+
+```text
+Install-SIRK-Portal-FromGit.ps1
+Install-SIRK-Portal-FromGit_RUN.ps1
+tools/install/Install-SIRK-Portal-FromGit.ps1
+tools/install/Install-SIRK-Portal-FromGit_RUN.ps1
 ```
 
-Nie wolno kopiować tych samych definicji `<path>` do wielu plików JavaScript albo HTML. Osobne pliki SVG są dozwolone tylko dla grafik produktowych, logotypów, ikon użytkownika i ikon folderów dostarczanych przez administratora.
+Instalator używa `SIRK-Portal.js`, katalogu pluginu `SIRK-Portal` oraz danych `sirk-platform-data`.
 
-## Zasady katalogów
+## Walidacja
 
-### Root
+```bash
+npm test
+```
 
-W root mogą pozostać wyłącznie entrypointy i pliki wymagane przez MeshCentral lub narzędzia pakietujące:
+`scripts/validate-repository-layout.js` blokuje:
 
-- `MyCompany.js`;
-- `plugin-main.js`;
-- `MyCompanyAdmin.js`;
-- `config.json`;
-- `package.json`;
-- kompatybilne launchery instalatora.
-
-Pełne skrypty PowerShell nie mogą być dodawane do root.
-
-### `public/`
-
-`public/` oznacza kod wysyłany do przeglądarki. Nie może zawierać backendowego `require()`, dostępu do filesystemu ani sekretów.
-
-- `public/portal` — nowy Portal;
-- `public/native` — stary/natywny interfejs;
-- `public/shared` — biblioteki wspólne;
-- `public/modules` — pojedyncze renderery modułów.
-
-### `web/admin/`
-
-Panel administracyjny nie jest Portalem i nie jest adapterem natywnego menu. Wszystkie jego assety mają znajdować się w `web/admin/`.
-
-### `server/`
-
-Cały backend aplikacyjny ma docelowo znajdować się w `server/`. Katalogi `core/` oraz `modules/` w root są przejściową warstwą zgodności podczas migracji.
-
-## Strategia migracji
-
-1. Dodać docelowe katalogi i test architektury.
-2. Przenieść narzędzia do `tools/` z launcherami zgodności.
-3. Usunąć podwójne renderery frontendowe i podłączyć centralny rejestr ikon.
-4. Przenieść backend modułów do `server/modules/`; stare ścieżki zostawić chwilowo jako shimy.
-5. Przenieść wspólne serwisy do `server/core/`; zaktualizować importy.
-6. Rozdzielić frontend na `public/portal`, `public/native`, `public/shared` i `public/modules`.
-7. Przenieść `web/*.js|css` do `web/admin/`.
-8. Usunąć shimy po przejściu pełnych testów i lokalnego deploymentu.
-
-Nie wolno wykonywać kroków 4–8 jako mechanicznego przeniesienia bez aktualizacji loaderów, asset map, testów i dokumentacji.
+- stare entrypointy i widoki `MyCompany`;
+- katalogi `core/` i `modules/` w root;
+- płaskie pliki aplikacyjne w `public/`;
+- katalog `public/shared-ui/`;
+- stare instalatory;
+- podwójne renderery;
+- niekanoniczne ścieżki loaderów.
