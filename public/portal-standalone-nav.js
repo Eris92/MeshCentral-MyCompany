@@ -4,225 +4,36 @@
     if (window.__myCompanyStandaloneNavigationLoaded) return;
     window.__myCompanyStandaloneNavigationLoaded = true;
 
-    var DEVICE_TABS_STORAGE = "mycompany.sirkportal.deviceTabs";
-    var CHILD_PARAM = "sirkWorkspaceChild";
-
-    function readSavedDeviceTabs() {
-        try {
-            var value = JSON.parse(localStorage.getItem(DEVICE_TABS_STORAGE) || "{}");
-            return value && typeof value === "object" ? value : {};
-        } catch (error) {
-            return {};
-        }
+    function asset(name) {
+        var base = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
+        var version = encodeURIComponent(String(window.__MYCOMPANY_PORTAL_VERSION__ || ""));
+        return base ? base + "/" + name + "?v=" + version : "";
     }
 
-    function workspaceChild() {
-        try { return new URL(window.location.href).searchParams.get(CHILD_PARAM) === "1"; }
-        catch (error) { return false; }
-    }
+    function loadUiContract() {
+        var head = document.head || document.documentElement;
+        var styleUrl = asset("vendor/sirk-portal/portal-ui-contract.css");
+        var scriptUrl = asset("vendor/sirk-portal/portal-ui-contract.js");
 
-    function moveChildren(source, target) {
-        if (!source || !target) return;
-        while (source.firstChild) target.appendChild(source.firstChild);
-    }
-
-    function activeDeviceKey() {
-        var active = document.querySelector(".sirk-device-tabs-standalone .sirk-device-tab.is-active[data-device-workspace-key]");
-        if (active) return String(active.getAttribute("data-device-workspace-key") || "all");
-        return String(readSavedDeviceTabs().active || "all");
-    }
-
-    function deviceStore(key) {
-        var stores = document.querySelectorAll(".sirk-device-tab-cache [data-device-tab-store]");
-        for (var i = 0; i < stores.length; i += 1) {
-            if (String(stores[i].getAttribute("data-device-tab-store") || "") === String(key || "")) return stores[i];
-        }
-        return null;
-    }
-
-    function deviceViewActive() {
-        var active = document.querySelector('.sirk-standalone-nav [data-view="devices"].is-active');
-        return !!active;
-    }
-
-    function contentHasDeviceList(content) {
-        return !!(content && content.querySelector("[data-device-id],#sirkDevicesHost,.sirk-device-groups"));
-    }
-
-    function preserveActiveDeviceWorkspace() {
-        if (workspaceChild() || !deviceViewActive()) return;
-        var key = activeDeviceKey();
-        if (!key || key === "all") return;
-        var content = document.getElementById("sirkStandaloneContent");
-        var store = deviceStore(key);
-        if (!content || !store || !content.querySelector(".sirk-device-isolated-workspace iframe")) return;
-        moveChildren(content, store);
-        store.setAttribute("data-session-preserved", "1");
-    }
-
-    function restoreActiveDeviceWorkspace() {
-        if (workspaceChild() || !deviceViewActive()) return false;
-        var key = activeDeviceKey();
-        if (!key || key === "all") return false;
-        var content = document.getElementById("sirkStandaloneContent");
-        var store = deviceStore(key);
-        var allStore = deviceStore("all");
-        if (!content || !store || !store.querySelector(".sirk-device-isolated-workspace iframe")) return false;
-        if (!contentHasDeviceList(content)) return false;
-
-        if (allStore) {
-            allStore.textContent = "";
-            moveChildren(content, allStore);
-        } else {
-            content.textContent = "";
-        }
-        moveChildren(store, content);
-        store.removeAttribute("data-session-preserved");
-        window.dispatchEvent(new Event("resize"));
-        return true;
-    }
-
-    function installRestoreGuard() {
-        var child = workspaceChild();
-        var saved = readSavedDeviceTabs();
-        var savedActive = String(saved.active || "all");
-        var devicesRequested = window.location.hash === "#devices";
-        var restoreHost = !child && devicesRequested && savedActive !== "all";
-
-        if (child && window.location.hash !== "#devices") {
-            try {
-                var url = new URL(window.location.href);
-                url.hash = "devices";
-                history.replaceState(history.state, "", url.href);
-            } catch (error) {
-                window.location.hash = "devices";
-            }
+        if (styleUrl && !document.getElementById("mycompany-portal-ui-contract-style")) {
+            var link = document.createElement("link");
+            link.id = "mycompany-portal-ui-contract-style";
+            link.rel = "stylesheet";
+            link.href = styleUrl;
+            head.appendChild(link);
         }
 
-        if (!child && !restoreHost) return;
-
-        var content = document.getElementById("sirkStandaloneContent");
-        if (!content) return;
-
-        document.documentElement.classList.add("sirk-device-restore-pending");
-        content.style.visibility = "hidden";
-        content.style.pointerEvents = "none";
-        content.setAttribute("aria-busy", "true");
-
-        var finished = false;
-        var observer = null;
-        var timer = null;
-
-        function finish() {
-            if (finished) return;
-            finished = true;
-            if (observer) observer.disconnect();
-            if (timer) window.clearTimeout(timer);
-            document.documentElement.classList.remove("sirk-device-restore-pending");
-            content.style.visibility = "";
-            content.style.pointerEvents = "";
-            content.removeAttribute("aria-busy");
-            window.dispatchEvent(new Event("resize"));
+        if (scriptUrl && !document.getElementById("mycompany-portal-ui-contract-script")) {
+            var script = document.createElement("script");
+            script.id = "mycompany-portal-ui-contract-script";
+            script.src = scriptUrl;
+            script.async = false;
+            head.appendChild(script);
         }
-
-        function ready() {
-            if (finished) return;
-
-            var currentView = String(content.getAttribute("data-active-view") || "");
-            if (currentView && currentView !== "devices") {
-                finish();
-                return;
-            }
-
-            if (child) {
-                if (content.querySelector(".sirk-device-workspace,.sirk-device-compact-header,[data-device-workspace-ready='1']")) finish();
-                return;
-            }
-
-            var activeTab = document.querySelector(".sirk-device-tabs-standalone .sirk-device-tab.is-active[data-device-workspace-key]");
-            var activeKey = activeTab && String(activeTab.getAttribute("data-device-workspace-key") || "");
-            if (activeKey && activeKey !== "all" && content.querySelector(".sirk-device-isolated-workspace iframe")) finish();
-        }
-
-        observer = new MutationObserver(ready);
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ["class", "hidden", "data-active-view", "data-device-workspace-key"]
-        });
-        timer = window.setTimeout(finish, 15000);
-        ready();
-    }
-
-    function installLayoutStyle() {
-        if (document.getElementById("mycompany-workspace-layout-fix")) return;
-        var style = document.createElement("style");
-        style.id = "mycompany-workspace-layout-fix";
-        style.textContent =
-            ".sirk-device-workspace{grid-template-rows:auto minmax(0,1fr)!important}" +
-            ".sirk-device-compact-header{align-items:stretch!important;gap:12px!important;min-height:58px!important}" +
-            ".sirk-device-compact-tabs{display:flex;align-items:center;gap:3px;min-width:0;flex:1 1 auto;overflow-x:auto;scrollbar-width:thin}" +
-            ".sirk-device-compact-tabs button{appearance:none;-webkit-appearance:none;flex:0 0 auto;min-height:32px;padding:5px 12px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--sirk-muted,#657187);font:600 13px/1.2 Segoe UI,Arial,sans-serif;white-space:nowrap;cursor:pointer}" +
-            ".sirk-device-compact-tabs button:hover,.sirk-device-compact-tabs button:focus-visible{background:var(--sirk-hover,#f7faff);color:var(--sirk-text,#172033);outline:none}" +
-            ".sirk-device-compact-tabs button.is-active{border-color:rgba(59,130,246,.2);background:rgba(59,130,246,.12);color:#2563eb}" +
-            ".sirk-device-compact-meta{align-self:center!important;margin-left:auto!important}" +
-            ".sirk-device-workspace>.sirk-device-tabs{display:none!important}" +
-            ".sirk-portal-view-management.mycompany-management-host,.sirk-portal-view-management.sirk-native-management{border:0!important;padding:0!important;background:transparent!important;box-shadow:none!important}";
-        (document.head || document.documentElement).appendChild(style);
-    }
-
-    function normalizeDeviceWorkspace() {
-        var workspace = document.querySelector("#sirkStandaloneContent .sirk-device-workspace");
-        if (!workspace) return;
-        var header = workspace.querySelector(":scope > .sirk-device-compact-header");
-        var tabs = workspace.querySelector(":scope > .sirk-device-tabs");
-        if (!header || !tabs || header.getAttribute("data-compact-tabs-mounted") === "1") return;
-
-        var back = header.querySelector(".sirk-device-compact-back");
-        var icon = header.querySelector(".sirk-device-compact-icon");
-        var main = header.querySelector(".sirk-device-compact-main");
-        if (back) back.remove();
-        if (icon) icon.remove();
-        if (main) main.remove();
-
-        tabs.className = "sirk-device-compact-tabs";
-        tabs.removeAttribute("role");
-        header.insertBefore(tabs, header.firstChild);
-        header.setAttribute("data-compact-tabs-mounted", "1");
-    }
-
-    function flattenManagementHost() {
-        var hosts = document.querySelectorAll(".mycompany-management-host,.sirk-native-management");
-        Array.prototype.forEach.call(hosts, function (host) {
-            host.classList.remove("mycompany-management-host", "sirk-native-management");
-            host.setAttribute("data-management-host-flattened", "1");
-        });
-    }
-
-    function normalizeLayouts() {
-        restoreActiveDeviceWorkspace();
-        normalizeDeviceWorkspace();
-        flattenManagementHost();
-    }
-
-    function observeLayouts() {
-        var scheduled = false;
-        function schedule() {
-            if (scheduled) return;
-            scheduled = true;
-            window.setTimeout(function () {
-                scheduled = false;
-                normalizeLayouts();
-            }, 0);
-        }
-        new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
-        schedule();
     }
 
     function navigate(view) {
         view = String(view || "overview");
-        if (view !== "devices") preserveActiveDeviceWorkspace();
         var next = "#" + view;
         if (window.location.hash === next) {
             window.dispatchEvent(new HashChangeEvent("hashchange"));
@@ -241,33 +52,30 @@
             button.addEventListener("click", function (event) {
                 event.preventDefault();
                 event.stopPropagation();
-                if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
                 navigate(button.getAttribute("data-view"));
-            }, true);
+            });
         });
         return true;
     }
 
     function loadTerminalConnect() {
         if (document.getElementById("mycompany-portal-terminal-connect")) return;
-        var base = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
-        if (!base) return;
+        var source = asset("portal-terminal-connect.js");
+        if (!source) return;
         var script = document.createElement("script");
         script.id = "mycompany-portal-terminal-connect";
-        script.src = base + "/portal-terminal-connect.js?v=" + encodeURIComponent(String(window.__MYCOMPANY_PORTAL_VERSION__ || ""));
+        script.src = source;
         script.async = false;
         (document.head || document.documentElement).appendChild(script);
     }
 
-    installRestoreGuard();
-    installLayoutStyle();
-    observeLayouts();
+    loadUiContract();
     loadTerminalConnect();
 
     if (!bind()) {
         var attempts = 0;
         var timer = window.setInterval(function () {
-            attempts++;
+            attempts += 1;
             if (bind() || attempts > 100) window.clearInterval(timer);
         }, 50);
     }
