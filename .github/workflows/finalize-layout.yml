@@ -1,0 +1,85 @@
+name: Finalize SIRK Layout
+
+on:
+  push:
+    branches: [chore/sirk-docs-1.5.140]
+    paths:
+      - scripts/finalize-sirk-layout.js
+      - .github/workflows/finalize-layout.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: chore/sirk-docs-1.5.140
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Apply cleanup and validate
+        id: prepare
+        shell: bash
+        run: |
+          set +e
+          : > finalize-output.log
+          node scripts/finalize-sirk-layout.js >> finalize-output.log 2>&1
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            git diff --check >> finalize-output.log 2>&1
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            npm test >> finalize-output.log 2>&1
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            find . -type f -name '*.js' -not -path './node_modules/*' -print0 |
+              xargs -0 -n1 node --check >> finalize-output.log 2>&1
+            status=$?
+          fi
+          echo "[git status]" >> finalize-output.log
+          git status --short >> finalize-output.log
+          cat finalize-output.log
+          if [ "$status" -eq 0 ]; then
+            echo "success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Upload validation output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finalize-sirk-layout-output
+          path: finalize-output.log
+          if-no-files-found: error
+          retention-days: 1
+      - name: Commit finalized layout
+        if: steps.prepare.outputs.success == 'true'
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'refactor: finalize SIRK Platform repository layout'
+          git push origin HEAD:chore/sirk-docs-1.5.140
+      - name: Remove accidental helper branches
+        if: steps.prepare.outputs.success == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          git push origin --delete \
+            tmp-do-not-use \
+            chore/sirk-docs-1.5.140-final \
+            chore/sirk-docs-1.5.140-ready \
+            chore/sirk-docs-1.5.140-merge
+      - name: Fail job after diagnostics
+        if: steps.prepare.outputs.success != 'true'
+        run: exit 1
