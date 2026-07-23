@@ -25,6 +25,16 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/finalize-sirk-layout.js')
+          source = path.read_text(encoding='utf-8')
+          source = source.replace(
+              'walk(".github"), walk("public"), walk("server"), walk("scripts"), walk("test"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")',
+              'walk(".github"), walk("public"), walk("server"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")'
+          )
+          path.write_text(source, encoding='utf-8')
+          PY
           set -o pipefail
           node scripts/finalize-sirk-layout.js 2>&1 | tee cleanup-output.log
           cat > .github/workflows/test.yml <<'EOF'
