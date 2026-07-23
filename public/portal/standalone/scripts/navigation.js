@@ -1,12 +1,12 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyStandaloneNavigationLoaded) return;
-    window.__myCompanyStandaloneNavigationLoaded = true;
+    if (window.__sirkPlatformStandaloneNavigationLoaded) return;
+    window.__sirkPlatformStandaloneNavigationLoaded = true;
 
     function asset(name) {
-        var base = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
-        var version = encodeURIComponent(String(window.__MYCOMPANY_PORTAL_VERSION__ || ""));
+        var base = String(window.__SIRK_PLATFORM_ASSET_BASE__ || "").replace(/\/$/, "");
+        var version = encodeURIComponent(String(window.__SIRK_PLATFORM_PORTAL_VERSION__ || ""));
         return base ? base + "/" + name + "?v=" + version : "";
     }
 
@@ -37,10 +37,10 @@
     }
 
     function loadUiContract() {
-        loadStyle("mycompany-portal-ui-contract-style", "vendor/sirk-portal/portal-ui-contract.css");
-        loadStyle("mycompany-portal-cleanup-style", "portal-cleanup.css");
-        loadScript("mycompany-portal-ui-contract-script", "vendor/sirk-portal/portal-ui-contract.js");
-        loadScript("mycompany-portal-cleanup-script", "portal-cleanup.js");
+        loadStyle("sirk-platform-portal-ui-contract-style", "vendor/sirk-portal/portal-ui-contract.css");
+        loadStyle("sirk-platform-portal-cleanup-style", "portal-cleanup.css");
+        loadScript("sirk-platform-portal-ui-contract-script", "vendor/sirk-portal/portal-ui-contract.js");
+        loadScript("sirk-platform-portal-cleanup-script", "portal-cleanup.js");
     }
 
     function replacePortalIcons() {
@@ -117,9 +117,9 @@
     }
 
     loadUiContract();
-    loadScript("mycompany-icon-registry", "shared/icon-registry.js", replacePortalIcons);
+    loadScript("sirk-platform-icon-registry", "shared/icon-registry.js", replacePortalIcons);
     observeDeviceWorkspace();
-    loadScript("mycompany-portal-terminal-connect", "portal-terminal-connect.js");
+    loadScript("sirk-platform-portal-terminal-connect", "portal-terminal-connect.js");
 
     if (!bind()) {
         var attempts = 0;

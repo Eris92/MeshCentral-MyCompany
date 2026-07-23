@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalCleanupLoaded) return;
-    window.__myCompanyPortalCleanupLoaded = true;
+    if (window.__sirkPlatformPortalCleanupLoaded) return;
+    window.__sirkPlatformPortalCleanupLoaded = true;
 
     var root = document.getElementById("sirkPortalRoot");
     if (!root) return;
@@ -29,7 +29,7 @@
         try {
             var doc = frame.contentDocument;
             if (!doc || !doc.head || !doc.body) return;
-            var admin = doc.getElementById("mycompany-admin");
+            var admin = doc.getElementById("sirk-platform-admin");
             if (!admin) return;
 
             doc.documentElement.classList.add("mc-portal-settings-document");
@@ -41,18 +41,18 @@
             doc.body.classList.add("mc-portal-settings-body");
             admin.classList.add("mc-admin-portal-embedded");
 
-            if (!doc.getElementById("mycompany-portal-settings-cleanup-style")) {
+            if (!doc.getElementById("sirk-platform-portal-settings-cleanup-style")) {
                 var style = doc.createElement("style");
-                style.id = "mycompany-portal-settings-cleanup-style";
+                style.id = "sirk-platform-portal-settings-cleanup-style";
                 style.textContent = [
                     "html,body{width:100%!important;height:100%!important;min-width:0!important;margin:0!important;overflow:hidden!important;background:var(--sirk-panel,#fff)!important;}",
                     "body{display:block!important;}",
-                    "#mycompany-admin{width:100%!important;max-width:none!important;height:100%!important;min-width:0!important;margin:0!important;padding:0!important;overflow:hidden!important;}",
+                    "#sirk-platform-admin{width:100%!important;max-width:none!important;height:100%!important;min-width:0!important;margin:0!important;padding:0!important;overflow:hidden!important;}",
                     ".mc-admin-shell{display:grid!important;grid-template-columns:184px minmax(0,1fr)!important;width:100%!important;max-width:none!important;height:100%!important;min-width:0!important;min-height:0!important;gap:0!important;overflow:hidden!important;}",
                     ".mc-admin-shell.has-middle{grid-template-columns:184px 236px minmax(0,1fr)!important;}",
-                    ".mc-admin-tabs,.mc-admin-middle,#mycompany-admin-content{min-width:0!important;min-height:0!important;height:100%!important;overflow:auto!important;box-sizing:border-box!important;}",
+                    ".mc-admin-tabs,.mc-admin-middle,#sirk-platform-admin-content{min-width:0!important;min-height:0!important;height:100%!important;overflow:auto!important;box-sizing:border-box!important;}",
                     ".mc-admin-tabs,.mc-admin-middle{padding:12px!important;border:0!important;border-right:1px solid var(--sirk-border,#dce3ec)!important;border-radius:0!important;background:var(--sirk-panel,#fff)!important;}",
-                    "#mycompany-admin-content{padding:18px!important;background:var(--sirk-panel,#fff)!important;}",
+                    "#sirk-platform-admin-content{padding:18px!important;background:var(--sirk-panel,#fff)!important;}",
                     ".mc-admin-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))!important;gap:12px!important;}",
                     ".mc-admin-card{margin:0 0 12px!important;padding:14px!important;border:1px solid var(--sirk-border,#dce3ec)!important;border-radius:8px!important;background:var(--sirk-panel,#fff)!important;}",
                     ".mc-admin-settings-layout{grid-template-columns:220px minmax(0,1fr)!important;width:100%!important;min-width:0!important;gap:14px!important;}",

@@ -5,9 +5,9 @@ var fs = require("fs");
 var path = require("path");
 
 var root = path.resolve(__dirname, "..");
-var css = fs.readFileSync(path.join(root, "public", "portal-cleanup.css"), "utf8");
-var js = fs.readFileSync(path.join(root, "public", "portal-cleanup.js"), "utf8");
-var nav = fs.readFileSync(path.join(root, "public", "portal-standalone-nav.js"), "utf8");
+var css = fs.readFileSync(path.join(root, "public", "portal", "standalone", "styles", "cleanup.css"), "utf8");
+var js = fs.readFileSync(path.join(root, "public", "portal", "standalone", "scripts", "cleanup.js"), "utf8");
+var nav = fs.readFileSync(path.join(root, "public", "portal", "standalone", "scripts", "navigation.js"), "utf8");
 
 [
     ".sirk-device-compact-tabs",
@@ -16,7 +16,7 @@ var nav = fs.readFileSync(path.join(root, "public", "portal-standalone-nav.js"),
     "--portal-secondary-edit-width: 440px",
     "--portal-primary-collapsed-width: 56px",
     ".sirk-portal-view-host",
-    ".mycompany-management-host",
+    ".sirk-platform-management-host",
     ".sirk-standalone-grid",
     ".sirk-standalone-settings-frame"
 ].forEach(function (token) {
@@ -36,6 +36,6 @@ var nav = fs.readFileSync(path.join(root, "public", "portal-standalone-nav.js"),
 assert(nav.indexOf('"portal-cleanup.css"') >= 0, "Standalone navigation must load cleanup CSS.");
 assert(nav.indexOf('"portal-cleanup.js"') >= 0, "Standalone navigation must load cleanup JS.");
 assert(css.indexOf("#sirkPortalRoot") >= 0, "Cleanup styles must remain scoped to the standalone Portal.");
-assert(css.indexOf(".mycompany-native-ui") < 0, "Cleanup styles must not target native MeshCentral.");
+assert(css.indexOf(".sirk-platform-native-ui") < 0, "Cleanup styles must not target native MeshCentral.");
 
 console.log("Standalone Portal cleanup contract: OK");

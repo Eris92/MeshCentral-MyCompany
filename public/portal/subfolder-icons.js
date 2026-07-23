@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalSubfolderIconsLoaded) return;
-    window.__myCompanyPortalSubfolderIconsLoaded = true;
+    if (window.__sirkPlatformPortalSubfolderIconsLoaded) return;
+    window.__sirkPlatformPortalSubfolderIconsLoaded = true;
 
     function svg(path) {
         return '<svg viewBox="0 0 24 24" aria-hidden="true">' + path + '</svg>';
@@ -54,10 +54,10 @@
             var labelNode = heading.lastElementChild;
             var label = labelNode ? labelNode.textContent : heading.textContent;
             var key = normalize(label);
-            if (heading.getAttribute("data-mycompany-subfolder-icon") === key) return;
+            if (heading.getAttribute("data-sirk-platform-subfolder-icon") === key) return;
 
             iconHost.innerHTML = iconFor(label);
-            heading.setAttribute("data-mycompany-subfolder-icon", key);
+            heading.setAttribute("data-sirk-platform-subfolder-icon", key);
         });
     }
 
@@ -65,13 +65,13 @@
         var portal = document.getElementById("sirkPortalRoot");
         if (!portal) return false;
         apply(portal);
-        if (!portal.__myCompanySubfolderIconsObserver) {
-            portal.__myCompanySubfolderIconsObserver = new MutationObserver(function (records) {
+        if (!portal.__sirkPlatformSubfolderIconsObserver) {
+            portal.__sirkPlatformSubfolderIconsObserver = new MutationObserver(function (records) {
                 records.forEach(function (record) {
                     if (record.target && record.target.nodeType === 1) apply(record.target.closest("#sirkPortalRoot") || portal);
                 });
             });
-            portal.__myCompanySubfolderIconsObserver.observe(portal, { childList: true, subtree: true });
+            portal.__sirkPlatformSubfolderIconsObserver.observe(portal, { childList: true, subtree: true });
         }
         return true;
     }

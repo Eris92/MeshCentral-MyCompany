@@ -345,7 +345,7 @@ body {
 }
 
 .sirk-standalone-content.sirk-unified-content > .sirk-standalone-view-scroll,
-.sirk-standalone-content.sirk-unified-content > .mycompany-management-host,
+.sirk-standalone-content.sirk-unified-content > .sirk-platform-management-host,
 .sirk-standalone-content.sirk-unified-content > .sirk-portal-view-host,
 .sirk-standalone-content.sirk-unified-content > .mc-shared-page,
 .sirk-standalone-content.sirk-unified-content > .mc-portal-module-shell,
@@ -370,7 +370,7 @@ body {
     overflow: auto;
 }
 
-.sirk-standalone-content.sirk-unified-content > .mycompany-management-host,
+.sirk-standalone-content.sirk-unified-content > .sirk-platform-management-host,
 .sirk-standalone-content.sirk-unified-content > .sirk-portal-view-host,
 .sirk-standalone-content.sirk-unified-content > .mc-shared-page,
 .sirk-standalone-content.sirk-unified-content > .mc-portal-module-shell {
@@ -378,7 +378,7 @@ body {
 }
 
 /* Management already owns the shared outer surface; remove its legacy inset. */
-#sirkPortalRoot .sirk-standalone-content.sirk-unified-content > .mycompany-management-host {
+#sirkPortalRoot .sirk-standalone-content.sirk-unified-content > .sirk-platform-management-host {
     padding: 0;
     overflow: hidden;
     background: var(--sirk-panel, #fff);
@@ -386,7 +386,7 @@ body {
 
 .sirk-standalone-content > .mc-shared-page,
 .sirk-standalone-content > .sirk-portal-view-host,
-.sirk-standalone-content > .mycompany-management-host,
+.sirk-standalone-content > .sirk-platform-management-host,
 .sirk-standalone-content .mc-portal-module-shell {
     flex: 1 1 auto;
     width: 100% !important;
@@ -405,7 +405,7 @@ body {
     min-height: 0;
 }
 
-.sirk-portal-view-management > .mycompany-management-host {
+.sirk-portal-view-management > .sirk-platform-management-host {
     width: 100%;
     height: 100%;
     min-width: 0;
@@ -419,7 +419,7 @@ body {
     box-sizing: border-box;
 }
 
-.sirk-portal-view-management > .mycompany-management-host > .sirk-management-shell {
+.sirk-portal-view-management > .sirk-platform-management-host > .sirk-management-shell {
     width: 100%;
     height: 100%;
     min-height: 0;

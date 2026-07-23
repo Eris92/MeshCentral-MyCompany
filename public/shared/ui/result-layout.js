@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyResultLayoutInstalled) return;
-    window.__myCompanyResultLayoutInstalled = true;
+    if (window.__sirkPlatformResultLayoutInstalled) return;
+    window.__sirkPlatformResultLayoutInstalled = true;
 
     function moveCopyBelowResult(host) {
         host.querySelectorAll(".mc-results-inline-actions").forEach(function (actions) {

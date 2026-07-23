@@ -33,7 +33,7 @@
     display: none;
 }
 
-#mycompany-admin-content {
+#sirk-platform-admin-content {
     min-width: 0;
 }
 
@@ -644,7 +644,7 @@
 .mc-admin-management-search input{width:min(280px,36vw);height:34px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:7px;background:inherit;color:inherit}
 .mc-admin-management-shell>.mc-admin-tabs,.mc-admin-management-shell>.mc-admin-middle{align-self:stretch;min-width:0;padding:9px 8px;border:0;border-right:1px solid #d7deea;border-radius:0;background:transparent;overflow-x:hidden;overflow-y:auto}
 .mc-admin-management-shell>.mc-admin-middle{padding:9px 10px}
-.mc-admin-management-shell #mycompany-admin-content{min-width:0;padding:18px;overflow:auto}
+.mc-admin-management-shell #sirk-platform-admin-content{min-width:0;padding:18px;overflow:auto}
 .mc-admin-management-shell .mc-admin-tabs>button,.mc-admin-management-shell .mc-admin-settings-nav button{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;margin:0 0 3px;padding:7px 9px;border:1px solid transparent;border-radius:7px;background:transparent;color:inherit;font:600 14px Segoe UI,Arial,sans-serif;white-space:nowrap}
 .mc-admin-management-shell .mc-admin-tabs>button:hover,.mc-admin-management-shell .mc-admin-settings-nav button:hover{border-color:transparent;background:rgba(96,165,250,.09)}
 .mc-admin-management-shell .mc-admin-tabs>button.active,.mc-admin-management-shell .mc-admin-settings-nav button.active{border-color:transparent;background:rgba(96,165,250,.16);box-shadow:inset 3px 0 0 #4d6bd8;color:inherit;font-weight:700}
@@ -667,6 +667,6 @@
 @media(max-width:900px){.mc-admin-management-shell,.mc-admin-management-shell.has-middle,.mc-admin-management-shell.is-collapsed,.mc-admin-management-shell.is-collapsed.has-middle{grid-template-columns:64px minmax(190px,230px) minmax(420px,1fr)}.mc-admin-management-shell:not(.has-middle),.mc-admin-management-shell.is-collapsed:not(.has-middle){grid-template-columns:64px minmax(420px,1fr)}.mc-admin-management-shell>.mc-admin-tabs{padding:9px 5px}.mc-admin-management-shell>.mc-admin-tabs>button{justify-content:center;gap:0;padding:7px 0}.mc-admin-management-shell>.mc-admin-tabs .mc-admin-management-item-label{display:none}}
 
 /* The Portal already owns the Settings title and outer frame. */
-#sirkPortalRoot #mycompany-admin{padding:0}
-#sirkPortalRoot #mycompany-admin>h2,#sirkPortalRoot #mycompany-admin>.mc-admin-subtitle{display:none}
-#sirkPortalRoot #mycompany-admin>.mc-admin-management-shell{border:0;border-radius:0}
+#sirkPortalRoot #sirk-platform-admin{padding:0}
+#sirkPortalRoot #sirk-platform-admin>h2,#sirkPortalRoot #sirk-platform-admin>.mc-admin-subtitle{display:none}
+#sirkPortalRoot #sirk-platform-admin>.mc-admin-management-shell{border:0;border-radius:0}

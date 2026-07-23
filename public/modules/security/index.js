@@ -1,7 +1,7 @@
 (function () {
     "use strict";
     var active = "incidents";
-    var module = window.MyCompanyModuleShell.create({
+    var module = window.SirkPlatformModuleShell.create({
         key: "defendertools",
         title: "Defender XDR",
         menuTitle: "Defender",
@@ -44,5 +44,5 @@
             return shell.api(active).then(function (result) { shell.json(shell.state.page.details, result); });
         }
     });
-    window.MyCompanyModules.defendertools = module;
+    window.SirkPlatformModules.defendertools = module;
 }());

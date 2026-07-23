@@ -1,11 +1,11 @@
 /* Native MeshCentral Approval Center only. Never loaded by /sirkportal/. */
-html.mycompany-native-ui .mc-module-approvalcenter {
+html.sirk-platform-native-ui .mc-module-approvalcenter {
   width: 100%;
   min-width: 0;
   color: inherit;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-toolbar {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-toolbar {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -16,7 +16,7 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-toolbar {
   background: transparent;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout {
   display: grid;
   grid-template-columns: 220px 290px minmax(0,1fr);
   width: 100%;
@@ -26,13 +26,13 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout {
   resize: none;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed {
   grid-template-columns: 64px 290px minmax(0,1fr);
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-primary,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-secondary,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-details {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-primary,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-secondary,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-details {
   min-width: 0;
   min-height: 0;
   padding: 12px;
@@ -40,13 +40,13 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-details {
   box-sizing: border-box;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-primary,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-secondary {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-primary,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-secondary {
   border-right: 1px solid rgba(127,127,127,.28);
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-management-item,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-nav-item {
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-management-item,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-nav-item {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -64,16 +64,16 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-nav-item {
   box-sizing: border-box;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-management-item:hover,
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-management-item.active,
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-management-item.is-active,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-nav-item:hover,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-nav-item.active {
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-management-item:hover,
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-management-item.active,
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-management-item.is-active,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-nav-item:hover,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-nav-item.active {
   background: rgba(80,120,200,.18);
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-management-item-icon,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-nav-icon {
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-management-item-icon,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-nav-icon {
   display: grid;
   place-items: center;
   flex: 0 0 22px;
@@ -82,37 +82,37 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-nav-icon {
   color: #2563a8;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-overview,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-all {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-overview,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-all {
   color: inherit;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-moverequests {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-moverequests {
   color: #2496d4;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-mycommands,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-myscripts,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-executing {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-mycommands,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-myscripts,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-executing {
   color: #3f7fdb;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-approved,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-completed {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-approved,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-completed {
   color: #258c78;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-pending {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-pending {
   color: #c18418;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-failed,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-rejected {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-failed,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-rejected {
   color: #c74747;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-management-item-icon svg,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-nav-icon svg {
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-management-item-icon svg,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-nav-icon svg {
   width: 18px;
   height: 18px;
   fill: none;
@@ -122,27 +122,27 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-nav-icon svg {
   stroke-linejoin: round;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-overview svg,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-icon-all svg {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-overview svg,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-icon-all svg {
   fill: currentColor;
   stroke: none;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-details-title {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-details-title {
   margin: 0 0 12px;
   font-size: 18px;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-card-grid,
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-approval-card-grid {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-card-grid,
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-approval-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
   gap: 12px;
   align-items: start;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-card,
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-card {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-card,
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-card {
   margin: 0;
   padding: 14px;
   border: 1px solid rgba(127,127,127,.34);
@@ -152,17 +152,17 @@ html.mycompany-native-ui .mc-module-approvalcenter .sirk-card {
   box-shadow: none;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-card h3,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-card strong {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-card h3,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-card strong {
   margin-top: 0;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-summary {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-request-summary {
   margin: 8px 0 0;
   line-height: 1.4;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-provider {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-request-provider {
   display: inline-block;
   margin-top: 10px;
   padding: 3px 8px;
@@ -172,16 +172,16 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-provider
   font-weight: 700;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-actions,
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-approval-actions {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-request-actions,
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-approval-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
   margin-top: 12px;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-primary-button,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-actions button {
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-primary-button,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-request-actions button {
   min-height: 32px;
   margin: 0;
   padding: 6px 12px;
@@ -193,14 +193,14 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-actions 
   cursor: pointer;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .sirk-danger-button,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-approval-request-actions button:last-child {
+html.sirk-platform-native-ui .mc-module-approvalcenter .sirk-danger-button,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-approval-request-actions button:last-child {
   border-color: #d9534f;
   background: transparent;
   color: #e05d58;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-results-filter {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-results-filter {
   width: min(460px,100%);
   min-height: 34px;
   margin: 0 0 10px;
@@ -211,33 +211,33 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-results-filter {
   color: inherit;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-results-table-wrap {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-results-table-wrap {
   overflow: auto;
   border: 1px solid rgba(127,127,127,.3);
   border-radius: 6px;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-results-table {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-results-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-results-table th,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-results-table td {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-results-table th,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-results-table td {
   padding: 9px 10px;
   border-bottom: 1px solid rgba(127,127,127,.25);
   text-align: left;
   vertical-align: top;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-results-table th {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-results-table th {
   position: sticky;
   top: 0;
   z-index: 1;
   background: var(--background-color,#fff);
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .mc-shared-primary {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .mc-shared-primary {
   width: 64px;
   min-width: 64px;
   max-width: 64px;
@@ -245,34 +245,34 @@ html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapse
   overflow-x: hidden;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .mc-approval-nav-label,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .sirk-script-label {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .mc-approval-nav-label,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .sirk-script-label {
   display: none;
 }
 
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .sirk-management-item,
-html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .mc-shared-nav-item {
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .sirk-management-item,
+html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed .mc-shared-nav-item {
   justify-content: center;
   padding: 8px 0;
 }
 
 @media (max-width: 1100px) {
-  html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout {
+  html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout {
     grid-template-columns: 190px 250px minmax(0,1fr);
   }
-  html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed {
+  html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed {
     grid-template-columns: 64px 250px minmax(0,1fr);
   }
 }
 
 @media (max-width: 800px) {
-  html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout,
-  html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed {
+  html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout,
+  html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-layout.is-collapsed {
     grid-template-columns: 1fr;
     min-height: 0;
   }
-  html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-primary,
-  html.mycompany-native-ui .mc-module-approvalcenter .mc-shared-secondary {
+  html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-primary,
+  html.sirk-platform-native-ui .mc-module-approvalcenter .mc-shared-secondary {
     border-right: 0;
     border-bottom: 1px solid rgba(127,127,127,.28);
   }

@@ -1,10 +1,10 @@
 (function () {
     "use strict";
 
-    var root = document.getElementById("mycompany-admin");
-    var content = document.getElementById("mycompany-admin-content");
-    if (!root || !content || window.__myCompanyAdminUiEnhancements) return;
-    window.__myCompanyAdminUiEnhancements = true;
+    var root = document.getElementById("sirk-platform-admin");
+    var content = document.getElementById("sirk-platform-admin-content");
+    if (!root || !content || window.__sirkPlatformAdminUiEnhancements) return;
+    window.__sirkPlatformAdminUiEnhancements = true;
 
     var scheduled = false;
     var providerDefinitions = [
@@ -33,7 +33,7 @@
     }
 
     function adminData() {
-        return window.MyCompanyAdminData || {};
+        return window.SirkPlatformAdminData || {};
     }
 
     function moduleAvailable(type) {
@@ -103,7 +103,7 @@
 
     function postProvider(type, value) {
         var url = new URL("pluginadmin.ashx", window.location.href);
-        url.searchParams.set("pin", root.getAttribute("data-plugin") || "MyCompany");
+        url.searchParams.set("pin", root.getAttribute("data-plugin") || "SirkPlatform");
         url.searchParams.set("module", "approvalcenter");
         url.searchParams.set("asset", "provider-settings");
         var body = new URLSearchParams();
@@ -269,9 +269,9 @@
     }
 
     function addSaveProxy(card, panel, label) {
-        if (!card || card.querySelector(".mc-admin-inline-actions") || card.querySelector("[data-mycompany-save-proxy]")) return;
+        if (!card || card.querySelector(".mc-admin-inline-actions") || card.querySelector("[data-sirk-platform-save-proxy]")) return;
         var actions = element("div", "mc-admin-inline-actions");
-        actions.setAttribute("data-mycompany-save-proxy", "1");
+        actions.setAttribute("data-sirk-platform-save-proxy", "1");
         var save = element("button", "mc-admin-primary", label);
         save.type = "button";
         var status = element("span", "mc-admin-save-status");
@@ -284,7 +284,7 @@
     function ensureInlineSaveActions(panel) {
         var bar = globalSaveBar(panel);
         if (!bar) return;
-        panel.querySelectorAll("[data-mycompany-save-proxy]").forEach(function (proxy) {
+        panel.querySelectorAll("[data-sirk-platform-save-proxy]").forEach(function (proxy) {
             proxy.remove();
         });
         bar.style.display = "flex";

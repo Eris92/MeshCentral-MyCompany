@@ -4,7 +4,7 @@
     function storageKey(options) {
         if (options.layoutStorageKey) return String(options.layoutStorageKey);
         var preset = String(options.preset || "standard").toLowerCase();
-        return "mycompany.layout." + preset + ".collapsed";
+        return "sirkPlatform.layout." + preset + ".collapsed";
     }
 
     function isStandalonePortal() {

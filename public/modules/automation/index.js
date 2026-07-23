@@ -7,7 +7,7 @@
     var treeState = { selectedRoot: "", selectedScript: "", expanded: {} };
     var outputs = Object.create(null);
     var tools = window.SharedScriptTools.create({
-        storageKey: "mycompany.myscripts.preferences",
+        storageKey: "sirkPlatform.myscripts.preferences",
         deepLinkParameter: "myscript"
     });
     tools.restoreTreeState(treeState);
@@ -373,7 +373,7 @@
         });
     }
 
-    var module = window.MyCompanyModuleShell.create({
+    var module = window.SirkPlatformModuleShell.create({
         key: "myscripts",
         title: "My Scripts",
         menuTitle: "My Scripts",
@@ -421,5 +421,5 @@
         }
     });
 
-    window.MyCompanyModules.myscripts = module;
+    window.SirkPlatformModules.myscripts = module;
 }());

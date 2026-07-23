@@ -1,6 +1,6 @@
 (function () {
     "use strict";
-    var core = window.MyCompanyCore;
+    var core = window.SirkPlatformCore;
     var VIEW_MODES = {
         myscripts: 101,
         mycommands: 102,
@@ -40,8 +40,8 @@
 
     function registerMenu(definition, open) {
         core.ensureMenu({
-            mainId: "MainMenuMyCompany-" + definition.key,
-            leftId: "LeftMenuMyCompany-" + definition.key,
+            mainId: "MainMenuSirkPlatform-" + definition.key,
+            leftId: "LeftMenuSirkPlatform-" + definition.key,
             title: definition.menuTitle || definition.title,
             order: definition.order || 200,
             viewMode: definition.viewMode,
@@ -53,8 +53,8 @@
     function createDeviceIntegration(definition, state, api, mountPage) {
         var options = definition.deviceTab || null;
         if (!options) return null;
-        var pageId = options.pageId || ("mycompany-" + definition.key + "-device-page");
-        var topTabId = options.topTabId || ("MainDevMyCompany-" + definition.key);
+        var pageId = options.pageId || ("sirk-platform-" + definition.key + "-device-page");
+        var topTabId = options.topTabId || ("MainDevSirkPlatform-" + definition.key);
         var title = options.title || definition.title;
 
         function enabled() {
@@ -142,7 +142,7 @@
         };
     }
 
-    window.MyCompanyModuleShell = {
+    window.SirkPlatformModuleShell = {
         create: function (definition) {
             definition.viewMode = Number(definition.viewMode || VIEW_MODES[definition.key] || 960);
             var state = { page: null, pages: {}, tab: definition.defaultTab || "main", search: "", nodeId: "", bootstrap: null };

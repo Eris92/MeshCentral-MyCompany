@@ -115,7 +115,7 @@ module.exports.createServerScriptExecutor = function (options) {
     }
 
     function powershellPath() {
-        var configured = String(process.env.MYCOMPANY_POWERSHELL || "").trim();
+        var configured = String(process.env.SIRK_PLATFORM_POWERSHELL || "").trim();
         if (configured) return configured;
         if (process.platform !== "win32") return "pwsh";
 

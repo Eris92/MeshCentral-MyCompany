@@ -181,7 +181,7 @@
         section.appendChild(element(
             "div",
             "mc-shared-muted mc-system-credentials-description",
-            "Use credentials configured globally in MyCompany. Secrets remain encrypted and are not copied into the script."
+            "Use credentials configured globally in SirkPlatform. Secrets remain encrypted and are not copied into the script."
         ));
         var list = element("div", "mc-system-credentials-list");
         var boxes = [];

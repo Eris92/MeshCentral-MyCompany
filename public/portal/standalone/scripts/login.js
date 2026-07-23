@@ -3,8 +3,8 @@
 
     var frame = document.getElementById("sirkLoginFrame");
     var loading = document.getElementById("sirkLoginLoading");
-    var assetBase = String(window.__MYCOMPANY_LOGIN_ASSET_BASE__ || "").replace(/\/$/, "");
-    var version = encodeURIComponent(window.__MYCOMPANY_PORTAL_VERSION__ || "1");
+    var assetBase = String(window.__SIRK_PLATFORM_LOGIN_ASSET_BASE__ || "").replace(/\/$/, "");
+    var version = encodeURIComponent(window.__SIRK_PLATFORM_PORTAL_VERSION__ || "1");
     var redirected = false;
     var revealed = false;
 
@@ -55,13 +55,13 @@
         if (redirected) return;
         redirected = true;
         var returnToPortal = new URL(window.location.href).searchParams.get("return") === "portal";
-        var target = window.__MYCOMPANY_FORCE_PORTAL__ === true || returnToPortal
-            ? window.__MYCOMPANY_LOGIN_PORTAL_URL__
-            : window.__MYCOMPANY_LOGIN_NATIVE_URL__;
+        var target = window.__SIRK_PLATFORM_FORCE_PORTAL__ === true || returnToPortal
+            ? window.__SIRK_PLATFORM_LOGIN_PORTAL_URL__
+            : window.__SIRK_PLATFORM_LOGIN_NATIVE_URL__;
         if (returnToPortal) {
             try {
-                var hash = window.sessionStorage.getItem("mycompanyPortalReturnHash") || "";
-                window.sessionStorage.removeItem("mycompanyPortalReturnHash");
+                var hash = window.sessionStorage.getItem("sirkPortal.returnHash") || "";
+                window.sessionStorage.removeItem("sirkPortal.returnHash");
                 if (/^#[a-z0-9_-]+$/i.test(hash)) target = String(target || "").replace(/#.*$/, "") + hash;
             } catch (error) {}
         }
@@ -77,8 +77,8 @@
                 return;
             }
             if (loginForm(documentValue)) {
-                inject(documentValue, "link", "myCompanyForcedLoginStyle", assetBase + "/sirk-login.css?v=" + version);
-                inject(documentValue, "script", "myCompanyForcedLoginScript", assetBase + "/sirk-login.js?v=" + version);
+                inject(documentValue, "link", "sirkPlatformForcedLoginStyle", assetBase + "/sirk-native-login.css?v=" + version);
+                inject(documentValue, "script", "sirkPlatformForcedLoginScript", assetBase + "/sirk-native-login.js?v=" + version);
                 var shell = documentValue.getElementById("sirkLoginShell");
                 var host = documentValue.getElementById("sirkNativeLoginHost");
                 var styledForm = host && host.querySelector("form.sirk-native-login-form");

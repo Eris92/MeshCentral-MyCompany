@@ -9,7 +9,7 @@
     var treeState = { selectedRoot: "", selectedScript: "", expanded: {} };
     var outputs = Object.create(null);
     var pollSequence = 0;
-    var tools = window.SharedScriptTools.create({ storageKey: "mycompany.mycommands.preferences", deepLinkParameter: "mycommand" });
+    var tools = window.SharedScriptTools.create({ storageKey: "sirkPlatform.mycommands.preferences", deepLinkParameter: "mycommand" });
     tools.restoreTreeState(treeState);
 
     var PL = {
@@ -54,7 +54,7 @@
     function tr(value) { value = String(value == null ? "" : value); return language() === "pl" && PL[value] ? PL[value] : value; }
     function msg(pl, en) { return language() === "pl" ? pl : en; }
     function svgData(svg) { return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ')); }
-    function node(shell) { return shell.state.nodeId || window.MyCompanyRuntime.state.nodeId || window.selectedNode || ""; }
+    function node(shell) { return shell.state.nodeId || window.SirkPlatformRuntime.state.nodeId || window.selectedNode || ""; }
     function stringValue(value) { if (value == null) return ""; if (typeof value === "string") return value; try { return JSON.stringify(value, null, 2); } catch (error) { return String(value); } }
     function isAdmin(shell) { return !!(shell.state.bootstrap && shell.state.bootstrap.access && shell.state.bootstrap.access.siteAdmin); }
     function sync(shell) { tools.syncToolbar(shell.state.page && shell.state.page.toolbar, mode, treeState.selectedScript, { canEdit: isAdmin(shell), enableMulti: true }); }
@@ -191,9 +191,9 @@
     function commands(shell) { primary(shell, shell.state.page.secondary); if (!treeState.selectedScript) { empty(shell); return; } var item = window.SharedDirectoryTree.find(tree, treeState.selectedScript); if (item && filterItem(item)) show(shell, item, false); else { treeState.selectedScript = ""; empty(shell); } }
     function refresh(shell) { var toolbar = shell.state.page && shell.state.page.toolbar; if (toolbar) toolbar.setEnabled("refresh", false); shell.post("refresh", {}).then(function (response) { sourceTree = response.tree || sourceTree; catalog = response.catalog || catalog; tree = buildTree(); if (treeState.selectedScript && !window.SharedDirectoryTree.find(tree, treeState.selectedScript)) treeState.selectedScript = ""; shell.render(); }).catch(function (error) { note(shell, msg("Odświeżanie nie powiodło się", "Refresh failed"), error.message || String(error), true); }).then(function () { if (toolbar) toolbar.setEnabled("refresh", true); }); }
 
-    var module = window.MyCompanyModuleShell.create({
+    var module = window.SirkPlatformModuleShell.create({
         key: "mycommands", title: "My Commands", menuTitle: "My Commands", showInMenu: false, order: 150, preset: "mycommands",
-        deviceTab: { title: "Commands", pageId: "mycompany-mycommands-device-page", topTabId: "MainDevMyCompany-Commands" },
+        deviceTab: { title: "Commands", pageId: "sirk-platform-mycommands-device-page", topTabId: "MainDevSirkPlatform-Commands" },
         buttons: {
             collapse: { side: "left", order: 10 },
             favorites: { side: "left", order: 20, onClick: function (toolbar) { tools.toggleFavorites(toolbar, function () { treeState.selectedScript = ""; module.api.render(); }); } },
@@ -209,5 +209,5 @@
 
     module.mountDeviceCommands = function (host, nodeId) { mode = "commands"; status = ""; if (typeof module.onDeviceRefreshEnd === "function") module.onDeviceRefreshEnd(String(nodeId || "")); return module.mount(host, "sirk-device-commands"); };
     window.addEventListener("storage", function (event) { if (event.key === "sirkPortal.language" && module && module.api) module.api.render(); });
-    window.MyCompanyModules.mycommands = module;
+    window.SirkPlatformModules.mycommands = module;
 }());

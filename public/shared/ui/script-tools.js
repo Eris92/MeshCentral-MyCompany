@@ -140,7 +140,7 @@
         selectedDevices: selectedDevices,
         create: function (options) {
             options = options || {};
-            var storageKey = options.storageKey || "mycompany.scripts.preferences";
+            var storageKey = options.storageKey || "sirkPlatform.scripts.preferences";
             var deepLinkParameter = options.deepLinkParameter || "script";
             var state = {
                 favorites: [], favoritesOnly: false, editMode: false,

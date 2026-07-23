@@ -1,8 +1,8 @@
 (function () {
     "use strict";
-    window.MyCompanyCore = window.MyCompanyCore || {};
-    var core = window.MyCompanyCore;
-    core.assetVersion = String(window.__MYCOMPANY_VERSION__ || "0");
+    window.SirkPlatformCore = window.SirkPlatformCore || {};
+    var core = window.SirkPlatformCore;
+    core.assetVersion = String(window.__SIRK_PLATFORM_VERSION__ || "0");
 
     function svgData(svg) {
         return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
@@ -17,7 +17,7 @@
 
     core.assetUrl = function (moduleName, assetName, parameters) {
         var endpoint = new URL("pluginadmin.ashx", window.location.href);
-        endpoint.searchParams.set("pin", "MyCompany");
+        endpoint.searchParams.set("pin", "SirkPlatform");
         if (moduleName) endpoint.searchParams.set("module", moduleName);
         if (assetName) endpoint.searchParams.set("asset", assetName);
         endpoint.searchParams.set("v", core.assetVersion);
@@ -65,14 +65,14 @@
     core.placeMenuItem = function (item, anchor, order) {
         if (!item || !anchor || !anchor.parentNode) return false;
         var host = anchor.parentNode;
-        item.setAttribute("data-mycompany-order", String(order || 100));
+        item.setAttribute("data-sirk-platform-order", String(order || 100));
         if (item.parentNode !== host) host.insertBefore(item, anchor.nextSibling);
         return true;
     };
     core.ensureMenu = function (definition) {
         var mainAnchor = document.getElementById("MainMenuMyDevices");
         var leftAnchor = document.getElementById("LeftMenuMyDevices");
-        var key = String(definition.mainId || "").replace(/^MainMenuMyCompany-/, "").toLowerCase();
+        var key = String(definition.mainId || "").replace(/^MainMenuSirkPlatform-/, "").toLowerCase();
         var iconSource = definition.icon || menuIcons[key] || "";
         var open = definition.open;
 
@@ -92,7 +92,7 @@
                 main.onmouseup = open;
                 main.onkeypress = function (event) { if (event && event.key === "Enter") return open(event); };
             }
-            main.setAttribute("data-mycompany-viewmode", String(definition.viewMode || ""));
+            main.setAttribute("data-sirk-platform-viewmode", String(definition.viewMode || ""));
             core.placeMenuItem(main, mainAnchor, definition.order);
         }
 
@@ -112,7 +112,7 @@
                 left.onmouseup = open;
                 left.onkeypress = function (event) { if (event && event.key === "Enter") return open(event); };
             }
-            left.setAttribute("data-mycompany-viewmode", String(definition.viewMode || ""));
+            left.setAttribute("data-sirk-platform-viewmode", String(definition.viewMode || ""));
 
             if (iconSource) {
                 var legacyIcon = left.querySelector(".lbtg");
@@ -125,7 +125,7 @@
                 } else if (leftModern) {
                     var nativeIcon = left.querySelector("svg, i, img");
                     var image = document.createElement("img");
-                    image.className = "mycompany-menu-icon";
+                    image.className = "sirk-platform-menu-icon";
                     image.alt = "";
                     image.src = iconSource;
                     image.style.width = "24px";
@@ -146,7 +146,7 @@
             item.element.style.cssText = item.cssText;
             item.element.hidden = item.hidden;
         });
-        var workspace = document.getElementById("MyCompanyWorkspace");
+        var workspace = document.getElementById("SirkPlatformWorkspace");
         if (workspace) {
             workspace.innerHTML = "";
             workspace.style.display = "none";
@@ -154,20 +154,20 @@
         core.workspaceState = null;
     };
 
-    core.isMyCompanyTarget = function (target) {
+    core.isSirkPlatformTarget = function (target) {
         if (!target || !target.closest) return false;
-        return !!target.closest("#MyCompanyWorkspace,[id^='MainMenuMyCompany-'],[id^='LeftMenuMyCompany-'],#myCompanyPortalLauncher");
+        return !!target.closest("#SirkPlatformWorkspace,[id^='MainMenuSirkPlatform-'],[id^='LeftMenuSirkPlatform-'],#sirkPlatformPortalLauncher");
     };
 
     core.installNativeRestoreGuard = function () {
         if (core.nativeRestoreGuardInstalled) return;
         core.nativeRestoreGuardInstalled = true;
         document.addEventListener("pointerdown", function (event) {
-            if (!core.workspaceState || core.isMyCompanyTarget(event.target)) return;
+            if (!core.workspaceState || core.isSirkPlatformTarget(event.target)) return;
             core.restoreWorkspace();
         }, true);
         document.addEventListener("keydown", function (event) {
-            if ((event.key !== "Enter" && event.key !== " ") || !core.workspaceState || core.isMyCompanyTarget(event.target)) return;
+            if ((event.key !== "Enter" && event.key !== " ") || !core.workspaceState || core.isSirkPlatformTarget(event.target)) return;
             core.restoreWorkspace();
         }, true);
     };
@@ -180,10 +180,10 @@
         var page = document.getElementById("p1");
         var titleHost = document.getElementById("p1title");
         if (!page || !titleHost) return false;
-        var workspace = document.getElementById("MyCompanyWorkspace");
+        var workspace = document.getElementById("SirkPlatformWorkspace");
         if (!workspace) {
             workspace = document.createElement("div");
-            workspace.id = "MyCompanyWorkspace";
+            workspace.id = "SirkPlatformWorkspace";
             page.appendChild(workspace);
         }
         var heading = titleHost.querySelector("h1,h2,h3,.title,b,strong") || titleHost;

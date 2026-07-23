@@ -4,9 +4,9 @@ var assert = require("assert");
 var fs = require("fs");
 var os = require("os");
 var path = require("path");
-var createScriptLibrary = require("../core/script-library.js").createScriptLibrary;
+var createScriptLibrary = require("../server/core/script-library.js").createScriptLibrary;
 
-var root = fs.mkdtempSync(path.join(os.tmpdir(), "mycompany-locales-"));
+var root = fs.mkdtempSync(path.join(os.tmpdir(), "sirkPlatform-locales-"));
 try {
     var folder = path.join(root, "Reports");
     fs.mkdirSync(folder, { recursive: true });

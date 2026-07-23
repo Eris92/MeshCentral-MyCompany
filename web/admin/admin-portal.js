@@ -1,7 +1,7 @@
 (function () {
     "use strict";
 
-    var root = document.getElementById("mycompany-admin");
+    var root = document.getElementById("sirk-platform-admin");
     if (!root) return;
 
     var PORTAL_VIEWS = [
@@ -17,8 +17,8 @@
         { key: "settings", label: "Ustawienia", accent: "#94a3b8" }
     ];
 
-    function data() { return window.MyCompanyAdminData || {}; }
-    function pluginPin() { return root.getAttribute("data-plugin") || "MyCompany"; }
+    function data() { return window.SirkPlatformAdminData || {}; }
+    function pluginPin() { return root.getAttribute("data-plugin") || "SirkPlatform"; }
     function element(tag, className, text) {
         var node = document.createElement(tag);
         if (className) node.className = className;
@@ -138,12 +138,12 @@
         panel.innerHTML = "";
         var header = element("div", "mc-admin-section-header");
         header.appendChild(element("h3", "", "SirK Portal"));
-        header.appendChild(element("p", "", "Niezależny frontend korzystający z sesji, uprawnień i backendu MyCompany."));
+        header.appendChild(element("p", "", "Niezależny frontend korzystający z sesji, uprawnień i backendu SirkPlatform."));
         panel.appendChild(header);
         var card = element("section", "mc-admin-card");
         card.appendChild(element("h3", "", "Portal interface"));
         card.appendChild(element("div", "mc-admin-card-description", "Portal działa w osobnym dokumencie i nie ładuje swojego layoutu, CSS ani loginu do natywnego interfejsu MeshCentral."));
-        var enabled = checkbox(card, "Enable SirK Portal", current.enabled === true || record.enabled === true, "Udostępnia portal pod adresem /sirkportal/. Wyłączenie nie usuwa danych MyCompany.");
+        var enabled = checkbox(card, "Enable SirK Portal", current.enabled === true || record.enabled === true, "Udostępnia portal pod adresem /sirkportal/. Wyłączenie nie usuwa danych SirkPlatform.");
         var defaultView = select(card, "Default start view", current.defaultView || "overview");
         var showNativeLink = checkbox(card, "Show MeshCentral link in SirK Portal", current.showNativeLink !== false, "Pokazuje link MeshCentral na dole menu SirK Portal.");
         var showLauncher = checkbox(card, "Show SirK Portal launcher in native Mesh", current.showLauncher === true, "Opcjonalny link nawigacyjny, domyślnie wyłączony.");
@@ -198,5 +198,5 @@
         panel.insertBefore(card, viewCard);
     }
 
-    window.MyCompanyPortalAdmin = { render: render };
+    window.SirkPlatformPortalAdmin = { render: render };
 }());

@@ -1,12 +1,12 @@
 (function () {
     "use strict";
 
-    if (!window.SharedScriptTools || window.__myCompanyFixedEditActions) return;
-    window.__myCompanyFixedEditActions = true;
+    if (!window.SharedScriptTools || window.__sirkPlatformFixedEditActions) return;
+    window.__sirkPlatformFixedEditActions = true;
 
-    if (!document.getElementById("mycompany-fixed-edit-actions-style")) {
+    if (!document.getElementById("sirk-platform-fixed-edit-actions-style")) {
         var style = document.createElement("style");
-        style.id = "mycompany-fixed-edit-actions-style";
+        style.id = "sirk-platform-fixed-edit-actions-style";
         style.textContent =
             ".mc-tree-script-actions{width:132px;min-width:132px;justify-content:flex-end}" +
             ".mc-tree-action-disabled{opacity:.28!important;filter:grayscale(1);cursor:not-allowed!important;pointer-events:none}" +

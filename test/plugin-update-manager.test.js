@@ -9,10 +9,10 @@ function read(relative) {
     return fs.readFileSync(path.join(root, relative), "utf8");
 }
 
-var service = read("core/plugin-admin-service.js");
-var admin = read("MyCompanyAdmin.js");
-var view = read("views/MyCompany.handlebars");
-var client = read("web/admin-plugin-updates.js");
+var service = read("server/core/plugin-admin-service.js");
+var admin = read("admin.js");
+var view = read("views/SIRK-Portal.handlebars");
+var client = read("web/admin/admin-plugin-updates.js");
 
 [
     "remoteConfig(record)",
@@ -24,7 +24,7 @@ var client = read("web/admin-plugin-updates.js");
     assert(service.indexOf(contract) >= 0, "Missing plugin update backend contract: " + contract);
 });
 
-assert(admin.indexOf('"admin-plugin-updates.js": ["web/admin-plugin-updates.js"') >= 0, "Admin server must expose the update UI asset");
+assert(admin.indexOf('"admin-plugin-updates.js": ["web/admin/admin-plugin-updates.js"') >= 0, "Admin server must expose the update UI asset");
 assert(view.indexOf("asset=admin-plugin-updates.js") >= 0, "Admin view must load the update UI asset");
 
 [

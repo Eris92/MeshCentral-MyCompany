@@ -227,7 +227,7 @@ module.exports.createModule = function (context) {
             command = buildCommand(payload);
         } catch (error) { return Promise.reject(error); }
         return context.device.resolveNode(user, payload.nodeId, { requireCommandRights: true }).then(function (node) {
-            var id = "mycompany-" + shared.randomId(10);
+            var id = "sirk-platform-" + shared.randomId(10);
             return context.device.sendRunCommands(node, command, id, null).then(function (state) {
                 var row = { id: id, requestId: request.id || "", nodeId: node.nodeId, nodeName: node.node && node.node.name || payload.nodeName || payload.nodeId, command: command.label, status: state.state, requester: request.requester, createdAt: Date.now(), updatedAt: Date.now(), output: "" };
                 saveExecution(row);

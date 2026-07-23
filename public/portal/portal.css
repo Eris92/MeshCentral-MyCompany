@@ -1,10 +1,10 @@
-/* MyCompany adapters for the vendored SirK Portal. */
+/* SirkPlatform adapters for the vendored SirK Portal. */
 .sirk-settings-frame{width:100%;min-height:calc(100vh - 110px);border:0;background:transparent}
 #sirkPortalRoot [data-view="approvals"]>.mc-shared-page{min-height:calc(100vh - 110px)}
-#sirkPortalRoot .mycompany-management-host{padding:14px;overflow:auto;background:var(--sirk-bg,#f3f6fb);color:var(--sirk-text,#172033)}
-#sirkPortalRoot .mycompany-management-host .sirk-management-shell{--portal-primary-width:184px;--portal-secondary-width:236px}
-#sirkPortalRoot .mycompany-management-host.is-management-edit-mode .sirk-management-shell{--portal-secondary-width:440px}
-#sirkPortalRoot .mycompany-management-host.is-management-collapsed .sirk-management-shell{--portal-primary-width:56px}
+#sirkPortalRoot .sirk-platform-management-host{padding:14px;overflow:auto;background:var(--sirk-bg,#f3f6fb);color:var(--sirk-text,#172033)}
+#sirkPortalRoot .sirk-platform-management-host .sirk-management-shell{--portal-primary-width:184px;--portal-secondary-width:236px}
+#sirkPortalRoot .sirk-platform-management-host.is-management-edit-mode .sirk-management-shell{--portal-secondary-width:440px}
+#sirkPortalRoot .sirk-platform-management-host.is-management-collapsed .sirk-management-shell{--portal-primary-width:56px}
 #sirkPortalRoot .sirk-management-shell{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:calc(100vh - 92px);border:1px solid var(--sirk-border,#dce3ec);border-radius:10px;overflow:hidden;background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033)}
 #sirkPortalRoot .sirk-management-toolbar{display:flex;align-items:center;gap:6px;min-height:48px;padding:7px 10px;border-bottom:1px solid var(--sirk-border,#dce3ec);background:var(--sirk-panel,#fff)}
 #sirkPortalRoot .sirk-management-tool{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--sirk-text,#172033);cursor:pointer}
@@ -74,12 +74,12 @@
 #sirkPortalRoot .mc-results-debug{margin-top:14px;border:1px solid var(--sirk-border,#dce3ec);border-radius:7px}
 #sirkPortalRoot .mc-results-debug summary{padding:9px 11px;cursor:pointer;font-weight:700}
 #sirkPortalRoot .mc-results-debug pre{margin:0;padding:11px;border-top:1px solid var(--sirk-border,#dce3ec);white-space:pre-wrap;word-break:break-word}
-#sirkPortalRoot.sirk-theme-dark .mycompany-management-host{--sirk-bg:#0b1220;--sirk-panel:#111827;--sirk-input:#0f172a;--sirk-text:#e7edf7;--sirk-muted:#94a3b8;--sirk-border:#2a374a}
-#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-sidebar,#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-nav,#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-portal-sidebar{width:64px!important;min-width:64px!important;max-width:64px!important}
-#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-menu-label,#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-sidebar .sirk-brand-text,#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-sidebar .sirk-language-label{display:none!important}
-#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-sidebar button,#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-nav button{justify-content:center!important;padding-left:0!important;padding-right:0!important}
-#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-sidebar svg,#sirkPortalRoot.mycompany-sidebar-collapsed .sirk-nav svg{margin:0!important}
-#sirkPortalRoot [data-mycompany-hidden-management-submenu="1"]{display:none!important}
+#sirkPortalRoot.sirk-theme-dark .sirk-platform-management-host{--sirk-bg:#0b1220;--sirk-panel:#111827;--sirk-input:#0f172a;--sirk-text:#e7edf7;--sirk-muted:#94a3b8;--sirk-border:#2a374a}
+#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-sidebar,#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-nav,#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-portal-sidebar{width:64px!important;min-width:64px!important;max-width:64px!important}
+#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-menu-label,#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-sidebar .sirk-brand-text,#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-sidebar .sirk-language-label{display:none!important}
+#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-sidebar button,#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-nav button{justify-content:center!important;padding-left:0!important;padding-right:0!important}
+#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-sidebar svg,#sirkPortalRoot.sirk-platform-sidebar-collapsed .sirk-nav svg{margin:0!important}
+#sirkPortalRoot [data-sirk-platform-hidden-management-submenu="1"]{display:none!important}
 #sirkPortalRoot .sirk-approval-shell{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:calc(100vh - 92px);border:1px solid var(--sirk-border,#dce3ec);border-radius:10px;overflow:hidden;background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033)}
 #sirkPortalRoot .sirk-approval-toolbar{display:flex;align-items:center;gap:8px;min-height:48px;padding:7px 10px;border-bottom:1px solid var(--sirk-border,#dce3ec)}
 #sirkPortalRoot .sirk-approval-search{width:min(440px,100%);height:34px;padding:0 10px;border:1px solid var(--sirk-border,#dce3ec);border-radius:7px;background:var(--sirk-input,#fff);color:var(--sirk-text,#172033)}

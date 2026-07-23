@@ -27,8 +27,8 @@
 
 #sirkPortalRoot .sirk-portal-view-host,
 #sirkPortalRoot .sirk-portal-view-host > *,
-#sirkPortalRoot .mycompany-management-host,
-#sirkPortalRoot .mycompany-management-host > * {
+#sirkPortalRoot .sirk-platform-management-host,
+#sirkPortalRoot .sirk-platform-management-host > * {
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;

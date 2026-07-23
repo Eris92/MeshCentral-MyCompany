@@ -1,10 +1,10 @@
 (function () {
     "use strict";
 
-    var root = document.getElementById("mycompany-admin");
-    var content = document.getElementById("mycompany-admin-content");
-    if (!root || !content || window.__myCompanyMoveMeshLevels) return;
-    window.__myCompanyMoveMeshLevels = true;
+    var root = document.getElementById("sirk-platform-admin");
+    var content = document.getElementById("sirk-platform-admin-content");
+    if (!root || !content || window.__sirkPlatformMoveMeshLevels) return;
+    window.__sirkPlatformMoveMeshLevels = true;
 
     var loading = false;
     var loaded = null;
@@ -18,7 +18,7 @@
 
     function pluginUrl(asset, method) {
         var url = new URL("pluginadmin.ashx", window.location.href);
-        url.searchParams.set("pin", root.getAttribute("data-plugin") || "MyCompany");
+        url.searchParams.set("pin", root.getAttribute("data-plugin") || "SirkPlatform");
         url.searchParams.set("module", "moverequests");
         url.searchParams.set("asset", asset);
         return { url: url.href, method: method || "GET" };

@@ -66,7 +66,7 @@ module.exports.createServerAdminService = function (options) {
                 stdio: "ignore"
             });
             child.on("error", function (error) {
-                console.error("MyCompany could not launch the MeshCentral service restart helper:", error.message);
+                console.error("SirkPlatform could not launch the MeshCentral service restart helper:", error.message);
             });
             child.unref();
             return { scheduled: true, serviceName: serviceName };

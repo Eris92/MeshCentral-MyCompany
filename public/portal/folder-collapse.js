@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalFolderCollapseLoaded) return;
-    window.__myCompanyPortalFolderCollapseLoaded = true;
+    if (window.__sirkPlatformPortalFolderCollapseLoaded) return;
+    window.__sirkPlatformPortalFolderCollapseLoaded = true;
 
     var expanded = {};
     var activeShell = null;
@@ -10,9 +10,9 @@
     var scheduled = false;
 
     function ensureStyle() {
-        if (document.getElementById("myCompanyPortalFolderCollapseStyle")) return;
+        if (document.getElementById("sirkPlatformPortalFolderCollapseStyle")) return;
         var style = document.createElement("style");
-        style.id = "myCompanyPortalFolderCollapseStyle";
+        style.id = "sirkPlatformPortalFolderCollapseStyle";
         style.textContent = [
             "#sirkPortalRoot .sirk-folder-heading{cursor:pointer;user-select:none;border-radius:7px;outline:0}",
             "#sirkPortalRoot .sirk-folder-heading:hover,#sirkPortalRoot .sirk-folder-heading:focus-visible{background:rgba(96,165,250,.10)}",
@@ -45,7 +45,7 @@
         var stack = [];
         var occurrence = Object.create(null);
         var root = rootKey(shell);
-        var managementHost = shell.closest(".mycompany-management-host");
+        var managementHost = shell.closest(".sirk-platform-management-host");
         var openPath = String(managementHost && managementHost.getAttribute("data-management-open-path") || "");
 
         Array.prototype.forEach.call(list.children, function (node) {
@@ -153,8 +153,8 @@
         if (!portal) return false;
         ensureStyle();
         schedule(portal.querySelector(".sirk-management-shell"));
-        if (!portal.__myCompanyFolderCollapseObserver) {
-            portal.__myCompanyFolderCollapseObserver = new MutationObserver(function (records) {
+        if (!portal.__sirkPlatformFolderCollapseObserver) {
+            portal.__sirkPlatformFolderCollapseObserver = new MutationObserver(function (records) {
                 for (var index = 0; index < records.length; index++) {
                     var target = records[index].target;
                     var shell = target && target.nodeType === 1 && target.closest && target.closest(".sirk-management-shell");
@@ -164,7 +164,7 @@
                     }
                 }
             });
-            portal.__myCompanyFolderCollapseObserver.observe(portal, { childList: true, subtree: true });
+            portal.__sirkPlatformFolderCollapseObserver.observe(portal, { childList: true, subtree: true });
         }
         return true;
     }

@@ -1,9 +1,9 @@
 (function () {
     "use strict";
-    window.MyCompanyRuntime = window.MyCompanyRuntime || {};
-    window.MyCompanyModules = window.MyCompanyModules || {};
-    var runtime = window.MyCompanyRuntime;
-    var core = window.MyCompanyCore;
+    window.SirkPlatformRuntime = window.SirkPlatformRuntime || {};
+    window.SirkPlatformModules = window.SirkPlatformModules || {};
+    var runtime = window.SirkPlatformRuntime;
+    var core = window.SirkPlatformCore;
     runtime.state = runtime.state || { bootstrap: null, initializePromise: null, nodeId: "" };
     var files = {
         approvalcenter: "approvalcenter.js",
@@ -22,8 +22,8 @@
     }
 
     function installCredentialsActions() {
-        if (!window.SharedScriptTools || window.__myCompanyCredentialsActions) return;
-        window.__myCompanyCredentialsActions = true;
+        if (!window.SharedScriptTools || window.__sirkPlatformCredentialsActions) return;
+        window.__sirkPlatformCredentialsActions = true;
         var originalCreate = window.SharedScriptTools.create;
         window.SharedScriptTools.create = function (options) {
             var tools = originalCreate.call(window.SharedScriptTools, options);
@@ -51,13 +51,13 @@
     }
 
     function installMyCommandsFix(module) {
-        if (!module || !module.api || window.__myCompanyCommandsUiFix) return;
-        window.__myCompanyCommandsUiFix = true;
+        if (!module || !module.api || window.__sirkPlatformCommandsUiFix) return;
+        window.__sirkPlatformCommandsUiFix = true;
 
         var commandByLabel = Object.create(null);
         var commandById = Object.create(null);
         var catalogLoaded = false;
-        var STORAGE = "mycompany.mycommands.preferences";
+        var STORAGE = "sirkPlatform.mycommands.preferences";
         var TEXT = {
             pl: {
                 Results: "Wyniki", Scripts: "Skrypty", Network: "Sieć", System: "System", Other: "Inne",
@@ -221,11 +221,11 @@
 
     function notify(method) {
         var args = Array.prototype.slice.call(arguments, 1);
-        Object.keys(window.MyCompanyModules).forEach(function (key) {
-            var module = window.MyCompanyModules[key];
+        Object.keys(window.SirkPlatformModules).forEach(function (key) {
+            var module = window.SirkPlatformModules[key];
             if (module && typeof module[method] === "function") {
                 try { module[method].apply(module, args); }
-                catch (error) { if (window.console) console.error("MyCompany " + key + " " + method + " failed", error); }
+                catch (error) { if (window.console) console.error("SirkPlatform " + key + " " + method + " failed", error); }
             }
         });
     }
@@ -239,21 +239,21 @@
         if (runtime.state.initializePromise) return runtime.state.initializePromise;
         runtime.state.initializePromise = core.api("", "bootstrap").then(function (bootstrap) {
             runtime.state.bootstrap = bootstrap;
-            var chain = core.loadScript("mycompany-shared-directory-tree", core.assetUrl("", "shared-ui/tree.js"))
-                .then(function () { return core.loadScript("mycompany-shared-catalog-view", core.assetUrl("", "shared-ui/catalog.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-results-view", core.assetUrl("", "shared-ui/results.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-result-layout", core.assetUrl("", "shared-ui/result-layout.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-script-tools", core.assetUrl("", "shared-ui/script-tools.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-script-definition-form", core.assetUrl("", "shared-ui/script-definition-form.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-confirm-execution-form", core.assetUrl("", "shared-ui/confirm-execution-form.js")); })
-                .then(function () { installCredentialsActions(); return core.loadScript("mycompany-shared-script-edit-actions", core.assetUrl("", "shared-ui/script-edit-actions.js")); })
-                .then(function () { return core.loadScript("mycompany-shared-system-credentials-form", core.assetUrl("", "shared-ui/system-credentials-form.js")); });
+            var chain = core.loadScript("sirk-platform-shared-directory-tree", core.assetUrl("", "shared-ui/tree.js"))
+                .then(function () { return core.loadScript("sirk-platform-shared-catalog-view", core.assetUrl("", "shared-ui/catalog.js")); })
+                .then(function () { return core.loadScript("sirk-platform-shared-results-view", core.assetUrl("", "shared-ui/results.js")); })
+                .then(function () { return core.loadScript("sirk-platform-shared-result-layout", core.assetUrl("", "shared-ui/result-layout.js")); })
+                .then(function () { return core.loadScript("sirk-platform-shared-script-tools", core.assetUrl("", "shared-ui/script-tools.js")); })
+                .then(function () { return core.loadScript("sirk-platform-shared-script-definition-form", core.assetUrl("", "shared-ui/script-definition-form.js")); })
+                .then(function () { return core.loadScript("sirk-platform-shared-confirm-execution-form", core.assetUrl("", "shared-ui/confirm-execution-form.js")); })
+                .then(function () { installCredentialsActions(); return core.loadScript("sirk-platform-shared-script-edit-actions", core.assetUrl("", "shared-ui/script-edit-actions.js")); })
+                .then(function () { return core.loadScript("sirk-platform-shared-system-credentials-form", core.assetUrl("", "shared-ui/system-credentials-form.js")); });
 
             order.forEach(function (key) {
                 var state = bootstrap.modules[key];
                 if (!state || !state.enabled || state.ready === false) return;
-                chain = chain.then(function () { return core.loadScript("mycompany-module-" + key, core.assetUrl("", files[key])); }).then(function () {
-                    var module = window.MyCompanyModules[key];
+                chain = chain.then(function () { return core.loadScript("sirk-platform-module-" + key, core.assetUrl("", files[key])); }).then(function () {
+                    var module = window.SirkPlatformModules[key];
                     configureModule(key, module);
                     if (!module || typeof module.initialize !== "function") return null;
                     return Promise.resolve(module.initialize(state)).then(function () {
@@ -266,9 +266,9 @@
             var portal = bootstrap.modules && bootstrap.modules.portal;
             var showLauncher = !!(portal && portal.enabled && portal.ready !== false && portal.config && portal.config.showLauncher === true);
             if (showLauncher) {
-                chain = chain.then(function () { return core.loadScript("mycompany-native-portal-launcher", core.assetUrl("", "native-portal-launcher.js")); });
+                chain = chain.then(function () { return core.loadScript("sirk-platform-native-portal-launcher", core.assetUrl("", "native-portal-launcher.js")); });
             } else {
-                var existingLauncher = document.getElementById("myCompanyPortalLauncher");
+                var existingLauncher = document.getElementById("sirkPlatformPortalLauncher");
                 if (existingLauncher && existingLauncher.parentNode) existingLauncher.parentNode.removeChild(existingLauncher);
             }
             return chain;

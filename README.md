@@ -1,126 +1,112 @@
-# SIRK Management Platform 1.5.139
+# SIRK Management Platform 1.5.140
 
-**Plugin:** `SIRK-Portal`  
+**Repozytorium i techniczna nazwa pluginu:** `SIRK-Portal`  
+**Nazwa wyświetlana:** `SIRK Management Platform`  
 **Nazwa skrócona w interfejsie:** `SIRK Platform`
 
-SIRK Management Platform jest skonsolidowanym pluginem MeshCentral zawierającym wspólny backend, moduły administracyjne, automatyzację, akceptacje, zarządzanie urządzeniami oraz samodzielny SIRK Portal.
+SIRK Management Platform jest skonsolidowanym pluginem MeshCentral zawierającym backend, panel administracyjny, automatyzację, akceptacje, integracje, zarządzanie urządzeniami oraz samodzielny SIRK Portal.
+
+Repozytorium nie utrzymuje kompatybilności z testową nazwą ani strukturą `MyCompany`. Nie ładuje starych entrypointów, nie migruje dawnych ustawień i nie korzysta z `mycompany-data`.
+
+## Zacznij od indeksów
+
+Przed odczytem kodu:
+
+1. przeczytaj [`AGENTS.md`](AGENTS.md);
+2. otwórz [`docs/INDEX.md`](docs/INDEX.md);
+3. wybierz indeks warstwy odpowiadającej zadaniu;
+4. czytaj wyłącznie wskazaną część repozytorium i jej bezpośrednie zależności.
+
+Nie skanuj całego repozytorium, jeżeli indeks wskazuje konkretny entrypoint, moduł, loader, test lub dokument.
 
 ## Dokumentacja
 
-- [Docelowa struktura repozytorium](docs/REPOSITORY-LAYOUT.md)
+- [Indeks dokumentacji i obszarów](docs/INDEX.md)
+- [Struktura repozytorium](docs/REPOSITORY-LAYOUT.md)
 - [Aktualny stan projektu](docs/PROJECT-STATE.md)
-- [Integracja SIRK Platform](docs/portal-integration.md)
-- [AGENTS.md](AGENTS.md)
+- [Integracja SIRK Platform i SIRK Portal](docs/portal-integration.md)
+- [Router instrukcji](AGENTS.md)
+- [Reguły projektu](docs/agent/11-Agent-SIRK-Portal.md)
+- [Prompt startowy nowej rozmowy](docs/agent/Prompt-Start-SIRK-Portal-Conversation.md)
 
 ## Warstwy projektu
 
 ```text
 backend Node/MeshCentral       -> server/
-nowy SIRK Portal               -> public/portal/
+samodzielny SIRK Portal        -> public/portal/
 adapter natywnego MeshCentral  -> public/native/
-frontend wspólny               -> public/shared/ i public/modules/
+frontend współdzielony         -> public/shared/
+renderery modułów              -> public/modules/
 panel administracyjny          -> web/admin/
+widok panelu                   -> views/SIRK-Portal.handlebars
 ikony                          -> assets/icons/
-narzędzia                      -> tools/
+narzędzia instalacyjne         -> tools/install/
 ```
 
-Katalogi `core/`, `modules/` i część płaskiego `public/` są jeszcze migrowane etapami. Nowy kod nie może dodawać kolejnych implementacji do starych lokalizacji.
-
-## Backend i frontend modułu
-
-Moduł biznesowy może mieć dwie warstwy:
-
-```text
-server/modules/approval-center/index.js  # backend
-public/modules/approvalcenter.js         # frontend
-```
-
-Nie są to dwa niezależne moduły. Backend obsługuje API, dane i uprawnienia, a frontend renderuje interfejs i korzysta ze wspólnego API.
-
-Historyczna ścieżka:
-
-```text
-modules/ApprovalCenter/index.js
-```
-
-jest wyłącznie małym shimem migracyjnym. Runtime i nowy kod nie mogą rozwijać backendu w tym katalogu.
+Szczegółowe mapy znajdują się w lokalnych plikach `INDEX.md` poszczególnych warstw.
 
 ## Moduły funkcjonalne
 
-- Automation Scripts — skrypty i zarządzanie;
-- Commands — polecenia;
-- Approvals — akceptacje;
-- Device Transfers — przenoszenie urządzeń;
-- Jira Integration — integracja z Jira i Assets;
-- Defender XDR — bezpieczeństwo;
-- SIRK Portal — główny interfejs użytkownika.
+- Automation;
+- Commands;
+- Approvals;
+- Device Transfers;
+- Jira Integration;
+- Security;
+- Portal.
 
-Klucze migracyjne `myscripts`, `mycommands`, `myjira`, `approvalcenter` i `MyCompany` mogą występować wyłącznie w warstwie kompatybilności dla istniejących ustawień, wniosków i instalacji. Nie są nazwami wyświetlanymi ani nazwami nowych plików.
+Backend modułów znajduje się w `server/modules/`, a pojedyncze renderery frontendowe w `public/modules/`.
 
-## Entry pointy
+## Entry pointy i loadery
 
-Kanoniczny entrypoint pluginu:
+Kanoniczny entrypoint:
 
 ```text
 SIRK-Portal.js
 ```
 
-`MyCompany.js` pozostaje czasowo jako mały shim dla istniejących instalacji. Nowa instalacja nie powinna go używać.
+Łańcuch backendu:
 
-## Instalacja
+```text
+SIRK-Portal.js
+  -> plugin-main-standalone.js
+    -> plugin-main.js
+      -> server/core/runtime-portal.js
+        -> server/core/runtime.js
+          -> server/modules/*
+```
 
-Kanoniczny instalator:
+Mapę assetów natywnego interfejsu utrzymuje `admin.js`. Mapę assetów samodzielnego Portalu utrzymuje `plugin-main-standalone.js`.
+
+## Dane trwałe
+
+Jedyny katalog danych runtime:
+
+```text
+meshcentral-data/sirk-platform-data
+```
+
+Plugin nie odczytuje, nie kopiuje i nie migruje `meshcentral-data/mycompany-data`.
+
+## Instalacja z Git
+
+Uruchom jako Administrator:
 
 ```powershell
 .\Install-SIRK-Portal-FromGit_RUN.ps1
 ```
 
-Właściwa implementacja znajduje się w:
+Źródłowa implementacja instalatora:
 
 ```text
 tools/install/Install-SIRK-Portal-FromGit.ps1
 ```
 
-Instalator:
-
-- sprawdza `shortName: SIRK-Portal`;
-- testuje `SIRK-Portal.js`;
-- usuwa starą kopię pluginu `MyCompany`, aby MeshCentral nie ładował dwóch wersji;
-- zachowuje backup;
-- kopiuje dane z `mycompany-data` do `sirk-platform-data`, gdy migracja jest potrzebna.
-
-## SIRK Portal
-
-SIRK Portal jest niezależnym dokumentem frontendowym. Nie modyfikuje core MeshCentral i korzysta z tego samego backendu co adapter natywnego interfejsu.
-
-Widoki:
-
-- Przegląd;
-- Urządzenia;
-- Akceptacje;
-- Automatyzacja;
-- Monitoring;
-- Zasoby;
-- Zarządzanie;
-- Raporty;
-- Bezpieczeństwo;
-- Ustawienia.
-
-## Dane trwałe
-
-Kanoniczny katalog danych:
+Repozytorium źródłowe:
 
 ```text
-meshcentral-data/sirk-platform-data
-├── settings.json
-├── requests.json
-├── secrets.json
-├── .secret.key
-├── defender/
-└── scripts/
+https://github.com/Eris92/SIRK-Portal
 ```
-
-Przy pierwszym uruchomieniu po zmianie nazwy dane z `mycompany-data` są przenoszone do `sirk-platform-data`. Dane runtime nie są częścią repozytorium i nie mogą być usuwane podczas aktualizacji pluginu.
 
 ## Testy
 
@@ -128,4 +114,4 @@ Przy pierwszym uruchomieniu po zmianie nazwy dane z `mycompany-data` są przenos
 npm test
 ```
 
-Walidator struktury kontroluje nazwę `SIRK-Portal`, nazwę wyświetlaną `SIRK Management Platform`, centralne ikony, pojedynczy renderer każdego modułu, katalog `web/admin/`, kanoniczne moduły w `server/modules/` i brak nowych implementacji pod historycznymi nazwami.
+Walidator struktury blokuje stare entrypointy i widoki `MyCompany`, backend poza `server/`, płaskie assety aplikacyjne w `public/`, `public/shared-ui/`, podwójne renderery i niekanoniczne ścieżki loaderów.

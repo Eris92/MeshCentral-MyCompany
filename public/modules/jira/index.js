@@ -1,7 +1,7 @@
 (function () {
     "use strict";
     var view = "my";
-    var module = window.MyCompanyModuleShell.create({
+    var module = window.SirkPlatformModuleShell.create({
         key: "myjira",
         title: "My Jira",
         menuTitle: "Jira",
@@ -42,5 +42,5 @@
             });
         }
     });
-    window.MyCompanyModules.myjira = module;
+    window.SirkPlatformModules.myjira = module;
 }());

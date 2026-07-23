@@ -3,7 +3,7 @@
 
     var selectedStatus = "";
     var hostButtonId = "MoveRequestHostButton";
-    var legacyTopButtonId = "MainDevMyCompany-MoveRequest";
+    var legacyTopButtonId = "MainDevSirkPlatform-MoveRequest";
 
     function renderRows(shell) {
         return shell.api("requests", {
@@ -44,9 +44,9 @@
         }
 
         add(module.api.state.nodeId);
-        add(window.MyCompanyRuntime &&
-            window.MyCompanyRuntime.state &&
-            window.MyCompanyRuntime.state.nodeId);
+        add(window.SirkPlatformRuntime &&
+            window.SirkPlatformRuntime.state &&
+            window.SirkPlatformRuntime.state.nodeId);
         add(window.currentNodeId);
         add(window.xxcurrentNodeId);
         add(window.nodeid);
@@ -319,7 +319,7 @@
 
         button.title = "Submit a device move request";
         button.disabled = false;
-        button.setAttribute("data-meshcentral-plugin-pin", "MyCompany");
+        button.setAttribute("data-meshcentral-plugin-pin", "SirkPlatform");
         button.setAttribute("data-meshcentral-plugin-click", "Move Request host action");
         button.removeAttribute("onclick");
         button.removeAttribute("onmouseup");
@@ -335,7 +335,7 @@
         });
     }
 
-    var module = window.MyCompanyModuleShell.create({
+    var module = window.SirkPlatformModuleShell.create({
         key: "moverequests",
         title: "Move Requests",
         menuTitle: "Move Requests",
@@ -381,5 +381,5 @@
         scheduleHostButton();
     };
 
-    window.MyCompanyModules.moverequests = module;
+    window.SirkPlatformModules.moverequests = module;
 }());

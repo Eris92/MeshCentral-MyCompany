@@ -1,7 +1,7 @@
 "use strict";
 
 var assert = require("assert");
-var factory = require("../core/integration-service.js");
+var factory = require("../server/core/integration-service.js");
 
 var state = { integrations: {} };
 var secretState = {};

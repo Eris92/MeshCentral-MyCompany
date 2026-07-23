@@ -216,7 +216,7 @@ module.exports.createDeviceService = function (options) {
             domain: String(context.domain && context.domain.id || ""),
             userid: user && user._id, username: shared.userName(user),
             msg: 'My Company: user "' + shared.userName(user) + '" started "' +
-                String(command.label || "command") + '".', plugin: "MyCompany"
+                String(command.label || "command") + '".', plugin: "SirkPlatform"
         });
     }
 

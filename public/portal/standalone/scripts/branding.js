@@ -1,13 +1,13 @@
 (function () {
     "use strict";
 
-    var base = String(window.__MYCOMPANY_ASSET_BASE__ || window.__MYCOMPANY_LOGIN_ASSET_BASE__ || "").replace(/\/$/, "");
+    var base = String(window.__SIRK_PLATFORM_ASSET_BASE__ || window.__SIRK_PLATFORM_LOGIN_ASSET_BASE__ || "").replace(/\/$/, "");
     if (!base) return;
 
     var current = {};
-    var DEVICE_TAB_STORAGE = "mycompany.sirkportal.deviceActiveTabs";
+    var DEVICE_TAB_STORAGE = "sirkPortal.deviceActiveTabs";
     var LANGUAGE_STORAGE = "sirkPortal.language";
-    var THEME_STORAGE = "mycompany.sirkportal.theme";
+    var THEME_STORAGE = "sirkPortal.theme";
     var restoreTimer = 0;
 
     function workspaceChild() {
@@ -132,7 +132,7 @@
         if (open) open.textContent = text.openMesh;
         var active = document.querySelector("[data-device-tab].is-active");
         if (active && active.getAttribute("data-device-tab") === "commands") {
-            var module = window.MyCompanyModules && window.MyCompanyModules.mycommands;
+            var module = window.SirkPlatformModules && window.SirkPlatformModules.mycommands;
             if (module && module.api && typeof module.api.render === "function") module.api.render();
         }
     }
@@ -196,7 +196,7 @@
         current = config && typeof config === "object" ? config : {};
         var name = String(current.siteName || "SirK Portal").trim() || "SirK Portal";
         var icon = String(current.siteIconUrl || "").trim();
-        window.__MYCOMPANY_PORTAL_BRANDING__ = current;
+        window.__SIRK_PLATFORM_PORTAL_BRANDING__ = current;
         document.title = document.getElementById("sirkLoginFrame") ? name + " — logowanie" : name;
         synchronize();
         var favicon = document.querySelector('link[rel="icon"][data-sirk-branding]');
@@ -222,7 +222,7 @@
         if (event.key === THEME_STORAGE) applyWorkspaceTheme();
     });
 
-    fetch(base + "/portal-branding.json?v=" + encodeURIComponent(String(window.__MYCOMPANY_PORTAL_VERSION__ || Date.now())), {
+    fetch(base + "/portal-branding.json?v=" + encodeURIComponent(String(window.__SIRK_PLATFORM_PORTAL_VERSION__ || Date.now())), {
         credentials: "same-origin",
         cache: "no-store"
     }).then(function (response) {

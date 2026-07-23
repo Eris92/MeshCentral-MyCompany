@@ -1,10 +1,10 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyDeviceTabsV11Loaded) return;
-    window.__myCompanyDeviceTabsV11Loaded = true;
+    if (window.__sirkPlatformDeviceTabsV11Loaded) return;
+    window.__sirkPlatformDeviceTabsV11Loaded = true;
 
-    var STORAGE_KEY = "mycompany.sirkportal.deviceTabs";
+    var STORAGE_KEY = "sirkPortal.deviceTabs";
     var CHILD_PARAM = "sirkWorkspaceChild";
     var NODE_PARAM = "sirkWorkspaceNode";
     var NAME_PARAM = "sirkWorkspaceName";
@@ -376,7 +376,7 @@
         window.setInterval(sync, 500);
     }
 
-    window.MyCompanyDeviceTabs = {
+    window.SirkPlatformDeviceTabs = {
         mount: ensureInfrastructure,
         activateAll: activateAll,
         activate: activate,

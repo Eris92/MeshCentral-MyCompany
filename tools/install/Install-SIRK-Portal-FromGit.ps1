@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 [CmdletBinding()]
 param(
-    [string]$Repository = 'https://github.com/Eris92/MeshCentral-MyCompany.git',
+    [string]$Repository = 'https://github.com/Eris92/sirk-portal.git',
     [string]$Branch = 'main',
     [string]$MeshRoot = 'C:\Program Files\Open Source\MeshCentral',
     [string]$ServiceName = 'MeshCentral',
@@ -12,9 +12,9 @@ $ErrorActionPreference = 'Stop'
 $DataRoot = Join-Path $MeshRoot 'meshcentral-data'
 $PluginsRoot = Join-Path $DataRoot 'plugins'
 $Target = Join-Path $PluginsRoot 'SIRK-Portal'
-$LegacyTarget = Join-Path $PluginsRoot 'MyCompany'
+$LegacyTarget = Join-Path $PluginsRoot 'SirkPlatform'
 $RuntimeData = Join-Path $DataRoot 'sirk-platform-data'
-$LegacyRuntimeData = Join-Path $DataRoot 'mycompany-data'
+$LegacyRuntimeData = Join-Path $DataRoot 'sirk-platform-data'
 $StageRoot = Join-Path $env:TEMP ('SIRK-Portal-Git-' + [guid]::NewGuid().ToString('N'))
 $Stage = Join-Path $StageRoot 'SIRK-Portal'
 $BackupRoot = Join-Path $DataRoot 'plugin-backups'

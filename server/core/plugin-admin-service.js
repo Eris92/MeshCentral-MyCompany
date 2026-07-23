@@ -6,7 +6,7 @@ module.exports.createPluginAdminService = function (options) {
     var pluginHandler = options.pluginHandler;
     var fs = options.fs;
     var path = options.path;
-    var protectedShortName = String(options.protectedShortName || "MyCompany").toLowerCase();
+    var protectedShortName = String(options.protectedShortName || "SirkPlatform").toLowerCase();
 
     function requireAdmin(user) {
         if (!shared.isSiteAdmin(user)) throw new Error("Permission denied.");
@@ -259,7 +259,7 @@ module.exports.createPluginAdminService = function (options) {
                 });
             }
             if (action === "rollback") return restoreBackup(plugin, payload.backupId);
-            if (isProtected) throw new Error("MyCompany cannot disable or remove itself from its own administration panel.");
+            if (isProtected) throw new Error("SirkPlatform cannot disable or remove itself from its own administration panel.");
             if (action === "enable") return callbackCall("installPlugin", [id, false, null]).then(function () { return { changed: true, restartRequired: false }; });
             if (action === "disable") return callbackCall("disablePlugin", [id]).then(function () { return { changed: true, restartRequired: false }; });
             if (action === "remove") {

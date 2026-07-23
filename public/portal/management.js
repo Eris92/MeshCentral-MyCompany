@@ -1,17 +1,17 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalManagementLoaded) return;
-    window.__myCompanyPortalManagementLoaded = true;
+    if (window.__sirkPlatformPortalManagementLoaded) return;
+    window.__sirkPlatformPortalManagementLoaded = true;
 
-    var core = window.MyCompanyCore;
-    var COLLAPSE_STORAGE_KEY = "mycompany.portal.management.primaryCollapsed.v1";
+    var core = window.SirkPlatformCore;
+    var COLLAPSE_STORAGE_KEY = "sirkPlatform.portal.management.primaryCollapsed.v1";
     var TEXT = {
         pl: { collapse: "Zwiń", expand: "Rozwiń", favorites: "Ulubione", edit: "Tryb edycji", refresh: "Odśwież", search: "Szukaj", searchPlaceholder: "Szukaj skryptów...", results: "Wyniki", all: "Wszystkie", pending: "Oczekujące", approved: "Zatwierdzone", executingStatus: "Wykonywane", completed: "Zakończone", failed: "Nieudane", rejected: "Odrzucone", scriptResults: "Wyniki skryptów", noScriptResults: "Brak wyników skryptów dla wybranego statusu.", waitingApproval: "Oczekiwanie na akceptację.", noOutput: "Brak danych wyjściowych.", emptyFavorites: "Brak ulubionych skryptów.", emptyScripts: "Brak skryptów.", credentials: "Poświadczenia", favorite: "Ulubione", copyLink: "Kopiuj link", run: "Uruchom", request: "Wyślij wniosek", executing: "Uruchamianie skryptu...", executionFailed: "Uruchomienie nie powiodło się", required: "jest wymagane.", validation: "Walidacja", management: "Zarządzanie", selectScript: "Wybierz skrypt do uruchomienia.", confirmPrefix: "Uruchomić teraz skrypt", result: "Wynik" },
         en: { collapse: "Collapse", expand: "Expand", favorites: "Favorites", edit: "Edit mode", refresh: "Refresh", search: "Search", searchPlaceholder: "Search scripts...", results: "Results", all: "All", pending: "Pending", approved: "Approved", executingStatus: "Executing", completed: "Completed", failed: "Failed", rejected: "Rejected", scriptResults: "Script results", noScriptResults: "No script results match the selected status.", waitingApproval: "Waiting for approval.", noOutput: "No output.", emptyFavorites: "No favorite scripts.", emptyScripts: "No scripts.", credentials: "Credentials", favorite: "Favorite", copyLink: "Copy link", run: "Run", request: "Request", executing: "Executing script...", executionFailed: "Execution failed", required: "is required.", validation: "Validation", management: "Management", selectScript: "Select a script to run.", confirmPrefix: "Run script", result: "Result" }
     };
     var tools = window.SharedScriptTools.create({
-        storageKey: "mycompany.myscripts.preferences",
+        storageKey: "sirkPlatform.myscripts.preferences",
         deepLinkParameter: "myscript"
     });
     var state = {
@@ -78,7 +78,7 @@
     }
 
     function bootstrap() {
-        return window.MyCompanyRuntime && window.MyCompanyRuntime.state && window.MyCompanyRuntime.state.bootstrap || {};
+        return window.SirkPlatformRuntime && window.SirkPlatformRuntime.state && window.SirkPlatformRuntime.state.bootstrap || {};
     }
 
     function isAdmin() {
@@ -164,7 +164,7 @@
 
     function buildShell(host) {
         host.innerHTML = "";
-        host.classList.add("mycompany-management-host", "sirk-native-management");
+        host.classList.add("sirk-platform-management-host", "sirk-native-management");
         var shell = el("div", "sirk-management-shell mc-portal-module-shell");
         var toolbar = el("div", "sirk-management-toolbar mc-portal-module-toolbar");
         toolbar.appendChild(toolButton("collapse", t("collapse"), icons.collapse));
@@ -173,7 +173,7 @@
         toolbar.appendChild(toolButton("refresh", t("refresh"), icons.refresh));
         toolbar.appendChild(toolButton("search", t("search"), icons.search));
         var search = el("input", "sirk-management-search");
-        search.id = "myCompanyPortalManagementSearch";
+        search.id = "sirkPlatformPortalManagementSearch";
         search.type = "search";
         search.placeholder = t("searchPlaceholder");
         search.value = state.search;
@@ -614,7 +614,7 @@
         });
     }
 
-    window.MyCompanyPortalManagement = {
+    window.SirkPlatformPortalManagement = {
         mount: mount,
         refresh: function () {
             if (!state.host) return;

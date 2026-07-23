@@ -2,7 +2,7 @@
     "use strict";
 
     var STORAGE_LANGUAGE = "sirkPortal.language";
-    var core = window.MyCompanyCore;
+    var core = window.SirkPlatformCore;
     var root = document.getElementById("sirkStandaloneRoot");
     var portalRoot = document.getElementById("sirkPortalRoot");
     var content = document.getElementById("sirkStandaloneContent");
@@ -25,7 +25,7 @@
             collapse: "Zwiń menu", expand: "Rozwiń menu", theme: "Zmień motyw",
             switchToDark: "Włącz ciemny motyw", switchToLight: "Włącz jasny motyw",
             languageTitle: "Switch to English", loading: "Ładowanie…",
-            loadingModules: "Ładowanie modułów MyCompany…", loadingDevices: "Ładowanie urządzeń…",
+            loadingModules: "Ładowanie modułów SirkPlatform…", loadingDevices: "Ładowanie urządzeń…",
             unknownError: "Nieznany błąd Portalu.", moduleDisabled: "moduł jest wyłączony albo użytkownik nie ma dostępu.",
             loadFailed: "nie udało się załadować danych.",
             overviewDevicesTitle: "Urządzenia", overviewDevicesSuffix: "urządzeń dostępnych w MeshCentral.",
@@ -47,9 +47,9 @@
             name: "Nazwa", status: "Status", group: "Grupa", system: "System",
             ipAddress: "Adres IP", lastSeen: "Ostatnio widziany", agentVersion: "Wersja agenta", nodeId: "Node ID",
             settingsAdminOnly: "Ustawienia są dostępne tylko dla Site Admin.",
-            monitoringPlaceholder: "Moduł Zabbix/Monitoring zostanie podłączony do wspólnego API MyCompany.",
-            reportsPlaceholder: "Raporty będą korzystać ze wspólnego rejestru wyników MyCompany.",
-            genericPlaceholder: "Moduł będzie podłączony do niezależnego API MyCompany.",
+            monitoringPlaceholder: "Moduł Zabbix/Monitoring zostanie podłączony do wspólnego API SirkPlatform.",
+            reportsPlaceholder: "Raporty będą korzystać ze wspólnego rejestru wyników SirkPlatform.",
+            genericPlaceholder: "Moduł będzie podłączony do niezależnego API SirkPlatform.",
             managementLoading: "Ładowanie Zarządzania…", approvalsLoading: "Ładowanie Akceptacji…"
         },
         en: {
@@ -60,7 +60,7 @@
             collapse: "Collapse menu", expand: "Expand menu", theme: "Change theme",
             switchToDark: "Switch to dark theme", switchToLight: "Switch to light theme",
             languageTitle: "Przełącz na polski", loading: "Loading…",
-            loadingModules: "Loading MyCompany modules…", loadingDevices: "Loading devices…",
+            loadingModules: "Loading SirkPlatform modules…", loadingDevices: "Loading devices…",
             unknownError: "Unknown Portal error.", moduleDisabled: "module is disabled or the user does not have access.",
             loadFailed: "failed to load data.",
             overviewDevicesTitle: "Devices", overviewDevicesSuffix: "devices available in MeshCentral.",
@@ -82,9 +82,9 @@
             name: "Name", status: "Status", group: "Group", system: "Operating system",
             ipAddress: "IP address", lastSeen: "Last seen", agentVersion: "Agent version", nodeId: "Node ID",
             settingsAdminOnly: "Settings are available only to Site Admin.",
-            monitoringPlaceholder: "The Zabbix/Monitoring module will use the shared MyCompany API.",
-            reportsPlaceholder: "Reports will use the shared MyCompany results registry.",
-            genericPlaceholder: "This module will use the independent MyCompany API.",
+            monitoringPlaceholder: "The Zabbix/Monitoring module will use the shared SirkPlatform API.",
+            reportsPlaceholder: "Reports will use the shared SirkPlatform results registry.",
+            genericPlaceholder: "This module will use the independent SirkPlatform API.",
             managementLoading: "Loading Management…", approvalsLoading: "Loading Approval…"
         }
     };
@@ -219,13 +219,13 @@
         var image = document.getElementById("sirkUserImage");
         if (!menu || !name || !image || !String(profile.name || "").trim()) return;
         name.textContent = String(profile.name).trim();
-        var fallback = String(window.__MYCOMPANY_DEFAULT_USER_IMAGE_URL__ || "");
+        var fallback = String(window.__SIRK_PLATFORM_DEFAULT_USER_IMAGE_URL__ || "");
         image.onerror = function () {
             image.onerror = null;
             image.src = fallback;
         };
         image.src = profile.hasImage === true
-            ? String(window.__MYCOMPANY_USER_IMAGE_URL__ || "") + "?rnd=" + encodeURIComponent(profile.imageRnd || Date.now())
+            ? String(window.__SIRK_PLATFORM_USER_IMAGE_URL__ || "") + "?rnd=" + encodeURIComponent(profile.imageRnd || Date.now())
             : fallback;
         image.alt = String(profile.name).trim();
         menu.hidden = false;
@@ -241,8 +241,8 @@
     }
 
     function asset(name) {
-        var base = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
-        return base + "/" + name + "?v=" + encodeURIComponent(window.__MYCOMPANY_PORTAL_VERSION__ || "1");
+        var base = String(window.__SIRK_PLATFORM_ASSET_BASE__ || "").replace(/\/$/, "");
+        return base + "/" + name + "?v=" + encodeURIComponent(window.__SIRK_PLATFORM_PORTAL_VERSION__ || "1");
     }
 
     function load(id, name) { return core.loadScript(id, asset(name)); }
@@ -368,7 +368,7 @@
 
     function initializeModule(key) {
         if (initialized[key]) return initialized[key];
-        var module = window.MyCompanyModules && window.MyCompanyModules[key];
+        var module = window.SirkPlatformModules && window.SirkPlatformModules[key];
         if (!module) return Promise.reject(new Error("Module " + key + " was not loaded."));
         initialized[key] = Promise.resolve(typeof module.initialize === "function" ? module.initialize(moduleState(key) || {}) : null);
         return initialized[key];
@@ -383,7 +383,7 @@
         loading(t("loading") + " " + viewName(view));
         initializeModule(key).then(function () {
             if (!isCurrent(sequence)) return;
-            var module = window.MyCompanyModules[key];
+            var module = window.SirkPlatformModules[key];
             if (!module || typeof module.mount !== "function") throw new Error("Module " + key + " does not expose a Portal view.");
             var host = prepareModuleHost(view);
             return Promise.resolve(module.mount(host, "sirk-standalone-" + view));
@@ -399,20 +399,20 @@
             return;
         }
         loading(t("managementLoading"));
-        if (!window.MyCompanyPortalManagement || typeof window.MyCompanyPortalManagement.mount !== "function") {
+        if (!window.SirkPlatformPortalManagement || typeof window.SirkPlatformPortalManagement.mount !== "function") {
             showError("MyScripts renderer is unavailable.");
             return;
         }
         var outerHost = prepareModuleHost("management");
         var host = document.createElement("div");
-        host.className = "mycompany-management-host";
+        host.className = "sirk-platform-management-host";
         outerHost.appendChild(host);
         var timer = window.setTimeout(function () {
             if (isCurrent(sequence) && !host.querySelector(".sirk-management-shell,.mc-shared-error,.sirk-card")) {
-                showError("MyScripts did not finish initialization.", "pluginadmin.ashx?pin=MyCompany&module=myscripts&asset=scripts");
+                showError("MyScripts did not finish initialization.", "pluginadmin.ashx?pin=SirkPlatform&module=myscripts&asset=scripts");
             }
         }, 12000);
-        Promise.resolve(window.MyCompanyPortalManagement.mount(host)).then(function () {
+        Promise.resolve(window.SirkPlatformPortalManagement.mount(host)).then(function () {
             window.clearTimeout(timer);
             if (!isCurrent(sequence)) return;
             if (!host.querySelector(".sirk-management-shell,.mc-shared-error,.sirk-card")) throw new Error("MyScripts renderer did not create a view.");
@@ -430,7 +430,7 @@
         loading(t("approvalsLoading"));
         initializeModule("approvalcenter").then(function () {
             if (!isCurrent(sequence)) return;
-            var module = window.MyCompanyModules.approvalcenter;
+            var module = window.SirkPlatformModules.approvalcenter;
             if (!module || typeof module.mount !== "function") throw new Error("Approval Center does not expose a Portal view.");
             var host = prepareModuleHost("approvals");
             return Promise.resolve(module.mount(host, "sirk-standalone-approval"));
@@ -453,9 +453,9 @@
         workspace.className = "mc-portal-module-workspace sirk-settings-module-workspace";
         var frame = document.createElement("iframe");
         frame.className = "sirk-standalone-settings-frame";
-        frame.title = "MyCompany settings";
-        var url = new URL(window.__MYCOMPANY_API_BASE__, window.location.href);
-        url.searchParams.set("pin", "MyCompany");
+        frame.title = "SirkPlatform settings";
+        var url = new URL(window.__SIRK_PLATFORM_API_BASE__, window.location.href);
+        url.searchParams.set("pin", "SirkPlatform");
         frame.src = url.href;
         workspace.appendChild(frame);
         shell.appendChild(toolbar);
@@ -464,7 +464,7 @@
     }
 
     function nativeDeviceUrl(node) {
-        var url = new URL(String(window.__MYCOMPANY_NATIVE_URL__ || "/meshcentral/"), window.location.href);
+        var url = new URL(String(window.__SIRK_PLATFORM_NATIVE_URL__ || "/meshcentral/"), window.location.href);
         url.searchParams.set("viewmode", "10");
         url.searchParams.set("gotonode", String(node.id || ""));
         return url.href;
@@ -596,7 +596,7 @@
         portalRoot.classList.toggle("sirk-theme-light", !dark);
         document.documentElement.style.colorScheme = dark ? "dark" : "light";
         syncThemeButton(dark);
-        try { localStorage.setItem("mycompany.sirkportal.theme", dark ? "dark" : "light"); } catch (ignored) {}
+        try { localStorage.setItem("sirkPortal.theme", dark ? "dark" : "light"); } catch (ignored) {}
     }
 
     function bind() {
@@ -636,7 +636,7 @@
             if (name === "sidebar") {
                 var value = !root.classList.contains("is-collapsed");
                 root.classList.toggle("is-collapsed", value);
-                try { localStorage.setItem("mycompany.sirkportal.standaloneCollapsed", value ? "1" : "0"); } catch (ignored) {}
+                try { localStorage.setItem("sirkPortal.standaloneCollapsed", value ? "1" : "0"); } catch (ignored) {}
                 applyShellLanguage();
             } else if (name === "theme") {
                 setTheme(!portalRoot.classList.contains("sirk-theme-dark"));
@@ -648,7 +648,7 @@
                 if (userMenu) userMenu.classList.toggle("is-open", open);
                 action.setAttribute("aria-expanded", open ? "true" : "false");
             } else if (name === "logout") {
-                window.location.assign(String(window.__MYCOMPANY_LOGOUT_URL__ || "/logout"));
+                window.location.assign(String(window.__SIRK_PLATFORM_LOGOUT_URL__ || "/logout"));
             }
         });
         document.addEventListener("click", function (event) {
@@ -666,8 +666,8 @@
             if (tile) tile.setAttribute("aria-expanded", "false");
         });
         try {
-            if (localStorage.getItem("mycompany.sirkportal.standaloneCollapsed") === "1") root.classList.add("is-collapsed");
-            setTheme(localStorage.getItem("mycompany.sirkportal.theme") === "dark");
+            if (localStorage.getItem("sirkPortal.standaloneCollapsed") === "1") root.classList.add("is-collapsed");
+            setTheme(localStorage.getItem("sirkPortal.theme") === "dark");
         } catch (ignored) { setTheme(false); }
         applyShellLanguage();
         window.addEventListener("hashchange", function () {
@@ -702,9 +702,9 @@
         loading(t("loadingModules"));
         core.api("", "bootstrap").then(function (value) {
             bootstrap = value || {};
-            window.MyCompanyRuntime = window.MyCompanyRuntime || { state: {} };
-            window.MyCompanyRuntime.state = window.MyCompanyRuntime.state || {};
-            window.MyCompanyRuntime.state.bootstrap = bootstrap;
+            window.SirkPlatformRuntime = window.SirkPlatformRuntime || { state: {} };
+            window.SirkPlatformRuntime.state = window.SirkPlatformRuntime.state || {};
+            window.SirkPlatformRuntime.state.bootstrap = bootstrap;
             bootstrap.access = bootstrap.access || (bootstrap.modules && bootstrap.modules.portal && bootstrap.modules.portal.access) || {};
             applyUserProfile();
             applyShellLanguage();

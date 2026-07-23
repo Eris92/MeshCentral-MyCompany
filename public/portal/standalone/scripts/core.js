@@ -1,9 +1,9 @@
 (function () {
     "use strict";
 
-    window.MyCompanyCore = window.MyCompanyCore || {};
-    window.MyCompanyModules = window.MyCompanyModules || {};
-    var core = window.MyCompanyCore;
+    window.SirkPlatformCore = window.SirkPlatformCore || {};
+    window.SirkPlatformModules = window.SirkPlatformModules || {};
+    var core = window.SirkPlatformCore;
 
     (function prepareInitialView() {
         var root = document.getElementById("sirkStandaloneRoot");
@@ -26,7 +26,7 @@
         } catch (error) {}
 
         try {
-            var saved = JSON.parse(localStorage.getItem("mycompany.sirkportal.deviceTabs") || "{}");
+            var saved = JSON.parse(localStorage.getItem("sirkPortal.deviceTabs") || "{}");
             savedActive = String(saved && saved.active || "all");
         } catch (error) {}
 
@@ -54,7 +54,7 @@
         if (title && requestedButton) title.textContent = requestedButton.textContent;
 
         function bootstrapReady() {
-            var runtime = window.MyCompanyRuntime;
+            var runtime = window.SirkPlatformRuntime;
             return !!(runtime && runtime.state && runtime.state.bootstrap && runtime.state.bootstrap.modules);
         }
 
@@ -69,7 +69,7 @@
 
         function desiredChildTab() {
             try {
-                var value = JSON.parse(localStorage.getItem("mycompany.sirkportal.deviceActiveTabs") || "{}");
+                var value = JSON.parse(localStorage.getItem("sirkPortal.deviceActiveTabs") || "{}");
                 return String(value && value.__last__ || "general");
             } catch (error) {
                 return "general";
@@ -142,13 +142,13 @@
         checkReady();
     }());
 
-    core.assetVersion = String(window.__MYCOMPANY_PORTAL_VERSION__ || "1.5.0");
+    core.assetVersion = String(window.__SIRK_PLATFORM_PORTAL_VERSION__ || "1.5.0");
 
     (function loadBranding() {
-        var base = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
-        if (!base || document.getElementById("mycompany-portal-branding")) return;
+        var base = String(window.__SIRK_PLATFORM_ASSET_BASE__ || "").replace(/\/$/, "");
+        if (!base || document.getElementById("sirk-platform-portal-branding")) return;
         var script = document.createElement("script");
-        script.id = "mycompany-portal-branding";
+        script.id = "sirk-platform-portal-branding";
         script.src = base + "/portal-branding.js?v=" + encodeURIComponent(core.assetVersion);
         script.async = false;
         (document.head || document.documentElement).appendChild(script);
@@ -158,7 +158,7 @@
         if (core.loginRedirectPending) return;
         core.loginRedirectPending = true;
         try {
-            window.sessionStorage.setItem("mycompanyPortalReturnHash", window.location.hash || "#overview");
+            window.sessionStorage.setItem("sirkPortalReturnHash", window.location.hash || "#overview");
         } catch (error) {}
         var login = new URL("login?return=portal", window.location.href);
         window.location.replace(login.href);
@@ -172,8 +172,8 @@
     }
 
     core.assetUrl = function (moduleName, assetName, parameters) {
-        var endpoint = new URL(String(window.__MYCOMPANY_API_BASE__ || "pluginadmin.ashx"), window.location.href);
-        endpoint.searchParams.set("pin", "MyCompany");
+        var endpoint = new URL(String(window.__SIRK_PLATFORM_API_BASE__ || "pluginadmin.ashx"), window.location.href);
+        endpoint.searchParams.set("pin", "SirkPlatform");
         if (moduleName) endpoint.searchParams.set("module", moduleName);
         if (assetName) endpoint.searchParams.set("asset", assetName);
         endpoint.searchParams.set("v", core.assetVersion);

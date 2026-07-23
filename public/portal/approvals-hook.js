@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalApprovalHookLoaded) return;
-    window.__myCompanyPortalApprovalHookLoaded = true;
+    if (window.__sirkPlatformPortalApprovalHookLoaded) return;
+    window.__sirkPlatformPortalApprovalHookLoaded = true;
 
     var active = false;
 
@@ -29,13 +29,13 @@
         });
         var title = document.getElementById("sirkViewTitle");
         if (title) title.textContent = "Akceptacje";
-        if (!window.MyCompanyPortalApproval || typeof window.MyCompanyPortalApproval.mount !== "function") {
+        if (!window.SirkPlatformPortalApproval || typeof window.SirkPlatformPortalApproval.mount !== "function") {
             target.innerHTML = '<div class="sirk-card"><h3>Akceptacje</h3><p>Renderer Approval Center nie został załadowany.</p></div>';
             return;
         }
         if (force || !target.querySelector(".sirk-approval-shell")) {
             target.innerHTML = "";
-            window.MyCompanyPortalApproval.mount(target);
+            window.SirkPlatformPortalApproval.mount(target);
         }
     }
 
@@ -67,11 +67,11 @@
     function bind() {
         var portal = root();
         if (!portal) return false;
-        if (!portal.__myCompanyApprovalHookObserver) {
-            portal.__myCompanyApprovalHookObserver = new MutationObserver(function () {
+        if (!portal.__sirkPlatformApprovalHookObserver) {
+            portal.__sirkPlatformApprovalHookObserver = new MutationObserver(function () {
                 if (active) mount(false);
             });
-            portal.__myCompanyApprovalHookObserver.observe(portal, { childList: true, subtree: true });
+            portal.__sirkPlatformApprovalHookObserver.observe(portal, { childList: true, subtree: true });
         }
         var selected = portal.querySelector('[data-sirk-view="approvals"].is-active');
         if (selected) { active = true; mount(false); }

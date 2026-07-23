@@ -1,16 +1,16 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyMarketplaceLoaded) return;
-    window.__myCompanyMarketplaceLoaded = true;
+    if (window.__sirkPlatformMarketplaceLoaded) return;
+    window.__sirkPlatformMarketplaceLoaded = true;
 
-    var root = document.getElementById("mycompany-admin");
-    var content = document.getElementById("mycompany-admin-content");
+    var root = document.getElementById("sirk-platform-admin");
+    var content = document.getElementById("sirk-platform-admin-content");
     if (!root || !content) return;
 
     var state = { catalog: [], installed: [], query: "", view: "installed", loading: false };
 
-    function pin() { return root.getAttribute("data-plugin") || "MyCompany"; }
+    function pin() { return root.getAttribute("data-plugin") || "SirkPlatform"; }
 
     function parseResponse(response) {
         return response.text().then(function (text) {
@@ -58,9 +58,9 @@
     }
 
     function ensureStyle() {
-        if (document.getElementById("mycompany-marketplace-style")) return;
+        if (document.getElementById("sirk-platform-marketplace-style")) return;
         var style = document.createElement("style");
-        style.id = "mycompany-marketplace-style";
+        style.id = "sirk-platform-marketplace-style";
         style.textContent = [
             ".mc-marketplace-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}",
             ".mc-marketplace-tabs{display:flex;gap:4px}",

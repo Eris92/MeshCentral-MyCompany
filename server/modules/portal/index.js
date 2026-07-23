@@ -149,7 +149,7 @@ module.exports.createModule = function (context) {
                 forceNewLogin: value.forceNewLogin === true,
                 forcePortalInterface: value.forcePortalInterface === true,
                 keepSessionsAfterRestart: persistence.enabled,
-                sessionKeyManagedByMyCompany: persistence.managedByMyCompany,
+                sessionKeyManagedBySirkPlatform: persistence.managedBySirkPlatform,
                 standaloneConflict: standalonePortalActive(),
                 vendorVersion: VENDOR_VERSION,
                 vendorReady: vendorState.ready,
@@ -192,7 +192,7 @@ module.exports.createModule = function (context) {
             var value = req && req.body || {};
             if (asset !== "settings") throw new Error("Unknown Portal action.");
             if (value.enabled === true && standalonePortalActive()) {
-                throw new Error("Disable or uninstall the standalone SirKPortal plugin before enabling the MyCompany Portal.");
+                throw new Error("Disable or uninstall the standalone SirKPortal plugin before enabling the SirkPlatform Portal.");
             }
             var portalBefore = settings();
             var persistence = typeof value.keepSessionsAfterRestart === "boolean"
@@ -208,7 +208,7 @@ module.exports.createModule = function (context) {
                 if (typeof value.forceNewLogin === "boolean") current.modules.portal.forceNewLogin = value.forceNewLogin;
                 if (typeof value.forcePortalInterface === "boolean") current.modules.portal.forcePortalInterface = value.forcePortalInterface;
                 current.modules.portal.keepSessionsAfterRestart = persistence.enabled;
-                current.modules.portal.sessionKeyManaged = persistence.managedByMyCompany;
+                current.modules.portal.sessionKeyManaged = persistence.managedBySirkPlatform;
                 current.modules.portal.sessionKeyHash = persistence.sessionKeyHash || "";
                 if (current.modules.portal.forceNewLogin === true || current.modules.portal.forcePortalInterface === true) {
                     current.modules.portal.enabled = true;
@@ -230,7 +230,7 @@ module.exports.createModule = function (context) {
                     serviceRestartRequired: persistence.restartRequired,
                     sessionPersistence: {
                         enabled: persistence.enabled,
-                        managedByMyCompany: persistence.managedByMyCompany,
+                        managedBySirkPlatform: persistence.managedBySirkPlatform,
                         managedExternally: persistence.managedExternally,
                         backupCreated: persistence.backupCreated === true
                     },

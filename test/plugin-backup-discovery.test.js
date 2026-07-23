@@ -9,8 +9,8 @@ function read(relative) {
     return fs.readFileSync(path.join(root, relative), "utf8");
 }
 
-var discovery = read("core/plugin-admin-service-backup-discovery.js");
-var admin = read("MyCompanyAdmin.js");
+var discovery = read("server/core/plugin-admin-service-backup-discovery.js");
+var admin = read("admin.js");
 
 [
     "candidateRoots()",

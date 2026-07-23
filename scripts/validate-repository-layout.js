@@ -73,7 +73,7 @@ function files(relative) {
     if (exists(relative)) errors.push("Legacy path must not exist: " + relative);
 });
 
-var allowedPublicRootFiles = new Set([]);
+var allowedPublicRootFiles = new Set(["INDEX.md"]);
 if (exists("public")) {
     fs.readdirSync(absolute("public"), { withFileTypes: true }).forEach(function (entry) {
         if (entry.isFile() && !allowedPublicRootFiles.has(entry.name)) {
@@ -82,9 +82,12 @@ if (exists("public")) {
     });
 }
 
+var allowedWebRootFiles = new Set(["INDEX.md"]);
 if (exists("web")) {
     fs.readdirSync(absolute("web"), { withFileTypes: true }).forEach(function (entry) {
-        if (entry.isFile()) errors.push("Admin asset must live in web/admin/: web/" + entry.name);
+        if (entry.isFile() && !allowedWebRootFiles.has(entry.name)) {
+            errors.push("Admin asset must live in web/admin/: web/" + entry.name);
+        }
     });
 }
 
@@ -152,12 +155,15 @@ moduleDirectories.forEach(function (name) {
 var registrations = Object.create(null);
 files("public/modules").filter(function (file) { return /\.js$/i.test(file); }).forEach(function (file) {
     var source = read(file);
-    var pattern = /window\.(?:SirkPlatformModules|MyCompanyModules)\.([a-z0-9_-]+)\s*=/gi;
+    var pattern = /window\.SirkPlatformModules\.([a-z0-9_-]+)\s*=/gi;
     var match;
     while ((match = pattern.exec(source))) {
         var key = match[1].toLowerCase();
         registrations[key] = registrations[key] || [];
         registrations[key].push(file);
+    }
+    if (/window\.MyCompanyModules/.test(source)) {
+        errors.push("Module renderer contains removed MyCompanyModules namespace: " + file);
     }
 });
 Object.keys(registrations).forEach(function (key) {

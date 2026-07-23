@@ -25,7 +25,7 @@
     <div id="sirkStandaloneRoot" class="sirk-standalone-root">
       <script>
         try {
-          if (localStorage.getItem("mycompany.sirkportal.standaloneCollapsed") === "1") {
+          if (localStorage.getItem("sirkPortal.standaloneCollapsed") === "1") {
             document.getElementById("sirkStandaloneRoot").classList.add("is-collapsed");
           }
         } catch (ignored) {}
@@ -64,13 +64,13 @@
     </div>
   </div>
   <script>
-    window.__MYCOMPANY_API_BASE__ = __API_BASE_JSON__;
-    window.__MYCOMPANY_ASSET_BASE__ = __ASSET_BASE_JSON__;
-    window.__MYCOMPANY_NATIVE_URL__ = __NATIVE_URL_JSON__;
-    window.__MYCOMPANY_LOGOUT_URL__ = __LOGOUT_URL_JSON__;
-    window.__MYCOMPANY_USER_IMAGE_URL__ = __USER_IMAGE_URL_JSON__;
-    window.__MYCOMPANY_DEFAULT_USER_IMAGE_URL__ = __DEFAULT_USER_IMAGE_URL_JSON__;
-    window.__MYCOMPANY_PORTAL_VERSION__ = __VERSION_JSON__;
+    window.__SIRK_PLATFORM_API_BASE__ = __API_BASE_JSON__;
+    window.__SIRK_PLATFORM_ASSET_BASE__ = __ASSET_BASE_JSON__;
+    window.__SIRK_PLATFORM_NATIVE_URL__ = __NATIVE_URL_JSON__;
+    window.__SIRK_PLATFORM_LOGOUT_URL__ = __LOGOUT_URL_JSON__;
+    window.__SIRK_PLATFORM_USER_IMAGE_URL__ = __USER_IMAGE_URL_JSON__;
+    window.__SIRK_PLATFORM_DEFAULT_USER_IMAGE_URL__ = __DEFAULT_USER_IMAGE_URL_JSON__;
+    window.__SIRK_PLATFORM_PORTAL_VERSION__ = __VERSION_JSON__;
   </script>
   <script src="__ASSET_BASE__/standalone-core.js?v=__VERSION__"></script>
   <script src="__ASSET_BASE__/portal-standalone.js?v=__VERSION__"></script>
@@ -90,7 +90,7 @@
     enhance();
   }());
   </script>
-  <script src="__ASSET_BASE__/portal-link-visibility.js?v=__VERSION__"></script>
+  <script src="__ASSET_BASE__/portal-view-mode.js?v=__VERSION__"></script>
   <script src="__ASSET_BASE__/portal-standalone-nav.js?v=__VERSION__"></script>
 </body>
 </html>

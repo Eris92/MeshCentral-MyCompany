@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalTerminalConnectLoaded) return;
-    window.__myCompanyPortalTerminalConnectLoaded = true;
+    if (window.__sirkPlatformPortalTerminalConnectLoaded) return;
+    window.__sirkPlatformPortalTerminalConnectLoaded = true;
 
     var pendingOptions = null;
     var closeHandlerInstalled = false;

@@ -1,12 +1,12 @@
 (function () {
     "use strict";
 
-    var admin = document.getElementById("mycompany-admin");
+    var admin = document.getElementById("sirk-platform-admin");
     var tabs = admin && admin.querySelector(".mc-admin-tabs");
-    var content = document.getElementById("mycompany-admin-content");
+    var content = document.getElementById("sirk-platform-admin-content");
     if (!admin || !tabs || !content) return;
 
-    var STORAGE_COLLAPSED = "mycompany.admin.managementCollapsed";
+    var STORAGE_COLLAPSED = "sirkPlatform.admin.managementCollapsed";
     var shell = document.createElement("div");
     var toolbarHost = document.createElement("div");
     var toolbar = document.createElement("div");
@@ -179,8 +179,8 @@
         decorateNavigation();
         applySearch();
 
-        if (window.MyCompanyPortalUiContract && typeof window.MyCompanyPortalUiContract.refresh === "function") {
-            window.MyCompanyPortalUiContract.refresh();
+        if (window.SirkPlatformPortalUiContract && typeof window.SirkPlatformPortalUiContract.refresh === "function") {
+            window.SirkPlatformPortalUiContract.refresh();
         }
     }
 

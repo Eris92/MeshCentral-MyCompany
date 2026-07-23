@@ -90,7 +90,7 @@ module.exports.createModule = function (context) {
         getAccess: function (user) { return { allowed: allowed(user), siteAdmin: shared.isSiteAdmin(user) }; },
         initialize: function () {
             library.ensure();
-            console.log("MyCompany MyScripts library:", root);
+            console.log("SirkPlatform MyScripts library:", root);
             if (!unregister) unregister = context.approval.registerProvider(provider);
             return Promise.resolve();
         },

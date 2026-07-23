@@ -1,16 +1,16 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPluginUpdatesLoaded) return;
-    window.__myCompanyPluginUpdatesLoaded = true;
+    if (window.__sirkPlatformPluginUpdatesLoaded) return;
+    window.__sirkPlatformPluginUpdatesLoaded = true;
 
-    var root = document.getElementById("mycompany-admin");
-    var content = document.getElementById("mycompany-admin-content");
+    var root = document.getElementById("sirk-platform-admin");
+    var content = document.getElementById("sirk-platform-admin-content");
     if (!root || !content) return;
 
     var state = { loading: false, plugins: [] };
 
-    function pin() { return root.getAttribute("data-plugin") || "MyCompany"; }
+    function pin() { return root.getAttribute("data-plugin") || "SirkPlatform"; }
 
     function parseResponse(response) {
         return response.text().then(function (text) {
@@ -67,9 +67,9 @@
     }
 
     function ensureStyle() {
-        if (document.getElementById("mycompany-plugin-update-style")) return;
+        if (document.getElementById("sirk-platform-plugin-update-style")) return;
         var style = document.createElement("style");
-        style.id = "mycompany-plugin-update-style";
+        style.id = "sirk-platform-plugin-update-style";
         style.textContent = [
             ".mc-admin-plugin-update-button{margin-right:8px;white-space:nowrap}",
             ".mc-admin-plugin-version-cell small{display:block;margin-top:3px;color:#657187}",

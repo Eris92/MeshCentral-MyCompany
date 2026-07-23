@@ -1,10 +1,10 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalIconDataLoaded) return;
-    window.__myCompanyPortalIconDataLoaded = true;
+    if (window.__sirkPlatformPortalIconDataLoaded) return;
+    window.__sirkPlatformPortalIconDataLoaded = true;
 
-    var core = window.MyCompanyCore;
+    var core = window.SirkPlatformCore;
     if (!core || typeof core.api !== "function" || typeof core.post !== "function") return;
 
     function safeIconSource(value) {

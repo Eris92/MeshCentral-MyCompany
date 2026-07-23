@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalUiFixLoaded) return;
-    window.__myCompanyPortalUiFixLoaded = true;
+    if (window.__sirkPlatformPortalUiFixLoaded) return;
+    window.__sirkPlatformPortalUiFixLoaded = true;
 
     function svg(path) {
         return '<svg viewBox="0 0 24 24" aria-hidden="true">' + path + '</svg>';
@@ -20,20 +20,20 @@
 
     function markPortalReady(root) {
         if (!root) return;
-        try { window.localStorage.setItem("mycompany.sirkportal.enabled", "1"); }
+        try { window.localStorage.setItem("sirkPortal.enabled", "1"); }
         catch (error) {}
-        document.documentElement.classList.remove("mycompany-auth-portal-pending");
-        if (typeof window.__myCompanyRevealAuthenticatedPortal === "function") {
-            window.__myCompanyRevealAuthenticatedPortal();
+        document.documentElement.classList.remove("sirk-platform-auth-portal-pending");
+        if (typeof window.__sirkPlatformRevealAuthenticatedPortal === "function") {
+            window.__sirkPlatformRevealAuthenticatedPortal();
         }
-        root.setAttribute("data-mycompany-portal-ready", "1");
+        root.setAttribute("data-sirk-platform-portal-ready", "1");
     }
 
     function managementActive(root) {
         if (!root) return false;
-        var host = root.querySelector('[data-mycompany-management-host="1"],.mycompany-management-host');
+        var host = root.querySelector('[data-sirk-platform-management-host="1"],.sirk-platform-management-host');
         if (host && !host.hidden && host.style.display !== "none" && host.querySelector(".sirk-management-shell")) return true;
-        var button = root.querySelector('[data-mycompany-management-nav="1"].is-active,[data-sirk-view="management"].is-active');
+        var button = root.querySelector('[data-sirk-platform-management-nav="1"].is-active,[data-sirk-view="management"].is-active');
         return !!button;
     }
 
@@ -100,9 +100,9 @@
         if (!apply()) {
             if (attempts > 150) {
                 window.clearInterval(timer);
-                document.documentElement.classList.remove("mycompany-auth-portal-pending");
-                if (typeof window.__myCompanyRevealAuthenticatedPortal === "function") {
-                    window.__myCompanyRevealAuthenticatedPortal();
+                document.documentElement.classList.remove("sirk-platform-auth-portal-pending");
+                if (typeof window.__sirkPlatformRevealAuthenticatedPortal === "function") {
+                    window.__sirkPlatformRevealAuthenticatedPortal();
                 }
             }
             return;

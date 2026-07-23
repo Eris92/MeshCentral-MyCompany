@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyNativePortalLauncherLoaded) return;
-    window.__myCompanyNativePortalLauncherLoaded = true;
+    if (window.__sirkPlatformNativePortalLauncherLoaded) return;
+    window.__sirkPlatformNativePortalLauncherLoaded = true;
 
     function portalUrl() {
         var url = new URL(window.location.href);
@@ -12,21 +12,21 @@
     }
 
     function launcherAllowed() {
-        var runtime = window.MyCompanyRuntime;
+        var runtime = window.SirkPlatformRuntime;
         var bootstrap = runtime && runtime.state && runtime.state.bootstrap;
         var portal = bootstrap && bootstrap.modules && bootstrap.modules.portal;
         return !!(portal && portal.enabled && portal.ready !== false && portal.config && portal.config.showLauncher === true);
     }
 
     function ensureLauncher() {
-        var existing = document.getElementById("myCompanyPortalLauncher");
+        var existing = document.getElementById("sirkPlatformPortalLauncher");
         if (!launcherAllowed()) {
             if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
             return;
         }
         if (!document.body || existing) return;
         var link = document.createElement("a");
-        link.id = "myCompanyPortalLauncher";
+        link.id = "sirkPlatformPortalLauncher";
         link.href = portalUrl();
         link.title = "Otwórz SirK Portal";
         link.setAttribute("aria-label", "Otwórz SirK Portal");

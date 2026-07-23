@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanySirkLoginLoaded) return;
-    window.__myCompanySirkLoginLoaded = true;
+    if (window.__sirkPlatformSirkLoginLoaded) return;
+    window.__sirkPlatformSirkLoginLoaded = true;
     var STORAGE_LANGUAGE = "sirkPortal.language";
     var TEXT = {
         pl: {
@@ -30,7 +30,7 @@
 
     function branding() {
         try {
-            var value = window.parent && window.parent.__MYCOMPANY_PORTAL_BRANDING__;
+            var value = window.parent && window.parent.__SIRK_PLATFORM_PORTAL_BRANDING__;
             return value && typeof value === "object" ? value : {};
         } catch (error) { return {}; }
     }

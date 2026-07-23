@@ -14,7 +14,7 @@
     }
 
     function currentConfig() {
-        var runtime = window.MyCompanyRuntime;
+        var runtime = window.SirkPlatformRuntime;
         var bootstrap = runtime && runtime.state && runtime.state.bootstrap;
         return bootstrap && bootstrap.modules && bootstrap.modules.portal && bootstrap.modules.portal.config;
     }
@@ -60,7 +60,7 @@
     function setFocusMode(enabled) {
         document.documentElement.classList.toggle("sirk-device-focus-mode", enabled);
         if (enabled) document.documentElement.classList.remove("sirk-device-connection-mode");
-        try { localStorage.setItem("mycompany.sirkportal.focusMode", enabled ? "1" : "0"); }
+        try { localStorage.setItem("sirkPortal.focusMode", enabled ? "1" : "0"); }
         catch (error) {}
         window.dispatchEvent(new Event("resize"));
     }
@@ -81,7 +81,7 @@
     }
 
     function restoreFocusMode() {
-        try { setFocusMode(localStorage.getItem("mycompany.sirkportal.focusMode") === "1"); }
+        try { setFocusMode(localStorage.getItem("sirkPortal.focusMode") === "1"); }
         catch (error) { setFocusMode(false); }
     }
 
@@ -254,5 +254,6 @@
         }, 100);
     }
 
-    new MutationObserver(function () { mountViewModeButton(); }).observe(document.documentElement, { childList: true, subtree: true });
+    var observerRoot = document.getElementById("sirkStandaloneRoot");
+    if (observerRoot) new MutationObserver(function () { mountViewModeButton(); }).observe(observerRoot, { childList: true, subtree: true });
 }());

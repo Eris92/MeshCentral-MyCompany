@@ -5,11 +5,11 @@ var fs = require("fs");
 var http = require("http");
 var os = require("os");
 var path = require("path");
-var httpClient = require("../core/http-client.js");
-var secretStore = require("../core/secret-store.js");
-var approvalService = require("../core/approval-service.js");
-var sessionPersistence = require("../core/session-persistence.js");
-var pluginAdminService = require("../core/plugin-admin-service.js");
+var httpClient = require("../server/core/http-client.js");
+var secretStore = require("../server/core/secret-store.js");
+var approvalService = require("../server/core/approval-service.js");
+var sessionPersistence = require("../server/core/session-persistence.js");
+var pluginAdminService = require("../server/core/plugin-admin-service.js");
 
 function listen(server) {
     return new Promise(function (resolve, reject) {
@@ -50,7 +50,7 @@ async function validateRedirectHeaders() {
 }
 
 function validateSecretCorruption() {
-    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "mycompany-secrets-"));
+    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "sirkPlatform-secrets-"));
     var dataPath = path.join(directory, "secrets.json");
     var keyPath = path.join(directory, ".secret.key");
     try {
@@ -60,7 +60,7 @@ function validateSecretCorruption() {
         encrypted.tag = Buffer.alloc(16, 1).toString("base64");
         fs.writeFileSync(dataPath, JSON.stringify(encrypted));
         var reopened = secretStore.createSecretStore({ fs: fs, path: path, dataPath: dataPath, keyPath: keyPath });
-        assert.throws(function () { reopened.readAll(); }, /Cannot read MyCompany secret store/);
+        assert.throws(function () { reopened.readAll(); }, /Cannot read SirkPlatform secret store/);
         assert.strictEqual(JSON.parse(fs.readFileSync(dataPath, "utf8")).tag, encrypted.tag);
     } finally {
         fs.rmSync(directory, { recursive: true, force: true });
@@ -68,7 +68,7 @@ function validateSecretCorruption() {
 }
 
 async function validateApprovalApiSafety() {
-    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "mycompany-approval-"));
+    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "sirkPlatform-approval-"));
     var admin = { _id: "user/domain/admin", name: "admin", siteadmin: 0xFFFFFFFF };
     var users = {}; users[admin._id] = admin;
     var current = { modules: { approvalcenter: { providers: { sample: { enabled: true, levels: { 1: [], 2: [], 3: [] } } } } } };
@@ -118,7 +118,7 @@ async function validateApprovalApiSafety() {
 }
 
 function validateSessionPersistence() {
-    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "mycompany-session-"));
+    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "sirkPlatform-session-"));
     var configPath = path.join(directory, "config.json");
     fs.writeFileSync(configPath, JSON.stringify({ settings: {}, domains: { "": {} } }), "utf8");
     var manager = sessionPersistence.createManager({
@@ -130,12 +130,12 @@ function validateSessionPersistence() {
         var enabled = manager.configure(true, {});
         var stored = JSON.parse(fs.readFileSync(configPath, "utf8"));
         assert.strictEqual(enabled.enabled, true);
-        assert.strictEqual(enabled.managedByMyCompany, true);
+        assert.strictEqual(enabled.managedBySirkPlatform, true);
         assert.strictEqual(enabled.restartRequired, true);
         assert.match(stored.settings.SessionKey, /^[0-9a-f]{128}$/);
         assert.strictEqual(JSON.stringify(enabled).indexOf(stored.settings.SessionKey), -1);
         var portal = { sessionKeyManaged: true, sessionKeyHash: enabled.sessionKeyHash };
-        assert.strictEqual(manager.status(portal).managedByMyCompany, true);
+        assert.strictEqual(manager.status(portal).managedBySirkPlatform, true);
         var disabled = manager.configure(false, portal);
         assert.strictEqual(disabled.enabled, false);
         assert.strictEqual(Object.prototype.hasOwnProperty.call(JSON.parse(fs.readFileSync(configPath, "utf8")).settings, "SessionKey"), false);
@@ -146,13 +146,13 @@ function validateSessionPersistence() {
 }
 
 async function validatePluginAdministrationSafety() {
-    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "mycompany-plugin-admin-"));
+    var directory = fs.mkdtempSync(path.join(os.tmpdir(), "sirkPlatform-plugin-admin-"));
     var pluginRoot = path.join(directory, "plugins");
     var externalRoot = path.join(pluginRoot, "External");
     fs.mkdirSync(externalRoot, { recursive: true });
     fs.writeFileSync(path.join(externalRoot, "config.json"), "{}", "utf8");
     var records = {
-        "plugin/mycompany": { _id: "plugin/mycompany", shortName: "MyCompany", name: "MyCompany", status: 1 },
+        "plugin/sirkPlatform": { _id: "plugin/sirkPlatform", shortName: "SirkPlatform", name: "SirkPlatform", status: 1 },
         "plugin/external": { _id: "plugin/external", shortName: "External", name: "External", status: 1 }
     };
     var removed = false;
@@ -171,16 +171,16 @@ async function validatePluginAdministrationSafety() {
         pluginHandler: handler,
         fs: fs,
         path: path,
-        protectedShortName: "MyCompany"
+        protectedShortName: "SirkPlatform"
     });
     var admin = { siteadmin: 0xFFFFFFFF };
     try {
         await assert.rejects(function () {
-            return service.operate(admin, "disable", { id: "plugin/mycompany" });
+            return service.operate(admin, "disable", { id: "plugin/sirkPlatform" });
         }, /cannot disable or remove itself/);
         await assert.rejects(function () {
             return service.operate(admin, "add", { configUrl: "http://example.test/config.json" });
-        }, /Only HTTPS/);
+        }, /HTTPS URL without credentials/);
         var result = await service.operate(admin, "remove", { id: "plugin/external" });
         assert.strictEqual(removed, true);
         assert.ok(result.backupPath);

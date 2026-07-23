@@ -1,11 +1,11 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalFixLoaded) return;
-    window.__myCompanyPortalFixLoaded = true;
+    if (window.__sirkPlatformPortalFixLoaded) return;
+    window.__sirkPlatformPortalFixLoaded = true;
 
     var managementActive = false;
-    var collapsedKey = "mycompany.sirkportal.sidebarCollapsed";
+    var collapsedKey = "sirkPortal.sidebarCollapsed";
 
     function root() {
         return document.getElementById("sirkPortalRoot");
@@ -16,7 +16,7 @@
     }
 
     function managementButton(portalRoot) {
-        var direct = portalRoot.querySelector('[data-mycompany-management-nav="1"],[data-sirk-view="management"]');
+        var direct = portalRoot.querySelector('[data-sirk-platform-management-nav="1"],[data-sirk-view="management"]');
         if (direct) return direct;
         var buttons = portalRoot.querySelectorAll("button,[role=button]");
         for (var index = 0; index < buttons.length; index++) {
@@ -30,7 +30,7 @@
         var button = target && target.closest && target.closest("button,[role=button]");
         if (!button || !portalRoot.contains(button)) return false;
         if (button.getAttribute("data-sirk-view") === "management") return true;
-        if (button.getAttribute("data-mycompany-management-nav") === "1") return true;
+        if (button.getAttribute("data-sirk-platform-management-nav") === "1") return true;
         var text = normalizedText(button);
         return text === "zarządzanie" || text === "management";
     }
@@ -45,12 +45,12 @@
     function managementHost(portalRoot) {
         var main = mainHost(portalRoot);
         if (!main) return null;
-        var host = main.querySelector('[data-mycompany-management-host="1"]');
+        var host = main.querySelector('[data-sirk-platform-management-host="1"]');
         if (!host) {
             host = document.createElement("section");
-            host.className = "sirk-view mycompany-management-host";
-            host.setAttribute("data-view", "mycompany-management");
-            host.setAttribute("data-mycompany-management-host", "1");
+            host.className = "sirk-view sirk-platform-management-host";
+            host.setAttribute("data-view", "sirk-platform-management");
+            host.setAttribute("data-sirk-platform-management-host", "1");
             main.appendChild(host);
         }
         return host;
@@ -60,7 +60,7 @@
         var button = managementButton(portalRoot);
         if (!button) return;
         button.setAttribute("data-sirk-view", "management");
-        button.setAttribute("data-mycompany-management-nav", "1");
+        button.setAttribute("data-sirk-platform-management-nav", "1");
         var nav = button.closest("nav,.sirk-nav,.sirk-sidebar,[role=navigation]") || button.parentElement;
         if (!nav) return;
         var candidates = nav.querySelectorAll("ul,ol,.sirk-submenu,.sirk-nav-submenu,[data-sirk-parent],[data-parent-view]");
@@ -70,14 +70,14 @@
                 candidate.hidden = true;
                 candidate.style.display = "none";
                 candidate.setAttribute("aria-hidden", "true");
-                candidate.setAttribute("data-mycompany-hidden-management-submenu", "1");
+                candidate.setAttribute("data-sirk-platform-hidden-management-submenu", "1");
             }
         });
         var next = button.nextElementSibling;
         if (next && /defender|jira|entra|zabbix|inne/.test(normalizedText(next))) {
             next.hidden = true;
             next.style.display = "none";
-            next.setAttribute("data-mycompany-hidden-management-submenu", "1");
+            next.setAttribute("data-sirk-platform-hidden-management-submenu", "1");
         }
     }
 
@@ -114,13 +114,13 @@
         if (!host) return;
         showOnlyManagement(portalRoot, host);
         setActiveButton(portalRoot);
-        if (!window.MyCompanyPortalManagement || typeof window.MyCompanyPortalManagement.mount !== "function") {
+        if (!window.SirkPlatformPortalManagement || typeof window.SirkPlatformPortalManagement.mount !== "function") {
             host.innerHTML = '<div class="sirk-card"><h3>Zarządzanie</h3><p>Renderer MyScripts nie został załadowany.</p></div>';
             return;
         }
         if (force || !host.querySelector(".sirk-management-shell")) {
             host.innerHTML = "";
-            window.MyCompanyPortalManagement.mount(host);
+            window.SirkPlatformPortalManagement.mount(host);
         }
     }
 
@@ -141,7 +141,7 @@
         var portalRoot = root();
         if (!portalRoot) return;
         var sidebar = portalRoot.querySelector(".sirk-sidebar,.sirk-nav,.sirk-portal-sidebar,[data-sirk-sidebar]");
-        portalRoot.classList.toggle("mycompany-sidebar-collapsed", value);
+        portalRoot.classList.toggle("sirk-platform-sidebar-collapsed", value);
         portalRoot.classList.toggle("is-sidebar-collapsed", value);
         portalRoot.setAttribute("data-sidebar-collapsed", value ? "1" : "0");
         if (sidebar) {
@@ -196,13 +196,13 @@
         if (!portalRoot) return false;
         applyCollapsed(collapsedValue());
         hideLegacySubmenu(portalRoot);
-        if (!portalRoot.__myCompanyFinalObserver) {
-            portalRoot.__myCompanyFinalObserver = new MutationObserver(function () {
+        if (!portalRoot.__sirkPlatformFinalObserver) {
+            portalRoot.__sirkPlatformFinalObserver = new MutationObserver(function () {
                 hideLegacySubmenu(portalRoot);
                 applyCollapsed(collapsedValue());
                 if (managementActive) mountManagement(false);
             });
-            portalRoot.__myCompanyFinalObserver.observe(portalRoot, { childList: true, subtree: true });
+            portalRoot.__sirkPlatformFinalObserver.observe(portalRoot, { childList: true, subtree: true });
         }
         return true;
     }

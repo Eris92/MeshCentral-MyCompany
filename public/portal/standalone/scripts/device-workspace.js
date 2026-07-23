@@ -1,11 +1,11 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalDeviceWorkspaceLoaded) return;
-    window.__myCompanyPortalDeviceWorkspaceLoaded = true;
+    if (window.__sirkPlatformPortalDeviceWorkspaceLoaded) return;
+    window.__sirkPlatformPortalDeviceWorkspaceLoaded = true;
 
     var content = document.getElementById("sirkStandaloneContent");
-    var core = window.MyCompanyCore;
+    var core = window.SirkPlatformCore;
     var selectedNodeId = "";
     var selectedNode = null;
     var inventory = null;
@@ -73,7 +73,7 @@
     function t(key) { return TEXT[language()][key] || key; }
 
     function commandModule() {
-        return window.MyCompanyModules && window.MyCompanyModules.mycommands || null;
+        return window.SirkPlatformModules && window.SirkPlatformModules.mycommands || null;
     }
 
     function localized(item, field) {
@@ -123,7 +123,7 @@
 
     function getInventory() {
         if (inventory) return Promise.resolve(inventory);
-        if (!core || typeof core.api !== "function") return Promise.reject(new Error("MyCompany API is unavailable."));
+        if (!core || typeof core.api !== "function") return Promise.reject(new Error("SirkPlatform API is unavailable."));
         return core.api("portal", "devices").then(function (value) {
             inventory = {
                 nodes: Array.isArray(value && value.nodes) ? value.nodes : [],
@@ -142,13 +142,13 @@
     }
 
     function nativeRootUrl() {
-        var url = new URL(String(window.__MYCOMPANY_NATIVE_URL__ || "/meshcentral/"), window.location.href);
+        var url = new URL(String(window.__SIRK_PLATFORM_NATIVE_URL__ || "/meshcentral/"), window.location.href);
         url.searchParams.set("sirkNative", "1");
         return url.href;
     }
 
     function nativeDeviceUrl(node) {
-        var url = new URL(String(window.__MYCOMPANY_NATIVE_URL__ || "/meshcentral/"), window.location.href);
+        var url = new URL(String(window.__SIRK_PLATFORM_NATIVE_URL__ || "/meshcentral/"), window.location.href);
         url.pathname = url.pathname.replace(/meshcentral\/?$/i, "");
         if (!url.pathname) url.pathname = "/";
         if (url.pathname.charAt(url.pathname.length - 1) !== "/") url.pathname += "/";
@@ -268,7 +268,7 @@
             if (!parent) break;
             var child = parent.firstElementChild;
             while (child && child !== current) {
-                if (!child.contains(anchor)) child.classList.add("mycompany-native-bridge-hidden");
+                if (!child.contains(anchor)) child.classList.add("sirk-platform-native-bridge-hidden");
                 child = child.nextElementSibling;
             }
             current = parent;
@@ -277,33 +277,33 @@
 
     function installNativeStage(win, panel, type) {
         var doc = win.document;
-        var style = doc.getElementById("myCompanyNativeBridgeStyle");
+        var style = doc.getElementById("sirkPlatformNativeBridgeStyle");
         if (!style) {
             style = doc.createElement("style");
-            style.id = "myCompanyNativeBridgeStyle";
+            style.id = "sirkPlatformNativeBridgeStyle";
             style.textContent = [
                 "html,body{width:100%!important;height:100%!important;margin:0!important;overflow:hidden!important;background:#111!important}",
-                "#myCompanyNativeBridgeStage{position:fixed!important;inset:0!important;z-index:2147483640!important;display:block!important;width:100%!important;height:100%!important;overflow:hidden!important;background:#111!important}",
-                ".mycompany-native-bridge-panel{position:relative!important;inset:auto!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;display:block!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;margin:0!important}",
-                ".mycompany-native-bridge-information{overflow:auto!important;background:#fff!important;color:#111!important}",
-                ".mycompany-native-bridge-hidden{display:none!important}",
-                ".mycompany-native-bridge-panel #termarea3xdiv{top:0!important;bottom:30px!important}",
-                ".mycompany-native-bridge-panel #p13toolbar{top:0!important}",
-                ".mycompany-native-bridge-panel #fileArea4{height:calc(100% - 54px)!important}",
-                ".mycompany-native-bridge-panel #Desk{max-width:100%!important;max-height:100%!important}"
+                "#sirkPlatformNativeBridgeStage{position:fixed!important;inset:0!important;z-index:2147483640!important;display:block!important;width:100%!important;height:100%!important;overflow:hidden!important;background:#111!important}",
+                ".sirk-platform-native-bridge-panel{position:relative!important;inset:auto!important;left:auto!important;top:auto!important;right:auto!important;bottom:auto!important;display:block!important;width:100%!important;height:100%!important;min-height:0!important;overflow:hidden!important;margin:0!important}",
+                ".sirk-platform-native-bridge-information{overflow:auto!important;background:#fff!important;color:#111!important}",
+                ".sirk-platform-native-bridge-hidden{display:none!important}",
+                ".sirk-platform-native-bridge-panel #termarea3xdiv{top:0!important;bottom:30px!important}",
+                ".sirk-platform-native-bridge-panel #p13toolbar{top:0!important}",
+                ".sirk-platform-native-bridge-panel #fileArea4{height:calc(100% - 54px)!important}",
+                ".sirk-platform-native-bridge-panel #Desk{max-width:100%!important;max-height:100%!important}"
             ].join("");
             (doc.head || doc.documentElement).appendChild(style);
         }
-        var stage = doc.getElementById("myCompanyNativeBridgeStage");
+        var stage = doc.getElementById("sirkPlatformNativeBridgeStage");
         if (!stage) {
             stage = doc.createElement("div");
-            stage.id = "myCompanyNativeBridgeStage";
+            stage.id = "sirkPlatformNativeBridgeStage";
             doc.body.appendChild(stage);
         }
         hideChromeBefore(panel, nativeAnchor(panel, type));
         stage.appendChild(panel);
-        panel.classList.add("mycompany-native-bridge-panel");
-        if (type === "registry" || type === "software" || type === "amt") panel.classList.add("mycompany-native-bridge-information");
+        panel.classList.add("sirk-platform-native-bridge-panel");
+        if (type === "registry" || type === "software" || type === "amt") panel.classList.add("sirk-platform-native-bridge-information");
         return panel;
     }
 

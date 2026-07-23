@@ -1,8 +1,8 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalUiContractLoaded) return;
-    window.__myCompanyPortalUiContractLoaded = true;
+    if (window.__sirkPlatformPortalUiContractLoaded) return;
+    window.__sirkPlatformPortalUiContractLoaded = true;
 
     var root = document.getElementById("sirkPortalRoot");
     if (!root) return;
@@ -80,7 +80,7 @@
             if (columns[2]) columns[2].classList.add("mc-portal-module-details");
         }
 
-        var managementHost = shell.closest(".mycompany-management-host");
+        var managementHost = shell.closest(".sirk-platform-management-host");
         var editMode = !!(
             managementHost && managementHost.classList.contains("is-management-edit-mode") ||
             shell.querySelector(".mc-tree-script-actions:not(:empty),.sirk-script-actions:not(:empty)")
@@ -114,11 +114,11 @@
     }
 
     function ensureFrameStyle(doc) {
-        if (!doc || !doc.head || doc.getElementById("mycompany-portal-ui-contract-style")) return;
-        var source = document.getElementById("mycompany-portal-ui-contract-style");
+        if (!doc || !doc.head || doc.getElementById("sirk-platform-portal-ui-contract-style")) return;
+        var source = document.getElementById("sirk-platform-portal-ui-contract-style");
         if (!source || !source.href) return;
         var link = doc.createElement("link");
-        link.id = "mycompany-portal-ui-contract-style";
+        link.id = "sirk-platform-portal-ui-contract-style";
         link.rel = "stylesheet";
         link.href = source.href;
         doc.head.appendChild(link);
@@ -145,7 +145,7 @@
         function apply() {
             try {
                 var doc = frame.contentDocument;
-                var admin = doc && doc.getElementById("mycompany-admin");
+                var admin = doc && doc.getElementById("sirk-platform-admin");
                 if (!admin || !doc.body) return;
 
                 var adminRoot = doc.getElementById("sirkPortalRoot") || doc.body;
@@ -156,11 +156,11 @@
                 syncFrameEnvironment(doc, adminRoot);
                 decorate(adminRoot);
 
-                if (!frame.__myCompanyPortalUiObserver) {
-                    frame.__myCompanyPortalUiObserver = new MutationObserver(function () {
+                if (!frame.__sirkPlatformPortalUiObserver) {
+                    frame.__sirkPlatformPortalUiObserver = new MutationObserver(function () {
                         decorate(adminRoot);
                     });
-                    frame.__myCompanyPortalUiObserver.observe(adminRoot, { childList: true, subtree: true });
+                    frame.__sirkPlatformPortalUiObserver.observe(adminRoot, { childList: true, subtree: true });
                 }
             } catch (error) {}
         }
@@ -168,7 +168,7 @@
         if (frame.getAttribute("data-portal-ui-contract") !== "1") {
             frame.setAttribute("data-portal-ui-contract", "1");
             frame.addEventListener("load", function () {
-                frame.__myCompanyPortalUiObserver = null;
+                frame.__sirkPlatformPortalUiObserver = null;
                 window.setTimeout(apply, 0);
                 window.setTimeout(apply, 250);
             });
@@ -192,7 +192,7 @@
     root.addEventListener("click", function () { window.setTimeout(schedule, 0); }, true);
     window.addEventListener("sirkportal:languagechange", schedule);
 
-    window.MyCompanyPortalUiContract = {
+    window.SirkPlatformPortalUiContract = {
         decorate: decorate,
         refresh: schedule
     };

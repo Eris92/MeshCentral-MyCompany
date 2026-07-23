@@ -9,8 +9,8 @@ function read(relative) {
     return fs.readFileSync(path.join(root, relative), "utf8");
 }
 
-var terminal = read("public/portal-terminal-connect.js");
-var nav = read("public/portal-standalone-nav.js");
+var terminal = read("public/portal/standalone/scripts/terminal-connect.js");
+var nav = read("public/portal/standalone/scripts/navigation.js");
 
 [
     "Powłoka Admina",

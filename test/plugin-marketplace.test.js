@@ -8,9 +8,9 @@ var root = path.resolve(__dirname, "..");
 function read(relative) { return fs.readFileSync(path.join(root, relative), "utf8"); }
 
 var catalog = JSON.parse(read("marketplace.json"));
-var client = read("web/admin-marketplace.js");
-var admin = read("MyCompanyAdmin.js");
-var view = read("views/MyCompany.handlebars");
+var client = read("web/admin/admin-marketplace.js");
+var admin = read("admin.js");
+var view = read("views/SIRK-Portal.handlebars");
 
 assert.strictEqual(catalog.schemaVersion, 1, "Marketplace schema version is required");
 assert(Array.isArray(catalog.plugins) && catalog.plugins.length >= 3, "Marketplace must contain curated plugins");
@@ -35,7 +35,7 @@ catalog.plugins.forEach(function (plugin) {
     assert(client.indexOf(contract) >= 0, "Missing Marketplace UI contract: " + contract);
 });
 
-assert(admin.indexOf('"admin-marketplace.js": ["web/admin-marketplace.js"') >= 0, "Marketplace UI asset must be exposed");
+assert(admin.indexOf('"admin-marketplace.js": ["web/admin/admin-marketplace.js"') >= 0, "Marketplace UI asset must be exposed");
 assert(admin.indexOf('"marketplace.json": ["marketplace.json"') >= 0, "Marketplace catalog asset must be exposed");
 assert(view.indexOf("asset=admin-marketplace.js") >= 0, "Marketplace UI must be loaded by the admin view");
 

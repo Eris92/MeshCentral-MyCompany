@@ -4,7 +4,7 @@
     if (window.SirkIcons) return;
 
     function base() {
-        var assetBase = String(window.__MYCOMPANY_ASSET_BASE__ || "").replace(/\/$/, "");
+        var assetBase = String(window.__SIRK_PLATFORM_ASSET_BASE__ || "").replace(/\/$/, "");
         return assetBase ? assetBase + "/icons/sirk-ui.svg" : "";
     }
 

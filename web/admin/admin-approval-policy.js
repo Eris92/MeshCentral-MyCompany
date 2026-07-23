@@ -1,11 +1,11 @@
 (function () {
     "use strict";
 
-    var root = document.getElementById("mycompany-admin");
-    if (!root || window.__myCompanyApprovalPolicyUi) return;
-    window.__myCompanyApprovalPolicyUi = true;
+    var root = document.getElementById("sirk-platform-admin");
+    if (!root || window.__sirkPlatformApprovalPolicyUi) return;
+    window.__sirkPlatformApprovalPolicyUi = true;
 
-    var data = window.MyCompanyAdminData || {};
+    var data = window.SirkPlatformAdminData || {};
     var titleMap = {
         "Move Requests": "moverequests",
         "My Commands": "mycommands",
@@ -28,10 +28,10 @@
                 if (!panelHeading || !/^approval\s*center$/i.test(String(panelHeading.textContent || "").trim())) return;
                 var heading = card.querySelector("h3");
                 var type = heading && titleMap[String(heading.textContent || "").trim()];
-                if (!type || card.querySelector('[data-mycompany-noapproval="' + type + '"]')) return;
+                if (!type || card.querySelector('[data-sirk-platform-noapproval="' + type + '"]')) return;
                 var label = document.createElement("label");
                 label.className = "mc-admin-check mc-admin-noapproval";
-                label.setAttribute("data-mycompany-noapproval", type);
+                label.setAttribute("data-sirk-platform-noapproval", type);
                 var input = document.createElement("input");
                 input.type = "checkbox";
                 input.checked = configured(type);
@@ -52,9 +52,9 @@
     function selectedPolicies() {
         var result = {};
         Array.prototype.forEach.call(
-            root.querySelectorAll(".mc-admin-settings-panel [data-mycompany-noapproval]"),
+            root.querySelectorAll(".mc-admin-settings-panel [data-sirk-platform-noapproval]"),
             function (label) {
-                var type = label.getAttribute("data-mycompany-noapproval");
+                var type = label.getAttribute("data-sirk-platform-noapproval");
                 var input = label.querySelector('input[type="checkbox"]');
                 result[type] = !!(input && input.checked);
             }

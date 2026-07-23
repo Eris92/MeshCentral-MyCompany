@@ -1,11 +1,11 @@
 (function () {
     "use strict";
 
-    var root = document.getElementById("mycompany-admin");
+    var root = document.getElementById("sirk-platform-admin");
     if (!root) return;
 
-    var data = window.MyCompanyAdminData || {};
-    var content = document.getElementById("mycompany-admin-content");
+    var data = window.SirkPlatformAdminData || {};
+    var content = document.getElementById("sirk-platform-admin-content");
     var active = "overview";
     var settingsSection = "portal";
     var debugSection = "config";
@@ -242,7 +242,7 @@
     }
 
     function pin() {
-        return root.getAttribute("data-plugin") || "MyCompany";
+        return root.getAttribute("data-plugin") || "SirkPlatform";
     }
 
     function parseResponse(response) {
@@ -381,7 +381,7 @@
             });
         }).then(function (result) {
             data = result.snapshot;
-            window.MyCompanyAdminData = data;
+            window.SirkPlatformAdminData = data;
             resetDraft();
             status.textContent = "Saved";
             render();
@@ -410,7 +410,7 @@
         sectionHeader(
             content,
             "Overview",
-            "Tylko do odczytu: ogólny stan wszystkich modułów MyCompany."
+            "Tylko do odczytu: ogólny stan wszystkich modułów SirkPlatform."
         );
         var grid = element("div", "mc-admin-grid");
         (data.modules || []).forEach(function (module) {
@@ -858,8 +858,8 @@
         content.appendChild(layout);
 
         if (settingsSection === "portal") {
-            if (window.MyCompanyPortalAdmin && typeof window.MyCompanyPortalAdmin.render === "function") {
-                window.MyCompanyPortalAdmin.render(panel);
+            if (window.SirkPlatformPortalAdmin && typeof window.SirkPlatformPortalAdmin.render === "function") {
+                window.SirkPlatformPortalAdmin.render(panel);
             } else {
                 sectionHeader(panel, "SirK Portal", "Ładowanie ustawień Portalu…");
             }
@@ -909,7 +909,7 @@
             select.appendChild(remove);
             if (plugin.protected) {
                 select.disabled = true;
-                select.title = "MyCompany nie może zarządzać własnym procesem z tego panelu.";
+                select.title = "SirkPlatform nie może zarządzać własnym procesem z tego panelu.";
             }
             select.onchange = function () {
                 var operation = select.value;
@@ -1044,12 +1044,12 @@
             };
         }
         if (debugSection === "logs") {
-            return data.diagnostics && data.diagnostics.logs || "Brak wpisów logu MyCompany.";
+            return data.diagnostics && data.diagnostics.logs || "Brak wpisów logu SirkPlatform.";
         }
         return data.diagnostics && data.diagnostics.errors ||
             (data.moduleLoadErrors && Object.keys(data.moduleLoadErrors).length
                 ? JSON.stringify(data.moduleLoadErrors, null, 2)
-                : "Brak zarejestrowanych błędów MyCompany.");
+                : "Brak zarejestrowanych błędów SirkPlatform.");
     }
 
     function debug() {

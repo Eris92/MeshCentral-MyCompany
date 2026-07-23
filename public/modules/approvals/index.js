@@ -271,7 +271,7 @@
         });
     }
 
-    var module = window.MyCompanyModuleShell.create({
+    var module = window.SirkPlatformModuleShell.create({
         key: "approvalcenter",
         title: "Approval Center",
         menuTitle: "Approval Center",
@@ -325,5 +325,5 @@
         }
     });
 
-    window.MyCompanyModules.approvalcenter = module;
+    window.SirkPlatformModules.approvalcenter = module;
 }());

@@ -1,12 +1,12 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalCollapseIsolationLoaded) return;
-    window.__myCompanyPortalCollapseIsolationLoaded = true;
+    if (window.__sirkPlatformPortalCollapseIsolationLoaded) return;
+    window.__sirkPlatformPortalCollapseIsolationLoaded = true;
 
     function bindShell(shell) {
-        if (!shell || shell.__myCompanyCollapseIsolationBound) return;
-        shell.__myCompanyCollapseIsolationBound = true;
+        if (!shell || shell.__sirkPlatformCollapseIsolationBound) return;
+        shell.__sirkPlatformCollapseIsolationBound = true;
 
         // The Management renderer already handles toolbar actions on this element.
         // This listener is registered afterwards, so it only stops the handled event
@@ -28,8 +28,8 @@
         var portal = document.getElementById("sirkPortalRoot");
         if (!portal) return false;
         bindExisting(portal);
-        if (!portal.__myCompanyCollapseIsolationObserver) {
-            portal.__myCompanyCollapseIsolationObserver = new MutationObserver(function (records) {
+        if (!portal.__sirkPlatformCollapseIsolationObserver) {
+            portal.__sirkPlatformCollapseIsolationObserver = new MutationObserver(function (records) {
                 records.forEach(function (record) {
                     Array.prototype.forEach.call(record.addedNodes || [], function (node) {
                         if (!node || node.nodeType !== 1) return;
@@ -38,7 +38,7 @@
                     });
                 });
             });
-            portal.__myCompanyCollapseIsolationObserver.observe(portal, { childList: true, subtree: true });
+            portal.__sirkPlatformCollapseIsolationObserver.observe(portal, { childList: true, subtree: true });
         }
         return true;
     }

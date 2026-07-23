@@ -115,7 +115,7 @@ function Export-CsvFile {
 
 function Get-AdminAssetMap {
     param([string]$Root)
-    $source = [IO.File]::ReadAllText((Join-Path $Root 'MyCompanyAdmin.js'))
+    $source = [IO.File]::ReadAllText((Join-Path $Root 'SirkPlatformAdmin.js'))
     $map = @{}
     $pattern = '(?ms)"(?<asset>[^"]+)"\s*:\s*\[\s*"(?<path>[^"]+)"\s*,'
     foreach ($match in [regex]::Matches($source, $pattern)) {
@@ -285,7 +285,7 @@ function Restore-Backup {
     param([string]$Root, [string]$PortalName, [string]$Path)
     $temporary = $null
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
-        $temporary = Join-Path ([IO.Path]::GetTempPath()) ('MyCompanyRestore-' + [guid]::NewGuid().ToString('N'))
+        $temporary = Join-Path ([IO.Path]::GetTempPath()) ('SirkPlatformRestore-' + [guid]::NewGuid().ToString('N'))
         Expand-Archive -LiteralPath $Path -DestinationPath $temporary -Force
         $base = $temporary
     } elseif (Test-Path -LiteralPath $Path -PathType Container) {
@@ -324,13 +324,13 @@ function Complete-Result {
 try {
     $root = [IO.Path]::GetFullPath($RootPath)
     if (-not (Test-Path -LiteralPath $root -PathType Container)) { throw "Plugin root does not exist: $root" }
-    foreach ($required in @('plugin-main.js', 'MyCompanyAdmin.js')) {
+    foreach ($required in @('plugin-main.js', 'SirkPlatformAdmin.js')) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $required) -PathType Leaf)) { throw "Required file is missing: $required" }
     }
 
-    if (-not $BackupRoot) { $BackupRoot = Join-Path (Split-Path -Parent $root) 'MyCompany-PortalGuiBackups' }
+    if (-not $BackupRoot) { $BackupRoot = Join-Path (Split-Path -Parent $root) 'SirkPlatform-PortalGuiBackups' }
     $BackupRoot = [IO.Path]::GetFullPath($BackupRoot)
-    if (-not $ReportPath) { $ReportPath = Join-Path (Join-Path ([IO.Path]::GetTempPath()) 'MyCompany-PortalGuiAudit') ('{0}-{1}-{2}-{3}' -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $Portal, $Scope, $Action) }
+    if (-not $ReportPath) { $ReportPath = Join-Path (Join-Path ([IO.Path]::GetTempPath()) 'SirkPlatform-PortalGuiAudit') ('{0}-{1}-{2}-{3}' -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $Portal, $Scope, $Action) }
     $ReportPath = [IO.Path]::GetFullPath($ReportPath)
     New-Item -ItemType Directory -Path $ReportPath -Force | Out-Null
     if ($Force) { $ConfirmPreference = 'None' }

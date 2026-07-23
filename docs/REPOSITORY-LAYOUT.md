@@ -2,16 +2,31 @@
 
 ## Nazwy produktu
 
-- nazwa techniczna pluginu: `SIRK-Portal`;
+- repozytorium i techniczna nazwa pluginu: `SIRK-Portal`;
 - nazwa wyświetlana: `SIRK Management Platform`;
-- nazwa skrócona w interfejsie: `SIRK Platform`.
+- nazwa skrócona: `SIRK Platform`.
 
-Repozytorium nie utrzymuje zgodności ze strukturą testową `MyCompany`. Stare entrypointy, shimy, aliasy, katalogi danych i ścieżki assetów są usunięte.
+Repozytorium nie utrzymuje zgodności z testową strukturą `MyCompany`. Stare entrypointy, shimy, aliasy, migracje danych i niekanoniczne ścieżki są usunięte.
+
+## Hierarchia indeksów
+
+```text
+AGENTS.md
+  -> docs/INDEX.md
+       -> server/INDEX.md
+       -> public/INDEX.md
+       -> web/INDEX.md
+       -> scripts/INDEX.md
+       -> test/INDEX.md
+```
+
+Odczyt repozytorium zaczyna się od indeksów. Po wybraniu warstwy należy czytać tylko wskazany entrypoint lub moduł oraz jego bezpośrednie zależności.
 
 ## Struktura
 
 ```text
 SIRK-Portal/
+├── AGENTS.md
 ├── SIRK-Portal.js
 ├── plugin-main.js
 ├── plugin-main-standalone.js
@@ -19,6 +34,7 @@ SIRK-Portal/
 ├── config.json
 ├── package.json
 ├── server/
+│   ├── INDEX.md
 │   ├── core/
 │   │   ├── runtime.js
 │   │   ├── runtime-portal.js
@@ -26,7 +42,6 @@ SIRK-Portal/
 │   │   ├── secret-store.js
 │   │   ├── approval-service.js
 │   │   ├── device-service.js
-│   │   ├── integration-service.js
 │   │   └── pozostałe usługi wspólne
 │   └── modules/
 │       ├── approval-center/
@@ -37,153 +52,103 @@ SIRK-Portal/
 │       ├── portal/
 │       └── security/
 ├── public/
+│   ├── INDEX.md
 │   ├── portal/
-│   │   ├── standalone/
-│   │   │   ├── index.html
-│   │   │   ├── login.html
-│   │   │   ├── scripts/
-│   │   │   └── styles/
-│   │   ├── vendor/
-│   │   ├── index.js
-│   │   └── portal.css
 │   ├── native/
-│   │   ├── mesh-plugin-core.js
-│   │   ├── portal-launcher.js
-│   │   ├── device-tabs.js
-│   │   ├── device-tabs.css
-│   │   └── approval.css
 │   ├── shared/
-│   │   ├── core.js
-│   │   ├── runtime.js
-│   │   ├── module-shell.js
-│   │   ├── icon-registry.js
-│   │   ├── styles/
-│   │   └── ui/
 │   └── modules/
-│       ├── approvals/
-│       ├── automation/
-│       ├── commands/
-│       ├── jira/
-│       ├── move-requests/
-│       └── security/
 ├── web/
+│   ├── INDEX.md
 │   └── admin/
-├── assets/
-│   └── icons/
-│       └── sirk-ui.svg
-├── views/
-│   └── SIRK-Portal.handlebars
-├── tools/
-│   └── install/
+├── assets/icons/sirk-ui.svg
+├── views/SIRK-Portal.handlebars
+├── tools/install/
 ├── scripts/
+│   └── INDEX.md
 ├── test/
+│   └── INDEX.md
 ├── docs/
+│   ├── INDEX.md
+│   ├── PROJECT-STATE.md
+│   ├── REPOSITORY-LAYOUT.md
+│   ├── portal-integration.md
+│   └── agent/
 └── seed/
 ```
 
-## Zasady backendu
+## Backend
 
-Cały kod Node.js i integracje z MeshCentral znajdują się w `server/`.
+Cały kod Node.js i integracje MeshCentral znajdują się w `server/`.
 
 - `server/core/` zawiera runtime, storage, security, integracje i wspólne usługi;
 - `server/modules/` zawiera moduły funkcjonalne;
-- każdy moduł używa katalogu `kebab-case` i posiada `index.js`;
-- katalogi `core/` oraz `modules/` w root są zabronione;
-- backend nie może być umieszczany w `public/`.
+- katalogi `core/` i `modules/` w root są zabronione;
+- backend nie może znajdować się w `public/`.
 
-Kanoniczny katalog danych runtime:
+Jedyny katalog danych:
 
 ```text
 meshcentral-data/sirk-platform-data
 ```
 
-Wtyczka testowa nie migruje i nie zachowuje danych z `mycompany-data`.
+Plugin nie odczytuje i nie migruje `mycompany-data`.
 
-## Zasady frontendu
+## Frontend
 
-`public/` zawiera wyłącznie cztery warstwy aplikacyjne:
+`public/` zawiera dokładnie cztery warstwy:
 
 - `public/portal/` — samodzielny SIRK Portal;
 - `public/native/` — integracja z natywnym GUI MeshCentral;
 - `public/shared/` — wspólny runtime, komponenty i style;
 - `public/modules/` — pojedyncze renderery modułów.
 
-Pliki aplikacyjne nie mogą leżeć bezpośrednio w `public/`. Katalog `public/shared-ui/` jest usunięty; jego zawartość znajduje się w `public/shared/ui/`.
+Pliki aplikacyjne nie mogą leżeć bezpośrednio w `public/`. `public/shared-ui/` jest zabroniony.
 
 ## Moduły
 
-Backend i frontend jednego modułu są oddzielnymi warstwami tego samego modułu:
+Backend i frontend jednego modułu są dwiema warstwami tego samego kontraktu:
 
 ```text
 server/modules/approval-center/index.js
 public/modules/approvals/index.js
 ```
 
-Dla jednego modułu może istnieć tylko jeden renderer. Zabronione jest utrzymywanie drugiego pliku w płaskim `public/`.
+Dla jednego modułu może istnieć tylko jeden renderer.
 
 ## Loadery
 
-Przepływ ładowania:
-
 ```text
 SIRK-Portal.js
-  → plugin-main-standalone.js
-    → plugin-main.js
-      → server/core/runtime-portal.js
-        → server/core/runtime.js
-          → server/modules/*
+  -> plugin-main-standalone.js
+    -> plugin-main.js
+      -> server/core/runtime-portal.js
+        -> server/core/runtime.js
+          -> server/modules/*
 ```
 
-Frontend natywny jest ładowany przez jedną mapę assetów w `admin.js`. Publiczne nazwy endpointów mogą pozostać stabilne, ale każda nazwa wskazuje na dokładnie jeden plik w strukturze kanonicznej.
-
-Standalone Portal używa jednej mapy assetów w `plugin-main-standalone.js` i jednego endpointu API:
-
-```text
-/sirk/api/v1/approvals
-```
+- `admin.js` utrzymuje mapę assetów natywnego UI i panelu administracyjnego;
+- `plugin-main-standalone.js` utrzymuje mapę assetów standalone Portalu;
+- każda publiczna nazwa assetu wskazuje dokładnie jeden kanoniczny plik.
 
 ## Panel administracyjny
 
-Wszystkie assety panelu administracyjnego znajdują się w:
-
 ```text
+admin.js
+views/SIRK-Portal.handlebars
 web/admin/
 ```
 
-Jedyny widok panelu:
+Nie istnieje alias danych `window.MyCompanyAdminData`. Kanoniczny obiekt to `window.SirkPlatformAdminData`.
+
+## Instalacja i repozytorium
 
 ```text
-views/SIRK-Portal.handlebars
-```
-
-## Ikony
-
-Kanoniczny sprite:
-
-```text
-assets/icons/sirk-ui.svg
-```
-
-Rejestr przeglądarkowy:
-
-```text
-public/shared/icon-registry.js
-```
-
-Standardowe ikony nie powinny być kopiowane jako powtarzające się inline SVG w wielu modułach.
-
-## Instalacja
-
-Kanoniczne instalatory:
-
-```text
+https://github.com/Eris92/SIRK-Portal
 Install-SIRK-Portal-FromGit.ps1
 Install-SIRK-Portal-FromGit_RUN.ps1
 tools/install/Install-SIRK-Portal-FromGit.ps1
 tools/install/Install-SIRK-Portal-FromGit_RUN.ps1
 ```
-
-Instalator używa `SIRK-Portal.js`, katalogu pluginu `SIRK-Portal` oraz danych `sirk-platform-data`.
 
 ## Walidacja
 
@@ -191,12 +156,4 @@ Instalator używa `SIRK-Portal.js`, katalogu pluginu `SIRK-Portal` oraz danych `
 npm test
 ```
 
-`scripts/validate-repository-layout.js` blokuje:
-
-- stare entrypointy i widoki `MyCompany`;
-- katalogi `core/` i `modules/` w root;
-- płaskie pliki aplikacyjne w `public/`;
-- katalog `public/shared-ui/`;
-- stare instalatory;
-- podwójne renderery;
-- niekanoniczne ścieżki loaderów.
+`scripts/validate-repository-layout.js` blokuje stare entrypointy i widoki `MyCompany`, root `core/` i `modules/`, płaskie assety aplikacyjne w `public/`, `public/shared-ui/`, stare instalatory, podwójne renderery i niekanoniczne ścieżki loaderów.

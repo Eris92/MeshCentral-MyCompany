@@ -1,10 +1,10 @@
 (function () {
     "use strict";
 
-    if (window.__myCompanyPortalApprovalLoaded) return;
-    window.__myCompanyPortalApprovalLoaded = true;
+    if (window.__sirkPlatformPortalApprovalLoaded) return;
+    window.__sirkPlatformPortalApprovalLoaded = true;
 
-    var core = window.MyCompanyCore;
+    var core = window.SirkPlatformCore;
     var state = {
         host: null,
         providers: [],
@@ -221,7 +221,7 @@
         if (!details) return;
         details.innerHTML = "";
         details.appendChild(el("h2", "", state.provider ? titleForProvider(state.provider) : "Approval Center"));
-        details.appendChild(el("p", "sirk-muted", state.provider ? "Requests for the selected provider." : "Requests from all MyCompany approval providers."));
+        details.appendChild(el("p", "sirk-muted", state.provider ? "Requests for the selected provider." : "Requests from all SirkPlatform approval providers."));
 
         var rows = filteredRows();
         if (!rows.length) {
@@ -316,7 +316,7 @@
         });
     }
 
-    window.MyCompanyPortalApproval = {
+    window.SirkPlatformPortalApproval = {
         mount: mount,
         refresh: loadRows
     };

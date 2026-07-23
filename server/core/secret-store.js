@@ -8,7 +8,7 @@ module.exports.createSecretStore = function (options) {
         fs.mkdirSync(path.dirname(keyPath), { recursive: true });
         if (!fs.existsSync(keyPath)) fs.writeFileSync(keyPath, crypto.randomBytes(32), { mode: 0o600 });
         var value = fs.readFileSync(keyPath);
-        if (value.length !== 32) throw new Error("Invalid MyCompany secret key.");
+        if (value.length !== 32) throw new Error("Invalid SirkPlatform secret key.");
         return value;
     }
     function encrypt(value) {
@@ -18,16 +18,16 @@ module.exports.createSecretStore = function (options) {
     }
     function decrypt(value) {
         if (!value || value.version !== 1 || typeof value.iv !== "string" || typeof value.tag !== "string" || typeof value.data !== "string") {
-            throw new Error("Invalid MyCompany encrypted secret store.");
+            throw new Error("Invalid SirkPlatform encrypted secret store.");
         }
         var iv = Buffer.from(value.iv, "base64");
         var tag = Buffer.from(value.tag, "base64");
         var encrypted = Buffer.from(value.data, "base64");
-        if (iv.length !== 12 || tag.length !== 16) throw new Error("Invalid MyCompany encrypted secret store.");
+        if (iv.length !== 12 || tag.length !== 16) throw new Error("Invalid SirkPlatform encrypted secret store.");
         var decipher = crypto.createDecipheriv("aes-256-gcm", key(), iv);
         decipher.setAuthTag(tag);
         var result = JSON.parse(Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8"));
-        if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error("Invalid MyCompany encrypted secret store.");
+        if (!result || typeof result !== "object" || Array.isArray(result)) throw new Error("Invalid SirkPlatform encrypted secret store.");
         return result;
     }
     function readAll() {
@@ -37,7 +37,7 @@ module.exports.createSecretStore = function (options) {
             try {
                 cache = decrypt(JSON.parse(fs.readFileSync(dataPath, "utf8").replace(/^\uFEFF/, "")));
             } catch (error) {
-                throw new Error("Cannot read MyCompany secret store: " + String(error && error.message || error));
+                throw new Error("Cannot read SirkPlatform secret store: " + String(error && error.message || error));
             }
         }
         return shared.copy(cache);
