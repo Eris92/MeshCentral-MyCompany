@@ -28,6 +28,13 @@
 
     function t(key) { return TEXT[language()][key] || key; }
 
+    function branding() {
+        try {
+            var value = window.parent && window.parent.__MYCOMPANY_PORTAL_BRANDING__;
+            return value && typeof value === "object" ? value : {};
+        } catch (error) { return {}; }
+    }
+
     function visible(element) {
         return !!(element && (element.offsetWidth || element.offsetHeight || element.getClientRects().length));
     }
@@ -52,7 +59,41 @@
     }
 
     function shellHtml() {
-        return '<section class="sirk-login-hero"><div class="sirk-login-hero-content"><div class="sirk-login-mark">S</div><div class="sirk-login-product">SirK Portal</div><h1 data-login-text="heroTitle">' + t("heroTitle") + '</h1><p data-login-text="heroText">' + t("heroText") + '</p><div class="sirk-login-points"><span><i></i><b data-login-text="point1">' + t("point1") + '</b></span><span><i></i><b data-login-text="point2">' + t("point2") + '</b></span><span><i></i><b data-login-text="point3">' + t("point3") + '</b></span></div></div><div class="sirk-login-watermark">SIRK</div></section><section class="sirk-login-panel"><div class="sirk-login-card"><button class="sirk-login-language" type="button" data-login-language="1"></button><header><span data-login-text="access">' + t("access") + '</span><h2 data-login-text="loginTitle">' + t("loginTitle") + '</h2><p data-login-text="loginText">' + t("loginText") + '</p></header><div id="sirkNativeLoginHost"></div><a class="sirk-password-reset" href="https://passwordreset.microsoftonline.com/" target="_blank" rel="noopener noreferrer" data-login-text="reset">' + t("reset") + '</a><footer data-login-text="footer">' + t("footer") + '</footer></div></section>';
+        var config = branding();
+        var name = String(config.siteName || "SirK Portal").trim() || "SirK Portal";
+        return '<section class="sirk-login-hero"><div class="sirk-login-hero-content"><div class="sirk-login-mark">' + name.charAt(0).toUpperCase() + '</div><div class="sirk-login-product"></div><h1 data-login-text="heroTitle">' + t("heroTitle") + '</h1><p data-login-text="heroText">' + t("heroText") + '</p><div class="sirk-login-points"><span><i></i><b data-login-text="point1">' + t("point1") + '</b></span><span><i></i><b data-login-text="point2">' + t("point2") + '</b></span><span><i></i><b data-login-text="point3">' + t("point3") + '</b></span></div></div><div class="sirk-login-watermark">SIRK</div></section><section class="sirk-login-panel"><div class="sirk-login-card"><button class="sirk-login-language" type="button" data-login-language="1"></button><header><span data-login-text="access">' + t("access") + '</span><h2 data-login-text="loginTitle">' + t("loginTitle") + '</h2><p data-login-text="loginText">' + t("loginText") + '</p></header><div id="sirkNativeLoginHost"></div><a class="sirk-password-reset" target="_blank" rel="noopener noreferrer" data-login-text="reset">' + t("reset") + '</a><footer data-login-text="footer">' + t("footer") + '</footer></div></section>';
+    }
+
+    function applyBranding() {
+        var config = branding();
+        var name = String(config.siteName || "SirK Portal").trim() || "SirK Portal";
+        var icon = String(config.siteIconUrl || "").trim();
+        var product = document.querySelector(".sirk-login-product");
+        if (product) product.textContent = name;
+        var mark = document.querySelector(".sirk-login-mark");
+        if (mark) {
+            if (icon) {
+                mark.textContent = "";
+                var existing = mark.querySelector("img");
+                if (!existing) {
+                    existing = document.createElement("img");
+                    existing.alt = "";
+                    existing.style.width = "100%";
+                    existing.style.height = "100%";
+                    existing.style.objectFit = "contain";
+                    mark.appendChild(existing);
+                }
+                existing.src = icon;
+            } else {
+                mark.textContent = (name.charAt(0) || "S").toUpperCase();
+            }
+        }
+        var reset = document.querySelector(".sirk-password-reset");
+        if (reset) {
+            reset.hidden = config.showPasswordReset === false;
+            reset.style.display = config.showPasswordReset === false ? "none" : "";
+            reset.href = String(config.passwordResetUrl || "https://passwordreset.microsoftonline.com/");
+        }
     }
 
     function applyErrorLanguage(form) {
@@ -88,6 +129,7 @@
             else submit.textContent = t("login");
         }
         applyErrorLanguage(form);
+        applyBranding();
         var toggle = document.querySelector("[data-login-language]");
         if (toggle) {
             var toggleText = language() === "pl" ? "EN" : "PL";
