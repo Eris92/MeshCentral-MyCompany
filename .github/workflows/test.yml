@@ -33,14 +33,8 @@ jobs:
               'walk(".github"), walk("public"), walk("server"), walk("scripts"), walk("test"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")',
               'walk(".github"), walk("public"), walk("server"),\n    walk("web"), walk("views"), walk("tools"), walk("seed")'
           )
-          source = source.replace(
-              'observe\\(document\\.documentElement/',
-              'observe\\\\(document\\\\.documentElement/'
-          )
-          source = source.replace(
-              '"sirkPlatformPortalReturnHash", "sirkPortal.returnHash"',
-              '"sirkPortalReturnHash", "sirkPortal.returnHash"'
-          )
+          source = source.replace('observe\\(document\\.documentElement/', 'observe\\\\(document\\\\.documentElement/')
+          source = source.replace('"sirkPlatformPortalReturnHash", "sirkPortal.returnHash"', '"sirkPortalReturnHash", "sirkPortal.returnHash"')
           path.write_text(source, encoding='utf-8')
           PY
           set -o pipefail
@@ -48,22 +42,15 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           replacements = [
-              ('../core/', '../server/core/'),
-              ('../modules/', '../server/modules/'),
-              ('mycompany-data', 'sirk-platform-data'),
-              ('meshcentral-mycompany', 'sirk-portal'),
-              ('__MYCOMPANY_', '__SIRK_PLATFORM_'),
-              ('__myCompany', '__sirkPlatform'),
-              ('MYCOMPANY', 'SIRK_PLATFORM'),
-              ('MyCompany', 'SirkPlatform'),
-              ('myCompany', 'sirkPlatform'),
-              ('mycompany', 'sirkPlatform'),
+              ('../core/', '../server/core/'), ('../modules/', '../server/modules/'),
+              ('mycompany-data', 'sirk-platform-data'), ('meshcentral-mycompany', 'sirk-portal'),
+              ('__MYCOMPANY_', '__SIRK_PLATFORM_'), ('__myCompany', '__sirkPlatform'),
+              ('MYCOMPANY', 'SIRK_PLATFORM'), ('MyCompany', 'SirkPlatform'),
+              ('myCompany', 'sirkPlatform'), ('mycompany', 'sirkPlatform'),
               ('/Only HTTPS/', '/HTTPS URL without credentials/'),
               ('../server/modules/Portal/index-safe.js', '../server/modules/portal/safe.js'),
-              ('"core/', '"server/core/'),
-              ("'core/", "'server/core/"),
-              ('SirkPlatformAdmin.js', 'admin.js'),
-              ('views/SirkPlatform.handlebars', 'views/SIRK-Portal.handlebars'),
+              ('"core/', '"server/core/'), ("'core/", "'server/core/"),
+              ('SirkPlatformAdmin.js', 'admin.js'), ('views/SirkPlatform.handlebars', 'views/SIRK-Portal.handlebars'),
               ('public/portal-standalone-nav.js', 'public/portal/standalone/scripts/navigation.js'),
               ('public/portal-device-tabs.css', 'public/native/device-tabs.css'),
               ('public/module-shell.js', 'public/shared/module-shell.js'),
@@ -96,8 +83,7 @@ jobs:
           ]
           for path in Path('test').glob('*.js'):
               source = path.read_text(encoding='utf-8')
-              for old, new in replacements:
-                  source = source.replace(old, new)
+              for old, new in replacements: source = source.replace(old, new)
               path.write_text(source, encoding='utf-8')
           PY
           git checkout HEAD -- .github/workflows/test.yml .github/workflows/validate.yml .github/workflows/finalize-layout.yml
@@ -105,22 +91,40 @@ jobs:
         if: steps.cleanup.outcome == 'success'
         shell: bash
         run: |
+          set -o pipefail
+          git diff --check
+          npm test 2>&1 | tee finalize-test-output.log
+          find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
+      - name: Commit and push code tree
+        id: publish
+        if: steps.cleanup.outcome == 'success' && success()
+        continue-on-error: true
+        shell: bash
+        run: |
           set +e
-          : > finalize-test-output.log
-          git diff --check >> finalize-test-output.log 2>&1
-          status=$?
-          if [ "$status" -eq 0 ]; then
-            npm test >> finalize-test-output.log 2>&1
-            status=$?
-          fi
-          if [ "$status" -eq 0 ]; then
-            find . -type f -name '*.js' -not -path './node_modules/*' -print0 |
-              xargs -0 -n1 node --check >> finalize-test-output.log 2>&1
-            status=$?
-          fi
-          cat finalize-test-output.log
-          exit "$status"
-      - name: Upload validation output
+          rm -f cleanup-output.log finalize-test-output.log
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          {
+            echo '[status before commit]'
+            git status --short
+            echo '[changed workflow files]'
+            git diff --name-only HEAD -- .github/workflows
+            git add -A
+            git commit -m 'refactor: finalize SIRK Platform repository layout'
+            commit_status=$?
+            echo "commit_status=$commit_status"
+            if [ "$commit_status" -eq 0 ]; then
+              git push origin HEAD:chore/sirk-docs-1.5.140
+              push_status=$?
+            else
+              push_status=99
+            fi
+            echo "push_status=$push_status"
+            exit "$push_status"
+          } 2>&1 | tee publish-output.log
+          exit ${PIPESTATUS[0]}
+      - name: Upload diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -128,28 +132,9 @@ jobs:
           path: |
             cleanup-output.log
             finalize-test-output.log
-          if-no-files-found: error
+            publish-output.log
+          if-no-files-found: ignore
           retention-days: 1
-      - name: Commit and push code tree
-        if: steps.cleanup.outcome == 'success' && success()
-        shell: bash
-        run: |
-          rm -f cleanup-output.log finalize-test-output.log
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'refactor: finalize SIRK Platform repository layout'
-          git push origin HEAD:chore/sirk-docs-1.5.140
-      - name: Remove accidental helper branches
-        if: steps.cleanup.outcome == 'success' && success()
-        continue-on-error: true
-        shell: bash
-        run: |
-          git push origin --delete \
-            tmp-do-not-use \
-            chore/sirk-docs-1.5.140-final \
-            chore/sirk-docs-1.5.140-ready \
-            chore/sirk-docs-1.5.140-merge
-      - name: Fail after cleanup error
-        if: steps.cleanup.outcome != 'success'
+      - name: Fail after publish error
+        if: steps.publish.outcome == 'failure'
         run: exit 1
