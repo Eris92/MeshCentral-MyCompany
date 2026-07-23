@@ -46,17 +46,29 @@ module.exports.createManager = function (context) {
             typeof portal.sessionKeyHash === "string" && portal.sessionKeyHash === keyHash(value);
         return {
             enabled: validKey(value),
-            managedByMyCompany: managed,
+            managedBySirkPlatform: managed,
             managedExternally: validKey(value) && !managed,
             restartRequired: false
         };
     }
 
+    function nextBackupPath(backupRoot) {
+        var baseName = "config-before-session-persistence-" + timestamp();
+        var candidate = path.join(backupRoot, baseName + ".json");
+        var suffix = 0;
+        while (fs.existsSync(candidate)) {
+            suffix += 1;
+            candidate = path.join(backupRoot, baseName + "-" + suffix + ".json");
+        }
+        return candidate;
+    }
+
     function writeConfig(config) {
         var backupRoot = path.join(dataPath, "config-backups");
         if (!fs.existsSync(backupRoot)) fs.mkdirSync(backupRoot, { recursive: true });
-        var backupPath = path.join(backupRoot, "config-before-session-persistence-" + timestamp() + ".json");
-        var temporaryPath = configPath + ".mycompany-session.tmp";
+        var backupPath = nextBackupPath(backupRoot);
+        var temporaryPath = configPath + ".sirk-platform-session-" + process.pid + "-" +
+            crypto.randomBytes(6).toString("hex") + ".tmp";
         fs.copyFileSync(configPath, backupPath, fs.constants.COPYFILE_EXCL);
         fs.writeFileSync(temporaryPath, JSON.stringify(config, null, 2), { encoding: "utf8", flag: "wx" });
         try {
@@ -97,7 +109,7 @@ module.exports.createManager = function (context) {
 
         return {
             enabled: validKey(current),
-            managedByMyCompany: validKey(current) && owned,
+            managedBySirkPlatform: validKey(current) && owned,
             managedExternally: validKey(current) && !owned,
             changed: changed,
             restartRequired: changed,
