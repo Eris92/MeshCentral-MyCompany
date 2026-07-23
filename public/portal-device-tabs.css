@@ -1,5 +1,5 @@
 #sirkPortalRoot .sirk-standalone-main{display:flex!important;flex-direction:column!important}
-#sirkPortalRoot .sirk-standalone-header{flex:0 0 69px!important}
+#sirkPortalRoot .sirk-standalone-header{flex:0 0 69px!important;border-bottom:0!important}
 #sirkPortalRoot .sirk-standalone-content{flex:1 1 auto!important;height:auto!important;min-height:0!important}
 #sirkPortalRoot .sirk-device-tabs{display:flex;align-items:flex-end;gap:2px;height:32px;min-height:32px;padding:2px 6px 0;border-bottom:1px solid var(--sirk-border,#dce3ec);background:var(--sirk-panel,#fff);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;box-sizing:border-box}
 #sirkPortalRoot .sirk-device-tabs[hidden]{display:none!important}
