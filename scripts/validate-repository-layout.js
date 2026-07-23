@@ -4,10 +4,6 @@ var fs = require("fs");
 var path = require("path");
 var root = path.resolve(__dirname, "..");
 var errors = [];
-var allowedRootPowerShell = new Set([
-    "Install-SIRK-Portal-FromGit.ps1",
-    "Install-SIRK-Portal-FromGit_RUN.ps1"
-]);
 
 function absolute(relative) { return path.join(root, relative); }
 function exists(relative) { return fs.existsSync(absolute(relative)); }
@@ -21,24 +17,76 @@ function files(relative) {
 }
 
 [
-    "tools/install", "scripts", "test", "docs", "public", "public/shared",
-    "web/admin", "server/modules", "core", "modules", "assets/icons"
+    "server/core",
+    "server/modules",
+    "public/portal",
+    "public/native",
+    "public/shared",
+    "public/modules",
+    "web/admin",
+    "assets/icons",
+    "tools/install",
+    "docs",
+    "scripts",
+    "test"
 ].forEach(function (relative) {
-    if (!exists(relative)) errors.push("Missing repository directory: " + relative);
+    if (!exists(relative)) errors.push("Missing canonical directory: " + relative);
 });
 
 [
     "SIRK-Portal.js",
+    "plugin-main.js",
+    "plugin-main-standalone.js",
     "admin.js",
+    "views/SIRK-Portal.handlebars",
+    "server/core/runtime.js",
+    "server/core/runtime-portal.js",
     "server/modules/approval-center/index.js",
-    "docs/REPOSITORY-LAYOUT.md",
-    "assets/icons/sirk-ui.svg",
+    "public/shared/core.js",
+    "public/shared/runtime.js",
     "public/shared/icon-registry.js",
-    "web/admin/admin.css",
-    "web/admin/admin.js"
+    "public/native/mesh-plugin-core.js",
+    "public/portal/index.js",
+    "public/portal/standalone/index.html",
+    "public/modules/automation/index.js",
+    "public/modules/approvals/index.js",
+    "web/admin/admin.js",
+    "assets/icons/sirk-ui.svg",
+    "tools/install/Install-SIRK-Portal-FromGit.ps1"
 ].forEach(function (relative) {
-    if (!exists(relative)) errors.push("Missing canonical layout file: " + relative);
+    if (!exists(relative)) errors.push("Missing canonical file: " + relative);
 });
+
+[
+    "MyCompany.js",
+    "MyCompanyAdmin.js",
+    "views/MyCompany.handlebars",
+    "core",
+    "modules",
+    "public/shared-ui",
+    "public/approvalcenter.js",
+    "Install-MyCompany-FromGit.ps1",
+    "Install-MyCompany-FromGit_RUN.ps1",
+    "tools/install/Install-MyCompany-FromGit.ps1",
+    "tools/install/Install-MyCompany-FromGit_RUN.ps1"
+].forEach(function (relative) {
+    if (exists(relative)) errors.push("Legacy path must not exist: " + relative);
+});
+
+var allowedPublicRootFiles = new Set([]);
+if (exists("public")) {
+    fs.readdirSync(absolute("public"), { withFileTypes: true }).forEach(function (entry) {
+        if (entry.isFile() && !allowedPublicRootFiles.has(entry.name)) {
+            errors.push("Application asset must not live directly in public/: public/" + entry.name);
+        }
+    });
+}
+
+if (exists("web")) {
+    fs.readdirSync(absolute("web"), { withFileTypes: true }).forEach(function (entry) {
+        if (entry.isFile()) errors.push("Admin asset must live in web/admin/: web/" + entry.name);
+    });
+}
 
 var config = JSON.parse(read("config.json"));
 var packageJson = JSON.parse(read("package.json"));
@@ -46,64 +94,65 @@ if (config.name !== "SIRK Management Platform") errors.push("Plugin display name
 if (config.shortName !== "SIRK-Portal") errors.push("Plugin shortName must be SIRK-Portal.");
 if (packageJson.name !== "sirk-portal") errors.push("Package name must be sirk-portal.");
 
-var canonicalEntry = read("SIRK-Portal.js");
-if (canonicalEntry.indexOf('module.exports["SIRK-Portal"]') < 0) errors.push("Canonical entrypoint must export SIRK-Portal.");
-if (exists("MyCompany.js")) {
-    var legacyEntry = read("MyCompany.js");
-    if (legacyEntry.length > 900 || legacyEntry.indexOf('require("./SIRK-Portal.js")') < 0) {
-        errors.push("MyCompany.js must remain a small legacy compatibility shim only.");
-    }
+var entry = read("SIRK-Portal.js");
+if (entry.indexOf('module.exports["SIRK-Portal"]') < 0) {
+    errors.push("Canonical entrypoint must export SIRK-Portal.");
 }
 
 var pluginMain = read("plugin-main.js");
-if (pluginMain.indexOf('browserPin = "MyCompany"') >= 0) errors.push("Browser asset pin must not be hardcoded to MyCompany.");
-if (pluginMain.indexOf("SIRK Management Platform") < 0 || pluginMain.indexOf("SirkPlatformRuntime") < 0) {
-    errors.push("Plugin runtime must use canonical SIRK Platform naming.");
+if (pluginMain.indexOf("./server/core/runtime-portal.js") < 0) {
+    errors.push("Plugin bootstrap must load server/core/runtime-portal.js.");
 }
-var adminView = read("views/MyCompany.handlebars");
-if (adminView.indexOf("SIRK Management Platform") < 0 || adminView.indexOf("SirkPlatformAdminData") < 0) {
-    errors.push("Administration view must expose SIRK Management Platform branding.");
+if (/MyCompanyRuntime|__MYCOMPANY_VERSION__|mycompany-data/.test(pluginMain)) {
+    errors.push("Plugin bootstrap contains removed MyCompany compatibility code.");
 }
 
-fs.readdirSync(root, { withFileTypes: true }).forEach(function (entry) {
-    if (!entry.isFile() || !/\.ps1$/i.test(entry.name)) return;
-    if (!allowedRootPowerShell.has(entry.name)) errors.push("PowerShell implementation must not live in repository root: " + entry.name);
-});
-
-if (exists("web")) {
-    fs.readdirSync(absolute("web"), { withFileTypes: true }).forEach(function (entry) {
-        if (entry.isFile() && /\.(?:js|css)$/i.test(entry.name)) errors.push("Admin frontend file must live in web/admin: web/" + entry.name);
-    });
+var standalone = read("plugin-main-standalone.js");
+if (standalone.indexOf('public", "portal"') < 0 || standalone.indexOf("sirk/api/v1/approvals") < 0) {
+    errors.push("Standalone server must use the canonical Portal root and API route.");
+}
+if (/mycompany\/api|approvalcenter\/api|__myCompanyStandaloneRoutes|mycompany\.local/.test(standalone)) {
+    errors.push("Standalone server contains removed legacy routes or flags.");
 }
 
-var architecture = read("docs/REPOSITORY-LAYOUT.md");
+var adminView = read("views/SIRK-Portal.handlebars");
+if (adminView.indexOf("SIRK Management Platform") < 0 ||
+    adminView.indexOf("SirkPlatformAdminData") < 0 ||
+    /MyCompanyAdminData|mycompany-admin/.test(adminView)) {
+    errors.push("Administration view contains legacy branding or identifiers.");
+}
+
+var adminSource = read("admin.js");
 [
-    "server/modules/approval-center/index.js",
-    "public/modules/approvalcenter.js",
-    "public/portal/",
-    "public/native/",
-    "public/shared/",
-    "web/admin/"
-].forEach(function (value) {
-    if (architecture.indexOf(value) < 0) errors.push("Repository layout documentation is incomplete: " + value);
+    '"core.js": ["public/shared/core.js"',
+    '"mesh-plugin-core.js": ["public/native/mesh-plugin-core.js"',
+    '"portal.js": ["public/portal/index.js"',
+    '"approvalcenter.js": ["public/modules/approvals/index.js"',
+    '"shared-ui/toolbar.js": ["public/shared/ui/toolbar.js"'
+].forEach(function (fragment) {
+    if (adminSource.indexOf(fragment) < 0) errors.push("Asset router is missing canonical mapping: " + fragment);
 });
+if (/\["public\/(?:core|runtime|module-shell|portal-|my|defender|move|main\.)/.test(adminSource) ||
+    adminSource.indexOf("public/shared-ui/") >= 0) {
+    errors.push("Asset router contains a removed flat public path.");
+}
 
-var backendApproval = "server/modules/approval-center/index.js";
-var legacyApproval = "modules/ApprovalCenter/index.js";
-var rendererApproval = "public/modules/approvalcenter.js";
-if (read(backendApproval).indexOf("module.exports.createModule") < 0) errors.push("Canonical Approvals backend module is invalid.");
-if (!exists(legacyApproval) || read(legacyApproval).indexOf("server/modules/approval-center") < 0 || read(legacyApproval).length > 500) {
-    errors.push("Historical ApprovalCenter path must remain a small compatibility shim only.");
-}
-if (!exists(rendererApproval) || read(rendererApproval).indexOf("window.MyCompanyModules.approvalcenter") < 0) {
-    errors.push("Canonical Approvals browser renderer is missing or invalid.");
-}
-if (exists("public/approvalcenter.js")) errors.push("Duplicate Approvals renderer must not exist: public/approvalcenter.js");
+var moduleDirectories = fs.readdirSync(absolute("server/modules"), { withFileTypes: true })
+    .filter(function (entry) { return entry.isDirectory(); })
+    .map(function (entry) { return entry.name; });
+moduleDirectories.forEach(function (name) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+        errors.push("Server module directory must use kebab-case: " + name);
+    }
+    if (!exists("server/modules/" + name + "/index.js")) {
+        errors.push("Server module is missing index.js: " + name);
+    }
+});
 
 var registrations = Object.create(null);
-files("public").filter(function (file) { return /\.js$/i.test(file); }).forEach(function (file) {
+files("public/modules").filter(function (file) { return /\.js$/i.test(file); }).forEach(function (file) {
     var source = read(file);
-    var pattern = /window\.MyCompanyModules\.([a-z0-9_-]+)\s*=/gi;
+    var pattern = /window\.(?:SirkPlatformModules|MyCompanyModules)\.([a-z0-9_-]+)\s*=/gi;
     var match;
     while ((match = pattern.exec(source))) {
         var key = match[1].toLowerCase();
@@ -116,31 +165,33 @@ Object.keys(registrations).forEach(function (key) {
     if (unique.length > 1) errors.push("Duplicate browser renderer for module " + key + ": " + unique.join(", "));
 });
 
-var adminSource = read("admin.js");
-if (adminSource.indexOf('"approvalcenter.js": ["public/modules/approvalcenter.js"') < 0) {
-    errors.push("Asset router must point approvalcenter.js to the canonical public/modules renderer.");
-}
-if (adminSource.indexOf('"icons/sirk-ui.svg": ["assets/icons/sirk-ui.svg"') < 0) errors.push("Central icon sprite is not exposed by the asset router.");
-if (adminSource.indexOf('"shared/icon-registry.js": ["public/shared/icon-registry.js"') < 0) errors.push("Shared icon registry is not exposed by the asset router.");
-if (adminSource.indexOf('"admin.css": ["web/admin/admin.css"') < 0 || /\["web\/admin(?:-[^"\]]+)?\.(?:js|css)"/.test(adminSource)) {
-    errors.push("Admin asset router must use only web/admin/* paths.");
-}
-if (!exists("MyCompanyAdmin.js") || read("MyCompanyAdmin.js").indexOf('require("./admin.js")') < 0 || read("MyCompanyAdmin.js").length > 500) {
-    errors.push("MyCompanyAdmin.js must remain a small compatibility shim only.");
-}
+var architecture = read("docs/REPOSITORY-LAYOUT.md");
+[
+    "server/core/",
+    "server/modules/",
+    "public/portal/",
+    "public/native/",
+    "public/shared/",
+    "public/modules/",
+    "web/admin/",
+    "sirk-platform-data"
+].forEach(function (fragment) {
+    if (architecture.indexOf(fragment) < 0) errors.push("Repository layout documentation is incomplete: " + fragment);
+});
 
-var navSource = read("public/portal-standalone-nav.js");
-if (navSource.indexOf("shared/icon-registry.js") < 0 || navSource.indexOf("window.SirkIcons.svg") < 0) {
-    errors.push("Standalone Portal navigation must use the shared icon registry.");
-}
+fs.readdirSync(root, { withFileTypes: true }).forEach(function (entry) {
+    if (!entry.isFile() || !/\.ps1$/i.test(entry.name)) return;
+    if (!["Install-SIRK-Portal-FromGit.ps1", "Install-SIRK-Portal-FromGit_RUN.ps1"].includes(entry.name)) {
+        errors.push("Unexpected PowerShell file in repository root: " + entry.name);
+    }
+});
 
 if (errors.length) {
     console.error(errors.join("\n"));
     process.exit(1);
 }
-console.log("Repository layout validation: OK");
+
+console.log("Final repository layout validation: OK");
 console.log("SIRK Platform naming validation: OK");
-console.log("Canonical server module validation: OK");
-console.log("Canonical frontend renderer validation: OK");
-console.log("Central icon registry validation: OK");
-console.log("Canonical admin directory validation: OK");
+console.log("Canonical server and public loader validation: OK");
+console.log("Legacy path validation: OK");
