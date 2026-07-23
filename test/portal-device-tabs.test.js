@@ -3,6 +3,7 @@ var assert = require("assert"), fs = require("fs"), path = require("path"), root
 function read(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
 var tabs = read("public/portal-device-tabs.js");
 var css = read("public/portal-device-tabs.css");
+var management = read("public/portal-management.js");
 var main = read("plugin-main.js");
 var admin = read("MyCompanyAdmin.js");
 var standalone = read("public/portal-standalone.html");
@@ -43,6 +44,11 @@ assert(css.indexOf("background:color-mix") < 0, "Management primary icons must n
 assert(css.indexOf(".is-management-collapsed .sirk-management-shell.mc-portal-module-shell .sirk-management-workspace.mc-portal-module-layout") >= 0, "Management collapse must target the actual shared grid track");
 assert(css.indexOf("grid-template-columns:56px var(--portal-secondary-width,236px) minmax(0,1fr)!important") >= 0, "Collapsed Management primary column must be exactly 56px");
 assert(css.indexOf("background:transparent!important") >= 0, "Management primary icon containers must stay transparent");
+assert(management.indexOf('state.host.classList.toggle("is-management-edit-mode", state.editMode)') >= 0, "Management must expose edit mode on the mounted host");
+assert(css.indexOf(".mycompany-management-host.is-management-edit-mode .sirk-management-shell.mc-portal-module-shell .sirk-management-workspace.mc-portal-module-layout") >= 0, "Management edit mode must target the real workspace grid");
+assert(css.indexOf("grid-template-columns:var(--portal-primary-width,184px) 440px minmax(0,1fr)!important") >= 0, "Management edit mode must widen the second column to 440px");
+assert(css.indexOf(".mycompany-management-host.is-management-edit-mode.is-management-collapsed") >= 0, "Management edit mode must work while the primary column is collapsed");
+assert(css.indexOf("grid-template-columns:56px 440px minmax(0,1fr)!important") >= 0, "Collapsed Management edit mode must keep 56px and widen the second column to 440px");
 assert(main.indexOf('style("mycompany-device-tabs-style", "portal-device-tabs.css")') >= 0, "Device tab CSS must load in native browser bootstrap");
 assert(main.indexOf('load("mycompany-device-tabs-script", asset("portal-device-tabs.js"))') >= 0, "Device tab script must load in native browser bootstrap");
 assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__') >= 0, "Standalone Portal must load device tab CSS");
@@ -59,4 +65,4 @@ assert(standaloneCore.indexOf("function menuReady()") >= 0, "Portal must wait un
 assert(standaloneCore.indexOf("function childWorkspaceReady()") >= 0, "Child workspace must restore its selected device tab before reveal");
 assert(standaloneCore.indexOf("function parentWorkspaceReady()") >= 0, "Parent Portal must wait for the selected host iframe");
 assert(standaloneCore.indexOf('childDocument.getElementById("sirkStandaloneRoot")') >= 0, "Parent Portal must verify that the child workspace finished booting");
-console.log("Persistent multi-host Portal startup, Management collapse and icon contract: OK");
+console.log("Persistent multi-host Portal startup, sessions and Management layout: OK");
