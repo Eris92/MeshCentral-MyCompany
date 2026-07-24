@@ -1,9 +1,9 @@
 {
   "name": "SIRK Management Platform",
   "shortName": "SIRKPortal",
-  "version": "1.5.151",
+  "version": "1.6.0",
   "author": "Eris92",
-  "description": "SIRK Management Platform plugin with the standalone SIRK Portal, shared automation, approval, device management and integration services.",
+  "description": "SIRK Management Platform with an independent Portal process and an optional MeshCentral adapter.",
   "hasAdminPanel": true,
   "homepage": "https://github.com/Eris92/SIRK-Portal",
   "changelogUrl": "https://raw.githubusercontent.com/Eris92/SIRK-Portal/main/changelog.md",
