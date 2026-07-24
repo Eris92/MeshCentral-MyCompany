@@ -4,7 +4,7 @@ var shared = require("../../core/shared.js");
 var libraryFactory = require("../../core/script-confirmation-library.js");
 var adminFactory = require("../../core/script-admin-service.js");
 var executorFactory = require("../../core/server-script-executor.js");
-var rootResolver = require("../../core/myscripts-root.js");
+var rootResolver = require("../../core/automation-root.js");
 var folderAccess = require("../../core/folder-access.js");
 
 module.exports.createModule = function (context) {
