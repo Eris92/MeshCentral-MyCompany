@@ -1,9 +1,9 @@
 {
   "name": "sirk-portal",
-  "version": "1.5.147",
+  "version": "1.5.148",
   "private": true,
   "scripts": {
-    "test": "node scripts/validate-repository-layout.js && node scripts/validate-architecture.js && node scripts/validate-standalone.js && node test/admin-entrypoint.test.js && node test/runtime-module-load.test.js && node test/browser-hook-serialization.test.js && node test/native-launcher-bootstrap.test.js && node test/security.test.js && node test/script-localization.test.js && node test/folder-access.test.js && node test/portal-view-access.test.js && node test/integration-health.test.js && node test/portal-access-and-desktop-connect.test.js && node test/portal-terminal-connect.test.js && node test/plugin-update-manager.test.js && node test/plugin-rollback-manager.test.js && node test/plugin-backup-discovery.test.js && node test/plugin-marketplace.test.js && node test/portal-device-tabs.test.js && node test/portal-ui-contract.test.js && node test/portal-cleanup.test.js && node test/portal-gui-isolation-script.test.js",
+    "test": "node scripts/validate-repository-layout.js && node scripts/validate-architecture.js && node scripts/validate-standalone.js && node test/admin-entrypoint.test.js && node test/runtime-module-load.test.js && node test/browser-hook-serialization.test.js && node test/native-launcher-bootstrap.test.js && node test/portal-route-redirect.test.js && node test/security.test.js && node test/script-localization.test.js && node test/folder-access.test.js && node test/portal-view-access.test.js && node test/integration-health.test.js && node test/portal-access-and-desktop-connect.test.js && node test/portal-terminal-connect.test.js && node test/plugin-update-manager.test.js && node test/plugin-rollback-manager.test.js && node test/plugin-backup-discovery.test.js && node test/plugin-marketplace.test.js && node test/portal-device-tabs.test.js && node test/portal-ui-contract.test.js && node test/portal-cleanup.test.js && node test/portal-gui-isolation-script.test.js",
     "check": "npm test"
   },
   "engines": {
