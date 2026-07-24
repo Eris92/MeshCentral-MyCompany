@@ -1,0 +1,31 @@
+name: Apply Portal runtime asset hotfix
+
+on:
+  push:
+    branches:
+      - hotfix/portal-runtime-assets-150
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[runtime-assets-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: hotfix/portal-runtime-assets-150
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/fix-portal-runtime-assets-150.js
+      - run: npm test
+      - name: Commit generated hotfix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "hotfix: fix Portal runtime assets 1.5.150 [runtime-assets-applied]"
+          git push origin HEAD:hotfix/portal-runtime-assets-150
