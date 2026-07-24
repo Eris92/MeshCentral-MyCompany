@@ -220,3 +220,4 @@ function createPlugin(parent, shortName) {
 }
 
 module.exports.createPlugin = createPlugin;
+module.exports.createSerializedStartupHook = createSerializedStartupHook;
