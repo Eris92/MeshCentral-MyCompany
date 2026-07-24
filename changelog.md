@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.143
+
+- Dodano wymagany przez MeshCentral administracyjny entrypoint `SIRK-PortalAdmin.js`.
+- Entry point deleguje obsługę panelu do kanonicznej implementacji `admin.js`.
+- Naprawiono błąd `Unauthorized` po otwarciu panelu SIRK Management Platform.
+- Dodano test regresyjny sprawdzający eksport `admin(plugin)`.
+
 ## 1.5.142
 
 - Opublikowano uporządkowany layout repozytorium SIRK-Portal na branchu `main`.
