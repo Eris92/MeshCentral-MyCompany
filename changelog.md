@@ -1,3 +1,10 @@
+## 1.6.3
+
+- Made `.sirk-portal-view-host` the single owner of the Portal view frame, radius and clipping.
+- Removed Management-specific outer padding and duplicate inner frames.
+- Applied the same 10px corner radius to all module views through the global surface contract.
+- Added regression coverage for the global view surface.
+
 ## 1.6.2
 
 - Fixed Portal settings save by excluding the current `SIRKPortal` instance from obsolete standalone-plugin conflict detection.

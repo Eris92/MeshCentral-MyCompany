@@ -1,7 +1,7 @@
 {
   "name": "SIRK Management Platform",
   "shortName": "SIRKPortal",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "author": "Eris92",
   "description": "SIRK Management Platform with an independent Portal process and an optional MeshCentral adapter.",
   "hasAdminPanel": true,
