@@ -9,25 +9,25 @@ function read(file) {
     return fs.readFileSync(path.join(root, file), "utf8");
 }
 
-var nav = read("public/portal-standalone-nav.js");
-var deviceCss = read("public/portal-device-tabs.css");
+var nav = read("public/portal/standalone/scripts/navigation.js");
+var deviceCss = read("public/native/device-tabs.css");
 var contractCss = read("public/vendor/sirk-portal/portal-ui-contract.css");
 var contractJs = read("public/vendor/sirk-portal/portal-ui-contract.js");
-var moduleShell = read("public/module-shell.js");
-var sharedPage = read("public/shared-ui/page.js");
-var management = read("public/portal-management.js");
-var adminLayout = read("web/admin-layout.js");
-var standalone = read("public/portal-standalone.html");
+var moduleShell = read("public/shared/module-shell.js");
+var sharedPage = read("public/shared/ui/page.js");
+var management = read("public/modules/automation/index.js");
+var adminLayout = read("web/admin/admin-layout.js");
+var standalone = read("public/portal/standalone/index.html");
 
 [
-    "public/mycommands.js",
-    "public/approvalcenter.js",
-    "public/myjira.js",
-    "public/defendertools.js"
+    "public/modules/commands/index.js",
+    "public/modules/approvals/index.js",
+    "public/modules/jira/index.js",
+    "public/modules/security/index.js"
 ].forEach(function (file) {
     assert(
-        read(file).indexOf("window.MyCompanyModuleShell.create") >= 0,
-        file + " must mount through MyCompanyModuleShell"
+        read(file).indexOf("window.SirkPlatformModuleShell.create") >= 0,
+        file + " must mount through SirkPlatformModuleShell"
     );
 });
 
@@ -68,11 +68,40 @@ var standalone = read("public/portal-standalone.html");
     "decorateActions",
     "decorateToolbar",
     "decorateShell",
+    "decoratePortalViews",
+    "installViewStyle",
     "decorateSettingsFrame",
     "observer.observe(root, { childList: true, subtree: true })",
     "ensureFrameStyle"
 ].forEach(function (value) {
     assert(contractJs.indexOf(value) >= 0, "Canonical Portal runtime is missing: " + value);
+});
+
+[
+    "mc-portal-view-surface",
+    "mc-portal-view-scroll",
+    "mc-portal-view-toolbar",
+    "mc-portal-button-secondary",
+    "mc-portal-status",
+    "mc-portal-list",
+    "mc-portal-list-row",
+    "mc-portal-badge"
+].forEach(function (value) {
+    assert(contractJs.indexOf(value) >= 0, "Shared view contract is missing: " + value);
+});
+
+[
+    ".sirk-standalone-view-scroll",
+    ".sirk-device-toolbar",
+    ".sirk-standalone-card,.sirk-device-group,.sirk-device-hero,.sirk-device-detail-item,.sirk-device-native-card",
+    ".sirk-device-input,.sirk-device-select",
+    ".sirk-device-refresh,.sirk-device-back",
+    ".sirk-device-status",
+    ".sirk-device-summary span",
+    ".sirk-device-list",
+    ".sirk-device-row"
+].forEach(function (value) {
+    assert(contractJs.indexOf(value) >= 0, "Overview or Devices is not connected to the shared UI contract: " + value);
 });
 
 assert(
@@ -114,12 +143,12 @@ assert(
 });
 
 assert(
-    management.indexOf('"sirk-management-shell mc-portal-module-shell"') >= 0,
+    management.indexOf('window.SirkPlatformModuleShell.create') >= 0,
     "Management must expose the canonical module shell"
 );
 assert(
-    management.indexOf("mc-portal-module-layout") >= 0,
-    "Management must expose the canonical three-column layout"
+    management.indexOf('preset: "myscripts"') >= 0,
+    "Automation must use the canonical shared shell preset"
 );
 assert(
     adminLayout.indexOf("mc-portal-module-shell") >= 0 &&
@@ -138,4 +167,4 @@ assert(
     "Standalone Portal must load its scoped module shell stylesheet"
 );
 
-console.log("Canonical SirK Portal UI contract: OK");
+console.log("Canonical SIRK Portal UI contract: OK");

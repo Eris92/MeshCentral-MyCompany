@@ -1,7 +1,7 @@
 "use strict";
 
 var assert = require("assert");
-var folderAccess = require("../core/folder-access.js");
+var folderAccess = require("../server/core/folder-access.js");
 
 var regular = { _id: "user/domain/alice", links: { "ugrp/domain/helpdesk": {} } };
 var outsider = { _id: "user/domain/bob", links: {} };

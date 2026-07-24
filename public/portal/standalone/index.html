@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>SirK Portal</title>
+  <link rel="stylesheet" href="__ASSET_BASE__/vendor/sirk-portal/sirk-portal.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/main.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/myscripts.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/shared-ui/shared-ui.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/shared-ui/toolbar.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal-standalone.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal-standalone-devices.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal-device-workspace.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__">
+  <link rel="stylesheet" href="__ASSET_BASE__/portal-module-shell.css?v=__VERSION__">
+  <style>
+    .sirk-connect-wrap{position:relative;display:inline-flex;align-items:center}.sirk-connect-split{display:inline-flex;align-items:stretch}.sirk-connect-split #sirkNativeConnect{border-radius:7px 0 0 7px;border-right:0;background:#198754;border-color:#198754;color:#fff}.sirk-connect-arrow,.sirk-connect-amt{height:32px;border:1px solid #198754;background:#198754;color:#fff;font:600 13px "Segoe UI",Arial,sans-serif;cursor:pointer}.sirk-connect-arrow{width:28px;padding:0;border-radius:0 7px 7px 0;border-left:1px solid rgba(255,255,255,.4)}.sirk-connect-amt{margin-left:8px;padding:0 12px;border-radius:7px}.sirk-connect-amt[hidden]{display:none!important}.sirk-connect-menu{position:absolute;z-index:100;top:calc(100% + 4px);left:0;display:grid;min-width:190px;padding:5px 0;border:1px solid var(--sirk-border,#dce3ec);border-radius:9px;background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033);box-shadow:0 12px 28px rgba(15,23,42,.24)}.sirk-connect-menu[hidden]{display:none!important}.sirk-connect-menu button{min-height:34px;padding:7px 13px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}.sirk-connect-menu button:hover{background:var(--sirk-hover,#eef3f9)}
+  </style>
+</head>
+<body>
+  <div id="sirkPortalRoot" class="sirk-theme-light">
+    <div id="sirkStandaloneRoot" class="sirk-standalone-root">
+      <script>
+        try {
+          if (localStorage.getItem("sirkPortal.standaloneCollapsed") === "1") {
+            document.getElementById("sirkStandaloneRoot").classList.add("is-collapsed");
+          }
+        } catch (ignored) {}
+      </script>
+      <aside class="sirk-standalone-sidebar">
+        <div class="sirk-standalone-brand"><span class="sirk-brand-mark">S</span><strong>SirK Portal</strong></div>
+        <div class="sirk-standalone-controls">
+          <button type="button" data-action="sidebar" title="Zwiń menu" aria-label="Zwiń menu"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button type="button" data-action="theme" title="Zmień motyw" aria-label="Zmień motyw"><svg viewBox="0 0 24 24"><path d="M20 15.5A8 8 0 1 1 8.5 4 6.5 6.5 0 0 0 20 15.5Z"/></svg></button>
+          <button type="button" data-action="language" class="sirk-language" title="Switch to English">PL</button>
+        </div>
+        <nav class="sirk-standalone-nav" aria-label="Nawigacja główna">
+          <button type="button" data-view="overview" class="is-active"><span><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v10H3V11Z"/><path d="M9 21v-7h6v7"/></svg></span><b>Przegląd</b></button>
+          <button type="button" data-view="devices"><span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><b>Urządzenia</b></button>
+          <button type="button" data-view="approvals"><span class="icon-approval"><svg viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></svg></span><b>Akceptacje</b></button>
+          <button type="button" data-view="automation"><span class="icon-automation"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><b>Automatyzacja</b></button>
+          <button type="button" data-view="monitoring"><span class="icon-monitoring"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span><b>Monitoring</b></button>
+          <button type="button" data-view="assets"><span class="icon-assets"><svg viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></span><b>Zasoby</b></button>
+          <button type="button" data-view="management"><span class="icon-management"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M8 4v6M8 14v6M16 14v6M16 4v6"/></svg></span><b>Zarządzanie</b></button>
+          <button type="button" data-view="reports"><span class="icon-reports"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7M3 20h18"/></svg></span><b>Raporty</b></button>
+          <button type="button" data-view="security"><span class="icon-security"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3Z"/><path d="M12 8v5M12 17h.01"/></svg></span><b>Bezpieczeństwo</b></button>
+          <button type="button" data-view="settings"><span class="icon-settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg></span><b>Ustawienia</b></button>
+        </nav>
+        <a class="sirk-standalone-native" href="__NATIVE_URL__"><span><svg viewBox="0 0 24 24"><path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v6H5V6h6"/></svg></span><b>MeshCentral</b></a>
+      </aside>
+      <main class="sirk-standalone-main">
+        <header class="sirk-standalone-header">
+          <strong id="sirkStandaloneTitle">Przegląd</strong>
+          <div id="sirkUserMenu" class="sirk-user-menu" hidden>
+            <button id="sirkUserTile" class="sirk-user-tile" type="button" data-action="user-menu" aria-haspopup="menu" aria-expanded="false"><span id="sirkUserName"></span><img id="sirkUserImage" alt=""></button>
+            <div class="sirk-user-dropdown" role="menu"><button type="button" role="menuitem" data-action="logout">Wyloguj się</button></div>
+          </div>
+        </header>
+        <section id="sirkStandaloneContent" class="sirk-standalone-content" aria-live="polite"><div class="sirk-standalone-loading"><span></span><p>Ładowanie SirK Portal…</p></div></section>
+      </main>
+    </div>
+  </div>
+  <script>
+    window.__SIRK_PLATFORM_API_BASE__ = __API_BASE_JSON__;
+    window.__SIRK_PLATFORM_ASSET_BASE__ = __ASSET_BASE_JSON__;
+    window.__SIRK_PLATFORM_NATIVE_URL__ = __NATIVE_URL_JSON__;
+    window.__SIRK_PLATFORM_LOGOUT_URL__ = __LOGOUT_URL_JSON__;
+    window.__SIRK_PLATFORM_USER_IMAGE_URL__ = __USER_IMAGE_URL_JSON__;
+    window.__SIRK_PLATFORM_DEFAULT_USER_IMAGE_URL__ = __DEFAULT_USER_IMAGE_URL_JSON__;
+    window.__SIRK_PLATFORM_PORTAL_VERSION__ = __VERSION_JSON__;
+  </script>
+  <script src="__ASSET_BASE__/standalone-core.js?v=__VERSION__"></script>
+  <script src="__ASSET_BASE__/portal-standalone.js?v=__VERSION__"></script>
+  <script src="__ASSET_BASE__/portal-device-workspace.js?v=__VERSION__"></script>
+  <script src="__ASSET_BASE__/portal-device-tabs.js?v=__VERSION__"></script>
+  <script>
+  (function(){
+    "use strict";
+    var pendingConsent=null;
+    function text(pl,en){try{return localStorage.getItem("sirkPortal.language")==="en"?en:pl;}catch(error){return pl;}}
+    function nativeNode(){var frame=document.getElementById("sirkNativeBridgeFrame");if(!frame)return null;try{var win=frame.contentWindow;return win&&(win.currentNode||win.xxcurrentNode||win.desktopNode)||null;}catch(error){return null;}}
+    function updateAmt(button){if(!button)return;var node=nativeNode();var amt=node&&(node.intelamt||node.intelAmt);button.hidden=!(amt&&Number(amt.state)===2);}
+    function patchFrame(){var frame=document.getElementById("sirkNativeBridgeFrame");if(!frame)return;try{var win=frame.contentWindow;if(!win||typeof win.connectDesktop!=="function"||win.connectDesktop.__sirkWrapped)return;var original=win.connectDesktop;var wrapped=function(event,method,extra,consent){if(pendingConsent!=null){consent=pendingConsent;pendingConsent=null;}return original.call(this,event,method,extra,consent);};wrapped.__sirkWrapped=true;win.connectDesktop=wrapped;}catch(error){}}
+    function enhance(){var select=document.getElementById("sirkNativeMethod"),connect=document.getElementById("sirkNativeConnect");if(!select||!connect||document.querySelector(".sirk-connect-wrap"))return;var label=document.querySelector('label[for="sirkNativeMethod"]');if(label)label.hidden=true;select.hidden=true;var wrap=document.createElement("div");wrap.className="sirk-connect-wrap";var split=document.createElement("div");split.className="sirk-connect-split";connect.parentNode.insertBefore(wrap,connect);wrap.appendChild(split);split.appendChild(connect);var arrow=document.createElement("button");arrow.type="button";arrow.className="sirk-connect-arrow";arrow.textContent="▾";arrow.setAttribute("aria-expanded","false");split.appendChild(arrow);var menu=document.createElement("div");menu.className="sirk-connect-menu";menu.hidden=true;[[72,text("Zapytaj o zgodę + Bar","Ask Consent + Bar")],[8,text("Zapytaj o zgodę","Ask Consent")],[64,text("Pasek Prywatności","Privacy Bar")]].forEach(function(item){var button=document.createElement("button");button.type="button";button.textContent=item[1];button.onclick=function(){pendingConsent=item[0];select.value="3";menu.hidden=true;arrow.setAttribute("aria-expanded","false");connect.click();};menu.appendChild(button);});wrap.appendChild(menu);var amt=document.createElement("button");amt.type="button";amt.className="sirk-connect-amt";amt.textContent="Intel AMT";amt.hidden=true;amt.onclick=function(){select.value="2";menu.hidden=true;arrow.setAttribute("aria-expanded","false");connect.click();};wrap.appendChild(amt);connect.addEventListener("click",function(){if(pendingConsent==null)select.value="3";},true);arrow.onclick=function(event){event.preventDefault();event.stopPropagation();menu.hidden=!menu.hidden;arrow.setAttribute("aria-expanded",menu.hidden?"false":"true");};document.addEventListener("click",function(event){if(!wrap.contains(event.target)){menu.hidden=true;arrow.setAttribute("aria-expanded","false");}});updateAmt(amt);}
+    new MutationObserver(function(){enhance();patchFrame();updateAmt(document.querySelector(".sirk-connect-amt"));}).observe(document.documentElement,{childList:true,subtree:true});
+    setInterval(function(){patchFrame();updateAmt(document.querySelector(".sirk-connect-amt"));},250);
+    enhance();
+  }());
+  </script>
+  <script src="__ASSET_BASE__/portal-view-mode.js?v=__VERSION__"></script>
+  <script src="__ASSET_BASE__/portal-standalone-nav.js?v=__VERSION__"></script>
+</body>
+</html>

@@ -1,220 +1,118 @@
-# MyCompany 1.5.137
+# SIRK Management Platform 1.5.142
 
-Jeden skonsolidowany plugin MeshCentral zawierający backend, moduły administracyjne, biblioteki skryptów i opcjonalny SirK Portal.
+**Repozytorium i techniczna nazwa pluginu:** `SIRK-Portal`  
+**Nazwa wyświetlana:** `SIRK Management Platform`  
+**Nazwa skrócona w interfejsie:** `SIRK Platform`
+
+SIRK Management Platform jest skonsolidowanym pluginem MeshCentral zawierającym backend, panel administracyjny, automatyzację, akceptacje, integracje, zarządzanie urządzeniami oraz samodzielny SIRK Portal.
+
+Repozytorium nie utrzymuje kompatybilności z testową nazwą ani strukturą `MyCompany`. Nie ładuje starych entrypointów, nie migruje dawnych ustawień i nie korzysta z `mycompany-data`.
+
+## Zacznij od indeksów
+
+Przed odczytem kodu:
+
+1. przeczytaj [`AGENTS.md`](AGENTS.md);
+2. otwórz [`docs/INDEX.md`](docs/INDEX.md);
+3. wybierz indeks warstwy odpowiadającej zadaniu;
+4. czytaj wyłącznie wskazaną część repozytorium i jej bezpośrednie zależności.
+
+Nie skanuj całego repozytorium, jeżeli indeks wskazuje konkretny entrypoint, moduł, loader, test lub dokument.
 
 ## Dokumentacja
 
+- [Indeks dokumentacji i obszarów](docs/INDEX.md)
+- [Struktura repozytorium](docs/REPOSITORY-LAYOUT.md)
 - [Aktualny stan projektu](docs/PROJECT-STATE.md)
-- [Integracja MyCompany + SirK Portal](docs/portal-integration.md)
-- [AGENTS.md](AGENTS.md)
-- [Reguły agenta dla MyCompany](docs/agent/11-Agent-MyCompany.md)
-- [Prompt startowy nowej rozmowy](docs/agent/Prompt-Start-MyCompany-Conversation.md)
+- [Integracja SIRK Platform i SIRK Portal](docs/portal-integration.md)
+- [Router instrukcji](AGENTS.md)
+- [Reguły projektu](docs/agent/11-Agent-SIRK-Portal.md)
+- [Prompt startowy nowej rozmowy](docs/agent/Prompt-Start-SIRK-Portal-Conversation.md)
 
-Repozytorium jest kompletnym źródłem instalacyjnym. Runtime nie ładuje kodu z dawnych repozytoriów ani sąsiednich pluginów.
-
-## Moduły
+## Warstwy projektu
 
 ```text
-MyCompany
-├── My Scripts / Zarządzanie
-├── My Commands / Automatyzacja i Polecenia
-├── Approval Center / Akceptacje
-├── Move Requests
-├── My Jira / Assets
-├── Defender Tools / Security
-├── wspólne integracje i encrypted secrets
-└── SirK Portal (opcjonalny frontend)
+backend Node/MeshCentral       -> server/
+samodzielny SIRK Portal        -> public/portal/
+adapter natywnego MeshCentral  -> public/native/
+frontend współdzielony         -> public/shared/
+renderery modułów              -> public/modules/
+panel administracyjny          -> web/admin/
+widok panelu                   -> views/SIRK-Portal.handlebars
+ikony                          -> assets/icons/
+narzędzia instalacyjne         -> tools/install/
 ```
 
-`MyScripts`, `MyCommands`, `MyJira`, `DefenderTools`, `ApprovalCenter` i `MoveRequests` są modułami wewnętrznymi, a nie osobnymi pluginami.
+Szczegółowe mapy znajdują się w lokalnych plikach `INDEX.md` poszczególnych warstw.
 
-## SirK Portal
+## Moduły funkcjonalne
 
-SirK Portal jest niezależnym dokumentem frontendowym udostępnianym przez MyCompany. Nie modyfikuje core MeshCentral, nie podmienia natywnych plików i nie rejestruje globalnych `domain.customFiles`.
+- Automation;
+- Commands;
+- Approvals;
+- Device Transfers;
+- Jira Integration;
+- Security;
+- Portal.
 
-Nie uruchamiaj jednocześnie osobnej wtyczki `SirKPortal`.
+Backend modułów znajduje się w `server/modules/`, a pojedyncze renderery frontendowe w `public/modules/`.
 
-Włączenie:
+## Wspólny kontrakt UI Portalu
+
+Wszystkie widoki SIRK Portal korzystają ze wspólnego systemu klas `mc-portal-*` dla powierzchni, kart, toolbarów, przycisków, pól formularzy, statusów, list i typografii.
+
+Widok Devices zachowuje własną geometrię listy urządzeń, szczegółów hosta i workspace aktywnej sesji, ale korzysta z tych samych komponentów wizualnych co Overview oraz pozostałe zakładki.
+
+## Entry pointy i loadery
+
+Kanoniczny entrypoint:
 
 ```text
-MyCompany → Settings → SirK Portal → Enable SirK Portal
+SIRK-Portal.js
 ```
 
-Główne widoki:
-
-- Przegląd;
-- Urządzenia;
-- Akceptacje;
-- Automatyzacja;
-- Monitoring;
-- Zasoby;
-- Zarządzanie;
-- Raporty;
-- Bezpieczeństwo;
-- Ustawienia;
-- MeshCentral.
-
-Każdy widok może zostać ukryty albo ograniczony do grup użytkowników MeshCentral. Backend ponownie sprawdza dostęp do endpointów i zasobów; ukrycie elementu UI nie jest jedyną kontrolą bezpieczeństwa.
-
-## Jeden kontrakt UI
-
-Wszystkie podobne moduły SirK Portal korzystają z jednego kontraktu:
+Łańcuch backendu:
 
 ```text
-mc-portal-module-shell
-├── mc-portal-module-toolbar
-└── mc-portal-module-workspace
-    └── mc-portal-module-layout
-        ├── mc-portal-module-primary
-        ├── mc-portal-module-secondary
-        └── mc-portal-module-details
+SIRK-Portal.js
+  -> plugin-main-standalone.js
+    -> plugin-main.js
+      -> server/core/runtime-portal.js
+        -> server/core/runtime.js
+          -> server/modules/*
 ```
 
-Wspólne komponenty:
-
-```text
-mc-portal-toolbar-button
-mc-portal-nav-item
-mc-portal-nav-icon
-mc-portal-nav-label
-mc-portal-card
-mc-portal-button
-mc-portal-filter
-mc-portal-table-wrap
-mc-portal-table
-```
-
-Kontrakt jest zdefiniowany w:
-
-```text
-public/vendor/sirk-portal/portal-ui-contract.css
-public/vendor/sirk-portal/portal-ui-contract.js
-```
-
-Domyślna geometria:
-
-```text
-pierwsza kolumna:       184 px
-druga kolumna:          236 px
-droga kolumna w Edit:   440 px
-pierwsza po zwinięciu:   56 px
-wysokość toolbara:       48 px
-wysokość pozycji menu:   42 px
-```
-
-Zasady:
-
-- Polecenia, Zarządzanie, Akceptacje, Ustawienia i inne trzykolumnowe moduły mają ten sam shell, toolbar, nawigację, karty, formularze i tabele.
-- Zwinięcie zawsze zmienia rzeczywisty track pierwszej kolumny.
-- Edit Mode zawsze zwiększa drugi track do wspólnej szerokości.
-- Ikony pierwszej kolumny nie mają kolorowego tła; mogą różnić się samym kolorem lub grafiką.
-- Moduł może nadpisać zmienne `--portal-primary-width`, `--portal-secondary-width` lub akcent, ale nie może budować drugiego równoległego systemu layoutu.
-- Stare klasy `mc-shared-*`, `sirk-management-*` i `mc-admin-*` mogą pozostać jako klasy funkcjonalne, lecz w Portalu otrzymują również odpowiadające im klasy `mc-portal-*`.
-- CSS Portalu jest ograniczony do `#sirkPortalRoot` i nie może zmieniać oryginalnego interfejsu MeshCentral.
-- Ustawienia są osadzone w same-origin iframe, ale otrzymują końcowy kontrakt CSS, motyw i zmienne Portalu. Style iframe nie mogą wpływać na pozostałe widoki.
-- Wyjątkiem jest `Urządzenia`, które zachowuje własny układ sesji i zakładek, ale nie może przechowywać stylów Zarządzania ani innych modułów.
-
-## Zakładki hostów i trwałe sesje
-
-Widok Urządzenia posiada dwa poziomy nawigacji:
-
-1. górne zakładki `Wszystkie / All + otwarte hosty`;
-2. podzakładki aktywnego hosta:
-
-```text
-Ogólne | Pulpit | Terminal | Polecenia | Pliki | Rejestr | Oprogramowanie | Intel AMT
-```
-
-Każdy otwarty host ma osobny iframe umieszczony w stałej warstwie sesji. Przełączenie hosta, `All` albo innego widoku Portalu nie powinno usuwać, przenosić ani przeładowywać iframe.
-
-Aktywny host i jego podzakładka są zapisywane. Po `F5` Portal ma wrócić bezpośrednio do właściwego hosta i podzakładki, bez pośredniego pokazania `Overview` lub `Ogólne`.
-
-## PL/EN, motyw i branding
-
-PL/EN oraz jasny/ciemny są wspólne dla głównego Portalu, otwartych workspace’ów hostów i osadzonych Ustawień. Zmiana nie powinna wymagać opuszczenia bieżącego widoku ani przeładowania aktywnej sesji.
-
-`Settings → SirK Portal → Portal interface` zawiera między innymi:
-
-- nazwę witryny;
-- adres ikony witryny i favicon;
-- widoczność przycisku resetu hasła;
-- adres resetu hasła;
-- widoczność, nazwy i akcenty pozycji menu;
-- wymuszenie nowego ekranu logowania;
-- wymuszenie nowego interfejsu;
-- utrzymywanie sesji po restarcie MeshCentral.
-
-## Zarządzanie i Polecenia
-
-Zarządzanie i Polecenia korzystają z tego samego trzykolumnowego systemu, wspólnego toolbara, katalogu, Favorites, Edit Mode, Results i formularzy.
-
-My Scripts obsługuje:
-
-- PL/EN nazw, opisów, zmiennych i opcji;
-- Favorites;
-- Edit Mode;
-- Credentials i Secrets;
-- potwierdzenie wykonania;
-- Approval Levels;
-- Results i Debug.
-
-My Commands obsługuje:
-
-- wbudowane polecenia oraz skrypty PowerShell;
-- osobne ikony kategorii i poleceń;
-- PL/EN;
-- Edit i Favorites;
-- Multi dla wielu urządzeń;
-- parametry i potwierdzenia;
-- approval workflow.
-
-Multi wysyła `commandId` dla wbudowanego polecenia i `scriptPath` dla skryptu.
-
-## Approval Center i Results
-
-Approval Center jest wspólnym workflow dla providerów MyCompany.
-
-`core/approval-service.js` usuwa prywatne `payload` przed zwróceniem publicznego rekordu. Widoki klienckie nie mogą filtrować publicznych wyników przez `request.payload`.
-
-Management → Results i Approval korzystają z tego samego źródła danych oraz centralnej kontroli widoczności.
-
-## Uprawnienia
-
-Reguły lewego menu Portalu oraz folderów My Scripts i My Commands stosują deny-by-default.
-
-- `enabled: false` ukrywa i blokuje zasób;
-- `allowAll: true` nadaje dostęp wszystkim użytkownikom posiadającym dostęp do modułu;
-- `groupIds` ogranicza dostęp do wybranych grup MeshCentral;
-- pusta lista grup bez `allowAll=true` nie nadaje dostępu;
-- Site Admin omija ograniczenie grupowe dla włączonych elementów.
+Mapę assetów natywnego interfejsu utrzymuje `admin.js`. Mapę assetów samodzielnego Portalu utrzymuje `plugin-main-standalone.js`.
 
 ## Dane trwałe
 
+Jedyny katalog danych runtime:
+
 ```text
-meshcentral-data/mycompany-data
-├── settings.json
-├── requests.json
-├── secrets.json
-├── .secret.key
-├── defender/
-└── scripts/
-    ├── MyScripts/
-    └── MyCommands/
+meshcentral-data/sirk-platform-data
 ```
 
-Portal nie tworzy osobnego storage. Sekrety nie są wysyłane do przeglądarki. Panel administracyjny pokazuje wyłącznie stan `configured`.
+Plugin nie odczytuje, nie kopiuje i nie migruje `meshcentral-data/mycompany-data`.
 
 ## Instalacja z Git
 
 Uruchom jako Administrator:
 
 ```powershell
-.\Install-MyCompany-FromGit_RUN.ps1
+.\Install-SIRK-Portal-FromGit_RUN.ps1
 ```
 
-Installer pobiera `main`, waliduje źródło, wykonuje atomową podmianę katalogu pluginu i uruchamia MeshCentral ponownie.
+Źródłowa implementacja instalatora:
 
-Nie nadpisuj `meshcentral-data/mycompany-data` podczas aktualizacji pluginu.
+```text
+tools/install/Install-SIRK-Portal-FromGit.ps1
+```
+
+Repozytorium źródłowe:
+
+```text
+https://github.com/Eris92/SIRK-Portal
+```
 
 ## Testy
 
@@ -222,23 +120,4 @@ Nie nadpisuj `meshcentral-data/mycompany-data` podczas aktualizacji pluginu.
 npm test
 ```
 
-Po zmianach Portalu obowiązkowa jest również ręczna kontrola:
-
-1. `F5` na `All`;
-2. `F5` na aktywnym hoście i aktywnej podzakładce;
-3. `Devices → inny widok → Devices` bez utraty sesji;
-4. Polecenia, Zarządzanie, Akceptacje i Ustawienia w trybie rozwiniętym oraz zwiniętym;
-5. Edit Mode i szerokość drugiej kolumny;
-6. PL/EN bez opuszczania bieżącego widoku;
-7. jasny/ciemny bez opuszczania bieżącego widoku;
-8. tabele, filtry, karty i przyciski w każdym module;
-9. Desktop i Terminal wraz z menu Connect;
-10. widoczność tylko dozwolonych pozycji menu.
-
-Test `test/portal-ui-contract.test.js` blokuje powrót wielu niezależnych layoutów, stylów Zarządzania w arkuszu Devices oraz starego globalnego mutatora DOM.
-
-## Praca agenta
-
-Każdy nowy wątek dotyczący MyCompany zaczyna się od `AGENTS.md` oraz `docs/agent/11-Agent-MyCompany.md`.
-
-Zmiana runtime wymaga testów, spójnej wersji, changelogu, historii wersji oraz kontrolowanego deploymentu.
+Walidator struktury blokuje stare entrypointy i widoki `MyCompany`, backend poza `server/`, płaskie assety aplikacyjne w `public/`, `public/shared-ui/`, podwójne renderery i niekanoniczne ścieżki loaderów.

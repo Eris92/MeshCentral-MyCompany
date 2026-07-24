@@ -1,4 +1,4 @@
-name: Validate MyCompany
+name: Validate SIRK-Portal
 
 on:
   push:
@@ -17,8 +17,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Validate architecture
+          node-version: '24'
+      - name: Validate project
         run: npm test
       - name: Check JavaScript syntax
         shell: bash

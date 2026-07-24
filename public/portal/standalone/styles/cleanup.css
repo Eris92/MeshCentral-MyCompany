@@ -1,0 +1,249 @@
+/* Final standalone Portal normalization. This file is loaded last and never by native MeshCentral. */
+#sirkPortalRoot {
+    --portal-surface-radius: 11px;
+    --portal-surface-padding: 14px;
+    --portal-toolbar-height: 48px;
+    --portal-primary-width: 184px;
+    --portal-secondary-width: 236px;
+    --portal-secondary-edit-width: 440px;
+    --portal-primary-collapsed-width: 56px;
+}
+
+#sirkPortalRoot .sirk-standalone-content {
+    padding: 12px;
+}
+
+#sirkPortalRoot .sirk-standalone-content > .sirk-portal-view-host,
+#sirkPortalRoot .sirk-standalone-content > .sirk-standalone-view-scroll,
+#sirkPortalRoot .sirk-standalone-content > .sirk-device-workspace {
+    flex: 1 1 auto;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+}
+
+#sirkPortalRoot .sirk-portal-view-host,
+#sirkPortalRoot .sirk-portal-view-host > *,
+#sirkPortalRoot .sirk-platform-management-host,
+#sirkPortalRoot .sirk-platform-management-host > * {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* One outer surface for all module views. */
+#sirkPortalRoot .sirk-unified-content > .sirk-portal-view-host,
+#sirkPortalRoot .sirk-unified-content > .sirk-standalone-view-scroll {
+    overflow: hidden;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: var(--portal-surface-radius);
+    background: var(--sirk-panel, #fff);
+}
+
+#sirkPortalRoot .sirk-unified-content > .sirk-standalone-view-scroll {
+    padding: var(--portal-surface-padding);
+    overflow: auto;
+}
+
+#sirkPortalRoot .mc-portal-module-shell,
+#sirkPortalRoot .sirk-management-shell,
+#sirkPortalRoot .mc-admin-management-shell {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: var(--sirk-panel, #fff) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-layout,
+#sirkPortalRoot .sirk-management-workspace,
+#sirkPortalRoot .mc-admin-management-layout {
+    display: grid !important;
+    grid-template-columns: var(--portal-primary-width) var(--portal-secondary-width) minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    resize: none !important;
+}
+
+#sirkPortalRoot .is-edit-mode.mc-portal-module-layout,
+#sirkPortalRoot .is-management-edit-mode .mc-portal-module-layout,
+#sirkPortalRoot .is-management-edit-mode .sirk-management-workspace,
+#sirkPortalRoot .mc-portal-module-layout:has(.mc-tree-script-actions:not(:empty)),
+#sirkPortalRoot .sirk-management-workspace:has(.mc-tree-script-actions:not(:empty)) {
+    grid-template-columns: var(--portal-primary-width) var(--portal-secondary-edit-width) minmax(0, 1fr) !important;
+}
+
+#sirkPortalRoot .is-collapsed.mc-portal-module-layout,
+#sirkPortalRoot .is-management-collapsed .mc-portal-module-layout,
+#sirkPortalRoot .is-management-collapsed .sirk-management-workspace {
+    grid-template-columns: var(--portal-primary-collapsed-width) var(--portal-secondary-width) minmax(0, 1fr) !important;
+}
+
+#sirkPortalRoot .is-management-collapsed.is-management-edit-mode .mc-portal-module-layout,
+#sirkPortalRoot .is-management-collapsed.is-management-edit-mode .sirk-management-workspace,
+#sirkPortalRoot .is-collapsed.is-edit-mode.mc-portal-module-layout {
+    grid-template-columns: var(--portal-primary-collapsed-width) var(--portal-secondary-edit-width) minmax(0, 1fr) !important;
+}
+
+#sirkPortalRoot .mc-portal-module-primary,
+#sirkPortalRoot .mc-portal-module-secondary,
+#sirkPortalRoot .mc-portal-module-details,
+#sirkPortalRoot .sirk-management-column,
+#sirkPortalRoot .mc-admin-management-column {
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Device tabs: portal-standalone-nav converts the original class to compact-tabs. */
+#sirkPortalRoot .sirk-device-compact-tabs,
+#sirkPortalRoot .sirk-device-tabs {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    padding: 5px 8px !important;
+    overflow-x: auto !important;
+    border: 0 !important;
+    background: transparent !important;
+    scrollbar-width: thin;
+}
+
+#sirkPortalRoot .sirk-device-compact-tabs button,
+#sirkPortalRoot .sirk-device-tabs button {
+    appearance: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-height: 34px !important;
+    padding: 6px 12px !important;
+    border: 1px solid transparent !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+    color: var(--sirk-muted, #657187) !important;
+    font: 600 13px/1.2 "Segoe UI", Arial, sans-serif !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+}
+
+#sirkPortalRoot .sirk-device-compact-tabs button:hover,
+#sirkPortalRoot .sirk-device-tabs button:hover {
+    background: rgba(96, 165, 250, .09) !important;
+    color: var(--sirk-text, #172033) !important;
+}
+
+#sirkPortalRoot .sirk-device-compact-tabs button.is-active,
+#sirkPortalRoot .sirk-device-tabs button.is-active {
+    border-color: rgba(59, 130, 246, .22) !important;
+    background: rgba(59, 130, 246, .13) !important;
+    color: #2563eb !important;
+}
+
+#sirkPortalRoot .sirk-device-workspace {
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    overflow: hidden !important;
+    border: 1px solid var(--sirk-border, #dce3ec);
+    border-radius: var(--portal-surface-radius);
+    background: var(--sirk-panel, #fff);
+}
+
+#sirkPortalRoot .sirk-device-compact-header {
+    min-height: 56px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--sirk-border, #dce3ec) !important;
+    border-radius: 0 !important;
+}
+
+#sirkPortalRoot .sirk-device-tab-body {
+    border: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* Overview uses the same card metrics as module details. */
+#sirkPortalRoot .sirk-standalone-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+#sirkPortalRoot .sirk-standalone-card {
+    min-width: 0 !important;
+    min-height: 220px !important;
+    margin: 0 !important;
+    padding: 18px !important;
+    border: 1px solid var(--sirk-border, #dce3ec) !important;
+    border-radius: 10px !important;
+    background: var(--sirk-panel, #fff) !important;
+    color: var(--sirk-text, #172033) !important;
+    box-shadow: none !important;
+    text-align: left !important;
+}
+
+#sirkPortalRoot .sirk-standalone-card h2 {
+    margin: 0 0 8px !important;
+    font-size: 22px !important;
+    line-height: 1.25 !important;
+}
+
+/* Settings iframe always fills the same module surface. */
+#sirkPortalRoot .sirk-settings-module-shell,
+#sirkPortalRoot .sirk-settings-module-workspace,
+#sirkPortalRoot .sirk-standalone-settings-frame {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+}
+
+@media (max-width: 1180px) {
+    #sirkPortalRoot {
+        --portal-primary-width: 170px;
+        --portal-secondary-width: 220px;
+        --portal-secondary-edit-width: 380px;
+    }
+    #sirkPortalRoot .sirk-standalone-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 840px) {
+    #sirkPortalRoot .sirk-standalone-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #sirkPortalRoot .mc-portal-module-layout,
+    #sirkPortalRoot .sirk-management-workspace,
+    #sirkPortalRoot .mc-admin-management-layout {
+        grid-template-columns: minmax(0, 1fr) !important;
+        overflow: auto !important;
+    }
+}

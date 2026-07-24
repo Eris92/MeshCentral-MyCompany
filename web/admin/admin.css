@@ -1,0 +1,672 @@
+.mc-admin {
+    padding: 10px 12px 18px;
+    font-family: Arial, sans-serif;
+    color: inherit;
+}
+
+.mc-admin h2 {
+    margin: 0 0 2px;
+}
+
+.mc-admin-subtitle {
+    margin-bottom: 12px;
+    color: #666;
+}
+
+.mc-admin-shell {
+    display: grid;
+    grid-template-columns: minmax(165px, 205px) minmax(520px, 1fr);
+    gap: 14px;
+    align-items: start;
+    overflow: auto;
+}
+
+.mc-admin-shell.has-middle {
+    grid-template-columns: minmax(165px, 205px) minmax(255px, 305px) minmax(520px, 1fr);
+}
+
+.mc-admin-middle {
+    min-width: 0;
+}
+
+.mc-admin-middle[hidden] {
+    display: none;
+}
+
+#sirk-platform-admin-content {
+    min-width: 0;
+}
+
+.mc-admin-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px;
+    border: 1px solid #b8b8b8;
+    border-radius: 3px;
+    background: #f3f3f3;
+}
+
+.mc-admin-tabs > button,
+.mc-admin-settings-subnav button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mc-admin-tabs > button {
+    padding: 8px 10px;
+    font-weight: 600;
+}
+
+.mc-admin-tabs > button:hover,
+.mc-admin-settings-subnav button:hover {
+    background: #e5e5e5;
+    border-color: #d1d1d1;
+}
+
+.mc-admin-tabs > button.active {
+    background: #4b69d6;
+    border-color: #405bc0;
+    color: #fff;
+}
+
+.mc-admin-settings-subnav {
+    margin: 0 0 3px 14px;
+    padding: 3px 0 3px 7px;
+    border-left: 1px solid #c5c5c5;
+}
+
+.mc-admin-settings-subnav button {
+    padding: 7px 9px;
+    font-size: 13px;
+}
+
+.mc-admin-settings-subnav button.active {
+    background: #dfe5fb;
+    border-color: #c1cdf5;
+    color: #111;
+    font-weight: 700;
+}
+
+.mc-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px;
+}
+
+.mc-admin-card {
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px solid #b8b8b8;
+    border-radius: 3px;
+    background: #f7f7f7;
+}
+
+.mc-admin-card h3 {
+    margin: 0 0 8px;
+}
+
+.mc-admin-card-description {
+    margin-bottom: 12px;
+    color: #666;
+    line-height: 1.35;
+}
+
+.mc-admin-state {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 3px 8px;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.mc-admin-state.ready {
+    background: #dff4e5;
+    color: #18753a;
+}
+
+.mc-admin-state.error {
+    background: #fde2e2;
+    color: #a60018;
+}
+
+.mc-admin-summary-row {
+    margin: 5px 0;
+}
+
+.mc-admin-settings-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 14px;
+    min-height: 520px;
+}
+
+.mc-admin-settings-layout.mc-admin-settings-layout-single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.mc-admin-settings-nav {
+    align-self: start;
+    padding: 5px;
+    border: 1px solid #b8b8b8;
+    border-radius: 3px;
+    background: #f3f3f3;
+}
+
+.mc-admin-section-nav {
+    position: sticky;
+    top: 8px;
+}
+
+.mc-admin-settings-nav button {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mc-admin-settings-nav button:hover {
+    background: #e5e5e5;
+}
+
+.mc-admin-settings-nav button.active {
+    background: #4b69d6;
+    color: #fff;
+}
+
+.mc-admin-settings-panel {
+    min-width: 0;
+}
+
+.mc-admin-section-header {
+    margin-bottom: 12px;
+    padding: 0 0 8px;
+    border-bottom: 1px solid #b8b8b8;
+}
+
+.mc-admin-section-header h3 {
+    margin: 0 0 4px;
+    font-size: 20px;
+}
+
+.mc-admin-section-header p {
+    margin: 0;
+    color: #666;
+    line-height: 1.4;
+}
+
+.mc-admin-field {
+    display: block;
+    margin: 0 0 12px;
+}
+
+.mc-admin-field-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.mc-admin-field-description {
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.mc-admin-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 7px;
+    border: 1px solid #9f9f9f;
+    border-radius: 2px;
+    background: #fff;
+    color: #111;
+}
+
+.mc-admin-input:focus {
+    outline: 1px solid #4b69d6;
+    border-color: #4b69d6;
+}
+
+.mc-admin-input[type="number"] {
+    max-width: 180px;
+}
+
+.mc-admin-portal-view-list {
+    display: grid;
+    gap: 10px;
+}
+
+.mc-admin-portal-view {
+    display: grid;
+    grid-template-columns: minmax(150px, .7fr) minmax(230px, 1fr) minmax(230px, 1fr) minmax(280px, 1.3fr);
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.mc-admin-portal-view-heading {
+    display: grid;
+    gap: 4px;
+}
+
+.mc-admin-portal-view-heading code {
+    color: #666;
+}
+
+.mc-admin-portal-view-controls {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 110px;
+    gap: 10px;
+    align-items: end;
+}
+
+.mc-admin-portal-view-controls.is-disabled {
+    opacity: .55;
+}
+
+.mc-admin-portal-color-field {
+    min-width: 0;
+}
+
+.mc-admin-input.mc-admin-portal-color {
+    width: 100%;
+    min-width: 70px;
+    height: 38px;
+    padding: 3px;
+}
+
+.mc-admin-groups {
+    min-height: 130px;
+}
+
+.mc-admin-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 11px;
+    cursor: pointer;
+}
+
+.mc-admin-check input {
+    margin-top: 2px;
+}
+
+.mc-admin-check strong,
+.mc-admin-check small {
+    display: block;
+}
+
+.mc-admin-check small {
+    margin-top: 3px;
+    color: #666;
+    line-height: 1.3;
+}
+
+.mc-admin-notice {
+    padding: 9px 10px;
+    border: 1px solid #c6d0f3;
+    border-left: 4px solid #4b69d6;
+    background: #eef1fb;
+    line-height: 1.4;
+}
+
+.mc-admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid #b8b8b8;
+    border-radius: 3px;
+    background: #f3f3f3;
+}
+
+.mc-admin-settings-savebar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    margin: 0 0 12px;
+}
+
+.mc-admin-primary {
+    min-width: 105px;
+    padding: 6px 14px;
+    border: 1px solid #405bc0;
+    border-radius: 2px;
+    background: #4b69d6;
+    color: #fff;
+    cursor: pointer;
+}
+
+.mc-admin-primary:hover {
+    background: #405bc0;
+}
+
+.mc-admin-primary:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.mc-admin-secondary {
+    padding: 6px 14px;
+    border: 1px solid #888;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.mc-admin-toolbar,
+.mc-admin-inline-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.mc-admin-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    border: 1px solid #b8b8b8;
+    border-radius: 3px;
+    box-sizing: border-box;
+}
+
+.mc-admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: var(--mc-admin-table-bg, #fff);
+}
+
+.mc-admin-table th,
+.mc-admin-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #d4d4d4;
+    text-align: left;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.mc-admin-table th:nth-child(1) { width: 96px; }
+.mc-admin-table th:nth-child(2) { width: 54px; }
+.mc-admin-table th:nth-child(3) { width: 70px; }
+.mc-admin-table th:nth-child(5) { width: 145px; }
+
+.mc-admin-table th {
+    background: #f3f3f3;
+    white-space: nowrap;
+}
+
+.mc-admin-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.mc-admin-table .mc-admin-state {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.mc-admin-table-secondary {
+    display: block;
+    margin-top: 3px;
+    color: #666;
+}
+
+.mc-admin-table-actions {
+    width: 145px;
+}
+
+.mc-admin-plugin-table th:nth-child(1) { width: 190px; }
+.mc-admin-plugin-table th:nth-child(2) { width: 70px; }
+.mc-admin-plugin-table th:nth-child(3) { width: 90px; }
+.mc-admin-plugin-table th:nth-child(4) { width: auto; }
+.mc-admin-plugin-table th:nth-child(5) { width: 145px; }
+
+.mc-admin-plugin-name,
+.mc-admin-plugin-name strong,
+.mc-admin-plugin-name .mc-admin-table-secondary {
+    overflow: hidden;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-admin-plugin-name strong {
+    display: block;
+}
+
+.mc-admin-plugin-description {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.mc-admin-action-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.mc-admin-service-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.mc-admin-save-status {
+    display: block;
+    max-width: 100%;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.mc-admin-save-status:empty {
+    display: none;
+}
+
+.mc-admin-debug {
+    max-height: 650px;
+    margin: 0;
+    padding: 12px;
+    overflow: auto;
+    border: 1px solid #b8b8b8;
+    border-radius: 3px;
+    background: #f7f7f7;
+    white-space: pre-wrap;
+    font-family: Consolas, monospace;
+}
+
+.mc-admin-error {
+    color: #a60018;
+}
+
+@media (prefers-color-scheme: dark) {
+    .mc-admin-subtitle,
+    .mc-admin-card-description,
+    .mc-admin-section-header p,
+    .mc-admin-field-description,
+    .mc-admin-check small {
+        color: #bdbdbd;
+    }
+
+    .mc-admin-tabs,
+    .mc-admin-settings-nav,
+    .mc-admin-actions {
+        border-color: #555;
+        background: #282828;
+    }
+
+    .mc-admin-card,
+    .mc-admin-debug {
+        border-color: #555;
+        background: #242424;
+    }
+
+    .mc-admin-table-wrap,
+    .mc-admin-table th,
+    .mc-admin-table td {
+        border-color: #555;
+    }
+
+    .mc-admin-table {
+        --mc-admin-table-bg: #242424;
+    }
+
+    .mc-admin-table th {
+        background: #282828;
+    }
+
+    .mc-admin-table-secondary {
+        color: #bdbdbd;
+    }
+
+    .mc-admin-input {
+        border-color: #666;
+        background: #1f1f1f;
+        color: #eee;
+    }
+
+    .mc-admin-settings-subnav button.active {
+        background: #39446e;
+        border-color: #515f94;
+        color: #fff;
+    }
+}
+
+@media (max-width: 760px) {
+    .mc-admin-shell,
+    .mc-admin-shell.has-middle {
+        grid-template-columns: 1fr;
+    }
+
+    .mc-admin-tabs {
+        display: flex;
+        flex-direction: row;
+        overflow: auto;
+    }
+
+    .mc-admin-tabs > button {
+        width: auto;
+        white-space: nowrap;
+    }
+
+    .mc-admin-settings-subnav {
+        display: flex !important;
+        margin: 0;
+        padding: 0;
+        overflow: auto;
+        border-left: 0;
+    }
+
+    .mc-admin-settings-subnav button {
+        width: auto;
+        white-space: nowrap;
+    }
+
+    .mc-admin-middle {
+        overflow-x: auto;
+    }
+
+    .mc-admin-section-nav {
+        position: static;
+        display: flex;
+        min-width: max-content;
+    }
+
+    .mc-admin-section-nav button {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 1100px) {
+    .mc-admin-portal-view {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .mc-admin-portal-view,
+    .mc-admin-portal-view-controls {
+        grid-template-columns: 1fr;
+    }
+}
+.mc-admin-folder-permission{margin:10px 0;padding:12px;border:1px solid rgba(127,127,127,.32);border-radius:6px;background:rgba(80,120,200,.035)}
+.mc-admin-folder-permission.is-disabled{opacity:.62;background:rgba(127,127,127,.08)}
+.mc-admin-folder-permission-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:8px}
+.mc-admin-folder-permission-name{display:grid;gap:2px;min-width:0}
+.mc-admin-folder-permission-name small{color:#6b7280;font:12px Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-admin-folder-permission-toggle{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:600}
+.mc-admin-folder-permission .mc-admin-field{margin-bottom:0}
+.mc-admin-folder-permission .mc-admin-check{margin:8px 0}
+.mc-admin-folder-permission .mc-admin-field.is-disabled{opacity:.5}
+.mc-admin-folder-permission .mc-admin-field.is-disabled .mc-admin-input{cursor:not-allowed}
+.mc-admin-health-switch{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.mc-admin-health-option{min-width:92px;padding:7px 13px;border:1px solid rgba(127,127,127,.45);border-radius:7px;background:transparent;color:inherit;font-weight:700;cursor:pointer}
+.mc-admin-health-option.active.is-ok{border-color:#16a34a;background:#dcfce7;color:#166534}
+.mc-admin-health-option.active.is-warning{border-color:#d97706;background:#fef3c7;color:#92400e}
+.mc-admin-health-option.active.is-critical{border-color:#dc2626;background:#fee2e2;color:#991b1b}
+.mc-admin-health-messages{margin:4px 0 12px;padding:10px;border-left:3px solid #d97706;background:rgba(217,119,6,.06)}
+.mc-admin-health-messages[hidden]{display:none}
+
+/* Management workspace contract for the complete administration surface. */
+.mc-admin-management-shell{grid-template-columns:184px minmax(0,1fr);grid-template-rows:auto minmax(520px,1fr);gap:0;min-height:590px;border:1px solid #d7deea;border-radius:10px;background:var(--mc-admin-surface,#fff);overflow:hidden}
+.mc-admin-management-shell.has-middle{grid-template-columns:184px 236px minmax(0,1fr)}
+.mc-admin-management-toolbar{grid-column:1/-1;display:flex;align-items:center;gap:6px;min-height:48px;padding:7px 10px;border-bottom:1px solid #d7deea;background:var(--mc-admin-surface,#fff)}
+.mc-admin-management-tool{display:grid;place-items:center;width:36px;height:34px;padding:0;border:1px solid transparent;border-radius:7px;background:transparent;color:#172033;cursor:pointer}
+.mc-admin-management-tool:hover,.mc-admin-management-tool.is-active{border-color:#cbd8f5;background:#edf3ff;color:#315dd5}
+.mc-admin-management-tool svg,.mc-admin-management-item-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mc-admin-management-search{margin-left:4px}
+.mc-admin-management-search[hidden]{display:none}
+.mc-admin-management-search input{width:min(280px,36vw);height:34px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:7px;background:inherit;color:inherit}
+.mc-admin-management-shell>.mc-admin-tabs,.mc-admin-management-shell>.mc-admin-middle{align-self:stretch;min-width:0;padding:9px 8px;border:0;border-right:1px solid #d7deea;border-radius:0;background:transparent;overflow-x:hidden;overflow-y:auto}
+.mc-admin-management-shell>.mc-admin-middle{padding:9px 10px}
+.mc-admin-management-shell #sirk-platform-admin-content{min-width:0;padding:18px;overflow:auto}
+.mc-admin-management-shell .mc-admin-tabs>button,.mc-admin-management-shell .mc-admin-settings-nav button{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;margin:0 0 3px;padding:7px 9px;border:1px solid transparent;border-radius:7px;background:transparent;color:inherit;font:600 14px Segoe UI,Arial,sans-serif;white-space:nowrap}
+.mc-admin-management-shell .mc-admin-tabs>button:hover,.mc-admin-management-shell .mc-admin-settings-nav button:hover{border-color:transparent;background:rgba(96,165,250,.09)}
+.mc-admin-management-shell .mc-admin-tabs>button.active,.mc-admin-management-shell .mc-admin-settings-nav button.active{border-color:transparent;background:rgba(96,165,250,.16);box-shadow:inset 3px 0 0 #4d6bd8;color:inherit;font-weight:700}
+.mc-admin-management-shell .mc-admin-settings-nav{position:static;padding:0;border:0;border-radius:0;background:transparent}
+.mc-admin-management-item-icon{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;color:#4d6bd8}
+.mc-admin-management-item-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-admin-management-shell.is-collapsed{grid-template-columns:56px minmax(0,1fr)}
+.mc-admin-management-shell.is-collapsed.has-middle{grid-template-columns:56px 236px minmax(0,1fr)}
+.mc-admin-management-shell.is-collapsed>.mc-admin-tabs{padding:9px 5px}
+.mc-admin-management-shell.is-collapsed>.mc-admin-tabs>button{justify-content:center;gap:0;padding:7px 0}
+.mc-admin-management-shell.is-collapsed>.mc-admin-tabs .mc-admin-management-item-label{display:none}
+.mc-admin-management-shell .mc-admin-settings-layout.mc-admin-settings-layout-single{display:block;min-height:0}
+.mc-admin-management-shell .mc-admin-section-header{margin:-2px 0 14px;padding:0 0 10px;border-bottom:1px solid #d7deea}
+.mc-admin-management-shell .mc-admin-section-header h3{font:700 22px Segoe UI,Arial,sans-serif}
+.mc-admin-management-shell .mc-admin-card{border-color:#d7deea;border-radius:9px;background:var(--mc-admin-card,#fff);box-shadow:none}
+.mc-admin-management-shell .mc-admin-actions{border-color:#d7deea;border-radius:9px;background:var(--mc-admin-card,#fff)}
+
+@media(prefers-color-scheme:dark){.mc-admin-management-shell{--mc-admin-surface:#171717;--mc-admin-card:#202020;border-color:#4b5563}.mc-admin-management-toolbar,.mc-admin-management-shell>.mc-admin-tabs,.mc-admin-management-shell>.mc-admin-middle,.mc-admin-management-shell .mc-admin-section-header{border-color:#4b5563}.mc-admin-management-tool{color:#eee}.mc-admin-management-tool:hover,.mc-admin-management-tool.is-active{border-color:#4b5f91;background:#2e3b5d;color:#dbe7ff}.mc-admin-management-shell .mc-admin-tabs>button.active,.mc-admin-management-shell .mc-admin-settings-nav button.active{background:#2e3b5d;color:#fff}.mc-admin-management-shell .mc-admin-card,.mc-admin-management-shell .mc-admin-actions{border-color:#4b5563}}
+
+@media(max-width:900px){.mc-admin-management-shell,.mc-admin-management-shell.has-middle,.mc-admin-management-shell.is-collapsed,.mc-admin-management-shell.is-collapsed.has-middle{grid-template-columns:64px minmax(190px,230px) minmax(420px,1fr)}.mc-admin-management-shell:not(.has-middle),.mc-admin-management-shell.is-collapsed:not(.has-middle){grid-template-columns:64px minmax(420px,1fr)}.mc-admin-management-shell>.mc-admin-tabs{padding:9px 5px}.mc-admin-management-shell>.mc-admin-tabs>button{justify-content:center;gap:0;padding:7px 0}.mc-admin-management-shell>.mc-admin-tabs .mc-admin-management-item-label{display:none}}
+
+/* The Portal already owns the Settings title and outer frame. */
+#sirkPortalRoot #sirk-platform-admin{padding:0}
+#sirkPortalRoot #sirk-platform-admin>h2,#sirkPortalRoot #sirk-platform-admin>.mc-admin-subtitle{display:none}
+#sirkPortalRoot #sirk-platform-admin>.mc-admin-management-shell{border:0;border-radius:0}

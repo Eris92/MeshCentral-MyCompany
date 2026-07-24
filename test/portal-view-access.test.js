@@ -2,7 +2,7 @@
 
 var assert = require("assert");
 var path = require("path");
-var factory = require("../modules/Portal/index-safe.js");
+var factory = require("../server/modules/portal/safe.js");
 
 var settingsValue = { modules: { portal: { views: {
     overview: { enabled: true, allowAll: true, groupIds: [] },

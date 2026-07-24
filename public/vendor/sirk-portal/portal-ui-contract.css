@@ -38,7 +38,7 @@
 
 #sirkPortalRoot .sirk-unified-content .mc-portal-module-shell,
 #sirkPortalRoot .sirk-portal-view-host > .mc-portal-module-shell,
-#sirkPortalRoot .sirk-portal-view-host > .mycompany-management-host > .mc-portal-module-shell {
+#sirkPortalRoot .sirk-portal-view-host > .sirk-platform-management-host > .mc-portal-module-shell {
     height: 100% !important;
 }
 
@@ -124,7 +124,7 @@
 
 #sirkPortalRoot .mc-portal-module-shell.is-edit-mode,
 #sirkPortalRoot .mc-portal-module-layout.is-edit-mode,
-#sirkPortalRoot .mycompany-management-host.is-management-edit-mode .mc-portal-module-shell {
+#sirkPortalRoot .sirk-platform-management-host.is-management-edit-mode .mc-portal-module-shell {
     --portal-secondary-width: var(--mc-ui-secondary-edit-width);
 }
 

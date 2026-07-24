@@ -1,16 +1,16 @@
 "use strict";
 var assert = require("assert"), fs = require("fs"), path = require("path"), root = path.resolve(__dirname, "..");
 function read(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
-var tabs = read("public/portal-device-tabs.js");
-var css = read("public/portal-device-tabs.css");
+var tabs = read("public/native/device-tabs.js");
+var css = read("public/native/device-tabs.css");
 var contractCss = read("public/vendor/sirk-portal/portal-ui-contract.css");
-var management = read("public/portal-management.js");
+var management = read("public/modules/automation/index.js");
 var main = read("plugin-main.js");
-var admin = read("MyCompanyAdmin.js");
-var standalone = read("public/portal-standalone.html");
-var standaloneCore = read("public/standalone-core.js");
+var admin = read("admin.js");
+var standalone = read("public/portal/standalone/index.html");
+var standaloneCore = read("public/portal/standalone/scripts/core.js");
 [
-    'var STORAGE_KEY = "mycompany.sirkportal.deviceTabs"',
+    'var STORAGE_KEY = "sirkPortal.deviceTabs"',
     'var CHILD_PARAM = "sirkWorkspaceChild"',
     'var NODE_PARAM = "sirkWorkspaceNode"',
     'function startChildWorkspace()',
@@ -27,7 +27,7 @@ var standaloneCore = read("public/standalone-core.js");
     'window.addEventListener("click", intercept, true)',
     'localStorage.setItem(STORAGE_KEY',
     'mode: "persistent-session-layer"',
-    'window.MyCompanyDeviceTabs'
+    'window.SirkPlatformDeviceTabs'
 ].forEach(function (value) { assert(tabs.indexOf(value) >= 0, "Missing persistent device workspace contract: " + value); });
 assert(tabs.indexOf("DocumentFragment") < 0, "Device tabs must keep connected iframe containers");
 assert(tabs.indexOf("stopBridge") < 0, "Parent tab manager must not stop a session owned by another host iframe");
@@ -48,12 +48,12 @@ assert(css.indexOf('#sirkPortalRoot [data-view="devices"]') < 0, "Device workspa
     "mc-shared-primary",
     "background:color-mix"
 ].forEach(function (value) { assert(css.indexOf(value) < 0, "Device tabs CSS must not style Management: " + value); });
-assert(management.indexOf('state.host.classList.toggle("is-management-edit-mode", state.editMode)') >= 0, "Management must expose edit mode on the mounted host");
+assert(management.indexOf('tools.toggleEdit(toolbar, module.api.render)') >= 0, "Automation must expose Edit through the shared module shell");
 assert(contractCss.indexOf("--mc-ui-collapsed-width: 56px") >= 0, "Canonical contract must define the collapsed primary width");
 assert(contractCss.indexOf("--mc-ui-secondary-edit-width: 440px") >= 0, "Canonical contract must define the edit secondary width");
 assert(contractCss.indexOf("background: transparent !important") >= 0, "Canonical primary icon containers must stay transparent");
-assert(main.indexOf('style("mycompany-device-tabs-style", "portal-device-tabs.css")') >= 0, "Device tab CSS must load in native browser bootstrap");
-assert(main.indexOf('load("mycompany-device-tabs-script", asset("portal-device-tabs.js"))') >= 0, "Device tab script must load in native browser bootstrap");
+assert(main.indexOf('style("sirk-platform-device-tabs-style", "portal-device-tabs.css")') >= 0, "Device tab CSS must load in native browser bootstrap");
+assert(main.indexOf('["sirk-platform-device-tabs", "portal-device-tabs.js"]') >= 0, "Device tab script must load in native browser bootstrap");
 assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.css?v=__VERSION__') >= 0, "Standalone Portal must load device tab CSS");
 assert(standalone.indexOf('__ASSET_BASE__/portal-device-tabs.js?v=__VERSION__') >= 0, "Standalone Portal must load device tab script");
 assert(admin.indexOf('"portal-device-tabs.js"') >= 0 && admin.indexOf('"portal-device-tabs.css"') >= 0, "Admin asset server must expose device tab assets");

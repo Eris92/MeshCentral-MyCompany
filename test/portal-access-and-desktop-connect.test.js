@@ -4,8 +4,8 @@ var fs = require("fs");
 var path = require("path");
 var root = path.resolve(__dirname, "..");
 function read(file) { return fs.readFileSync(path.join(root, file), "utf8"); }
-var admin = read("views/MyCompany.handlebars");
-var portal = read("public/portal-standalone.html");
+var admin = read("views/SIRK-Portal.handlebars");
+var portal = read("public/portal/standalone/index.html");
 assert(admin.indexOf("Dostęp dla wszystkich użytkowników") >= 0);
 assert(admin.indexOf('dispatchEvent(new Event("change"') >= 0);
 assert(portal.indexOf('select.value="3"') >= 0);
