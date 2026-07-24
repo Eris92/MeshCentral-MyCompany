@@ -28,7 +28,7 @@ function createFallbackRuntime(error) {
         },
         adminSnapshot: function () {
             return {
-                plugin: { name: "SIRK Management Platform", shortName: "SIRK-Portal", version: VERSION },
+                plugin: { name: "SIRK Management Platform", shortName: "SIRKPortal", version: VERSION },
                 modules: [],
                 moduleSettings: {},
                 integrations: {},
@@ -66,46 +66,12 @@ function writeLoadError(parent, error) {
     } catch (ignored) {}
 }
 
-function createPlugin(parent, shortName) {
-    var obj = {
-        parent: parent,
-        meshServer: parent && parent.parent,
-        shortName: shortName || "SIRK-Portal",
-        exports: ["onWebUIStartupEnd", "goPageStart", "goPageEnd", "onDeviceRefreshEnd", "commandResult"]
-    };
-
-    try {
-        obj.runtime = require("./server/core/runtime-portal.js").createRuntime({
-            parent: parent,
-            pluginRoot: __dirname,
-            source: obj
-        });
-    } catch (error) {
-        console.error("SIRK Platform runtime creation failed", error);
-        writeLoadError(parent, error);
-        obj.runtime = createFallbackRuntime(error);
-    }
-
-    obj.admin = createAdmin(obj);
-    obj.server_startup = function () {
-        Promise.resolve(obj.runtime.initialize()).catch(function (error) {
-            console.error("SIRK Platform initialization failed", error);
-            writeLoadError(parent, error);
-        });
-    };
-    obj.handleAdminReq = function (req, res, user) { return obj.admin.req(req, res, user); };
-    obj.handleAdminPostReq = function (req, res, user) { return obj.admin.post(req, res, user); };
-    obj.hook_processAgentData = function (command, agent) {
-        if (obj.runtime && typeof obj.runtime.captureAgentData === "function") {
-            obj.runtime.captureAgentData(command, agent);
-        }
-    };
-
-    obj.onWebUIStartupEnd = function () {
+function createSerializedStartupHook(version, pin) {
+    var source = function () {
         if (typeof window === "undefined" || typeof document === "undefined") return;
 
-        var browserVersion = VERSION;
-        var browserPin = obj.shortName;
+        var browserVersion = "__VERSION__";
+        var browserPin = "__PIN__";
         window.__SIRK_PLATFORM_VERSION__ = browserVersion;
         document.documentElement.classList.add("sirk-platform-native-ui");
 
@@ -117,7 +83,7 @@ function createPlugin(parent, shortName) {
             return url.href;
         }
 
-        function load(id, source) {
+        function load(id, sourceUrl) {
             return new Promise(function (resolve, reject) {
                 var existing = document.getElementById(id);
                 if (existing) {
@@ -130,7 +96,7 @@ function createPlugin(parent, shortName) {
                 }
                 var script = document.createElement("script");
                 script.id = id;
-                script.src = source;
+                script.src = sourceUrl;
                 script.async = false;
                 script.onload = function () { script.setAttribute("data-loaded", "1"); resolve(); };
                 script.onerror = reject;
@@ -189,25 +155,64 @@ function createPlugin(parent, shortName) {
         }).catch(function (error) {
             if (window.console) console.error("SIRK Platform browser startup failed", error);
         });
+    }.toString();
+
+    source = source
+        .replace("__VERSION__", String(version).replace(/\\/g, "\\\\").replace(/\"/g, "\\\""))
+        .replace("__PIN__", String(pin).replace(/\\/g, "\\\\").replace(/\"/g, "\\\""));
+    return Function("return (" + source + ");")();
+}
+
+function createPlugin(parent, shortName) {
+    var obj = {
+        parent: parent,
+        meshServer: parent && parent.parent,
+        shortName: shortName || "SIRKPortal",
+        exports: ["onWebUIStartupEnd", "goPageStart", "goPageEnd", "onDeviceRefreshEnd", "commandResult"]
     };
 
-    function browserRuntime() {
-        return typeof window === "undefined" ? null : window.SirkPlatformRuntime || null;
+    try {
+        obj.runtime = require("./server/core/runtime-portal.js").createRuntime({
+            parent: parent,
+            pluginRoot: __dirname,
+            source: obj
+        });
+    } catch (error) {
+        console.error("SIRK Platform runtime creation failed", error);
+        writeLoadError(parent, error);
+        obj.runtime = createFallbackRuntime(error);
     }
+
+    obj.admin = createAdmin(obj);
+    obj.server_startup = function () {
+        Promise.resolve(obj.runtime.initialize()).catch(function (error) {
+            console.error("SIRK Platform initialization failed", error);
+            writeLoadError(parent, error);
+        });
+    };
+    obj.handleAdminReq = function (req, res, user) { return obj.admin.req(req, res, user); };
+    obj.handleAdminPostReq = function (req, res, user) { return obj.admin.post(req, res, user); };
+    obj.hook_processAgentData = function (command, agent) {
+        if (obj.runtime && typeof obj.runtime.captureAgentData === "function") {
+            obj.runtime.captureAgentData(command, agent);
+        }
+    };
+
+    obj.onWebUIStartupEnd = createSerializedStartupHook(VERSION, obj.shortName);
     obj.goPageStart = function (view) {
-        var runtime = browserRuntime();
+        var runtime = typeof window === "undefined" ? null : window.SirkPlatformRuntime || null;
         if (runtime && typeof runtime.onNativePageStart === "function") runtime.onNativePageStart(view);
     };
     obj.goPageEnd = function (view) {
-        var runtime = browserRuntime();
+        var runtime = typeof window === "undefined" ? null : window.SirkPlatformRuntime || null;
         if (runtime && typeof runtime.onNativePageEnd === "function") runtime.onNativePageEnd(view);
     };
     obj.onDeviceRefreshEnd = function (nodeId) {
-        var runtime = browserRuntime();
+        var runtime = typeof window === "undefined" ? null : window.SirkPlatformRuntime || null;
         if (runtime && typeof runtime.onDeviceRefreshEnd === "function") runtime.onDeviceRefreshEnd(nodeId);
     };
     obj.commandResult = function (server, message) {
-        var runtime = browserRuntime();
+        var runtime = typeof window === "undefined" ? null : window.SirkPlatformRuntime || null;
         if (runtime && typeof runtime.commandResult === "function") runtime.commandResult(message);
     };
 
@@ -215,3 +220,4 @@ function createPlugin(parent, shortName) {
 }
 
 module.exports.createPlugin = createPlugin;
+module.exports.createSerializedStartupHook = createSerializedStartupHook;

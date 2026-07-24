@@ -1,7 +1,7 @@
 {
   "name": "SIRK Management Platform",
   "shortName": "SIRKPortal",
-  "version": "1.5.145",
+  "version": "1.5.146",
   "author": "Eris92",
   "description": "SIRK Management Platform plugin with the standalone SIRK Portal, shared automation, approval, device management and integration services.",
   "hasAdminPanel": true,
