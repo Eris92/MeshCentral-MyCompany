@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.5.142",
+    "date": "2026-07-24",
+    "changes": [
+      "Publish the finalized SIRK-Portal repository layout to main",
+      "Include the unified UI contract for Overview, Devices and all module views",
+      "Synchronize release metadata and documentation for installation testing"
+    ]
+  },
+  {
     "version": "1.5.141",
     "date": "2026-07-24",
     "changes": [
