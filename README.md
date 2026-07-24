@@ -1,4 +1,4 @@
-# SIRK Management Platform 1.5.141
+# SIRK Management Platform 1.5.142
 
 **Repozytorium i techniczna nazwa pluginu:** `SIRK-Portal`  
 **Nazwa wyświetlana:** `SIRK Management Platform`  
