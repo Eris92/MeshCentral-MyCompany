@@ -377,7 +377,7 @@
     function mountModule(view, key, sequence) {
         var state = moduleState(key);
         if (!moduleAllowed(key)) {
-            showError(viewName(view) + ": " + t("moduleDisabled"), JSON.stringify(state || {}, null, 2));
+            showError(viewName(view) + ": " + t("moduleDisabled"));
             return;
         }
         loading(t("loading") + " " + viewName(view));
@@ -395,7 +395,7 @@
     function management(sequence) {
         var state = moduleState("myscripts");
         if (!moduleAllowed("myscripts")) {
-            showError("MyScripts: " + t("moduleDisabled"), JSON.stringify(state || {}, null, 2));
+            showError(viewName("management") + ": " + t("moduleDisabled"));
             return;
         }
         loading(t("managementLoading"));
@@ -409,7 +409,7 @@
         outerHost.appendChild(host);
         var timer = window.setTimeout(function () {
             if (isCurrent(sequence) && !host.querySelector(".sirk-management-shell,.mc-shared-error,.sirk-card")) {
-                showError("MyScripts did not finish initialization.", "pluginadmin.ashx?pin=SirkPlatform&module=myscripts&asset=scripts");
+                showError("MyScripts did not finish initialization.", "pluginadmin.ashx?pin=SIRKPortal&module=myscripts&asset=scripts");
             }
         }, 12000);
         Promise.resolve(window.SirkPlatformPortalManagement.mount(host)).then(function () {
@@ -424,7 +424,7 @@
 
     function approvals(sequence) {
         if (!moduleAllowed("approvalcenter")) {
-            showError("Approval Center: " + t("moduleDisabled"), JSON.stringify(moduleState("approvalcenter") || {}, null, 2));
+            showError(viewName("approvals") + ": " + t("moduleDisabled"));
             return;
         }
         loading(t("approvalsLoading"));
@@ -455,7 +455,7 @@
         frame.className = "sirk-standalone-settings-frame";
         frame.title = "SirkPlatform settings";
         var url = new URL(window.__SIRK_PLATFORM_API_BASE__, window.location.href);
-        url.searchParams.set("pin", "SirkPlatform");
+        url.searchParams.set("pin", "SIRKPortal");
         frame.src = url.href;
         workspace.appendChild(frame);
         shell.appendChild(toolbar);

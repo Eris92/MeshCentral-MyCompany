@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.5.151",
+    "date": "2026-07-24",
+    "changes": [
+      "Complete standalone Portal asset manifest",
+      "Fix Settings and module runtime URLs",
+      "Normalize disabled module states"
+    ]
+  },
+  {
     "version": "1.5.150",
     "date": "2026-07-24",
     "changes": [

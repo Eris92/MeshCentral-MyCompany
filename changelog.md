@@ -1,3 +1,10 @@
+## 1.5.151
+
+- Completed the standalone Portal asset manifest for all shared UI components and feature modules.
+- Added the Portal UI contract JavaScript endpoint.
+- Fixed Settings and Management URLs to use `SIRKPortal`.
+- Replaced raw disabled-module JSON with the shared unavailable-state presentation.
+
 ## 1.5.150
 
 - Fixed the standalone Portal bootstrap pin to use `SIRKPortal`.
