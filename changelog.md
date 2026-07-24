@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.142
+
+- Opublikowano uporządkowany layout repozytorium SIRK-Portal na branchu `main`.
+- Zawarto finalny wspólny kontrakt UI dla Overview, Devices i pozostałych zakładek.
+- Zsynchronizowano źródła wersji i dokumentację wydania do testów instalacyjnych.
+
 ## 1.5.141
 
 - Rozszerzono kanoniczny kontrakt UI na wszystkie widoki SIRK Portal.
