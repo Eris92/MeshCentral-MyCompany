@@ -1,6 +1,6 @@
 "use strict";
 
-var shared = require("../../../core/shared.js");
+var shared = require("../../core/shared.js");
 
 module.exports.createModule = function (context) {
     var providerTypes = ["moverequests", "mycommands", "myscripts"];
