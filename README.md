@@ -1,6 +1,7 @@
-# SIRK Management Platform 1.5.143
+# SIRK Management Platform 1.5.144
 
-**Repozytorium i techniczna nazwa pluginu:** `SIRK-Portal`  
+**Repozytorium:** `SIRK-Portal`  
+**Techniczny identyfikator pluginu MeshCentral:** `SIRKPortal`  
 **Nazwa wyświetlana:** `SIRK Management Platform`  
 **Nazwa skrócona w interfejsie:** `SIRK Platform`
 
@@ -68,16 +69,18 @@ Widok Devices zachowuje własną geometrię listy urządzeń, szczegółów host
 Kanoniczne entrypointy MeshCentral:
 
 ```text
-SIRK-Portal.js
-SIRK-PortalAdmin.js
+SIRKPortal.js
+SIRKPortalAdmin.js
 ```
 
-`SIRK-PortalAdmin.js` jest wymaganym przez MeshCentral entrypointem panelu i deleguje implementację do `admin.js`.
+Identyfikator `SIRKPortal` celowo nie zawiera myślnika. MeshCentral wykorzystuje `shortName` jako nazwę właściwości w generowanym JavaScript głównego interfejsu, dlatego musi to być poprawny identyfikator JavaScript.
+
+`SIRKPortalAdmin.js` deleguje implementację panelu do `admin.js`.
 
 Łańcuch backendu:
 
 ```text
-SIRK-Portal.js
+SIRKPortal.js
   -> plugin-main-standalone.js
     -> plugin-main.js
       -> server/core/runtime-portal.js
@@ -117,10 +120,16 @@ Repozytorium źródłowe:
 https://github.com/Eris92/SIRK-Portal
 ```
 
+Instalator umieszcza plugin w:
+
+```text
+meshcentral-data/plugins/SIRKPortal
+```
+
 ## Testy
 
 ```bash
 npm test
 ```
 
-Walidator struktury blokuje stare entrypointy i widoki `MyCompany`, backend poza `server/`, płaskie assety aplikacyjne w `public/`, `public/shared-ui/`, podwójne renderery i niekanoniczne ścieżki loaderów.
+Walidator struktury blokuje niebezpieczny identyfikator z myślnikiem, stare entrypointy i widoki `MyCompany`, backend poza `server/`, płaskie assety aplikacyjne w `public/`, `public/shared-ui/`, podwójne renderery i niekanoniczne ścieżki loaderów.
