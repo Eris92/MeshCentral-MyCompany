@@ -68,11 +68,40 @@ var standalone = read("public/portal/standalone/index.html");
     "decorateActions",
     "decorateToolbar",
     "decorateShell",
+    "decoratePortalViews",
+    "installViewStyle",
     "decorateSettingsFrame",
     "observer.observe(root, { childList: true, subtree: true })",
     "ensureFrameStyle"
 ].forEach(function (value) {
     assert(contractJs.indexOf(value) >= 0, "Canonical Portal runtime is missing: " + value);
+});
+
+[
+    "mc-portal-view-surface",
+    "mc-portal-view-scroll",
+    "mc-portal-view-toolbar",
+    "mc-portal-button-secondary",
+    "mc-portal-status",
+    "mc-portal-list",
+    "mc-portal-list-row",
+    "mc-portal-badge"
+].forEach(function (value) {
+    assert(contractJs.indexOf(value) >= 0, "Shared view contract is missing: " + value);
+});
+
+[
+    ".sirk-standalone-view-scroll",
+    ".sirk-device-toolbar",
+    ".sirk-standalone-card,.sirk-device-group,.sirk-device-hero,.sirk-device-detail-item,.sirk-device-native-card",
+    ".sirk-device-input,.sirk-device-select",
+    ".sirk-device-refresh,.sirk-device-back",
+    ".sirk-device-status",
+    ".sirk-device-summary span",
+    ".sirk-device-list",
+    ".sirk-device-row"
+].forEach(function (value) {
+    assert(contractJs.indexOf(value) >= 0, "Overview or Devices is not connected to the shared UI contract: " + value);
 });
 
 assert(
@@ -138,4 +167,4 @@ assert(
     "Standalone Portal must load its scoped module shell stylesheet"
 );
 
-console.log("Canonical SirK Portal UI contract: OK");
+console.log("Canonical SIRK Portal UI contract: OK");
