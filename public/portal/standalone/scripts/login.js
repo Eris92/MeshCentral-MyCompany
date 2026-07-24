@@ -7,6 +7,7 @@
     var version = encodeURIComponent(window.__SIRK_PLATFORM_PORTAL_VERSION__ || "1");
     var redirected = false;
     var revealed = false;
+    var probePending = false;
 
     function reveal() {
         if (revealed) return;
@@ -68,7 +69,35 @@
         window.location.replace(String(target || "/"));
     }
 
+    function sessionProbeUrl() {
+        var endpoint = new URL("../../pluginadmin.ashx", window.location.href);
+        endpoint.searchParams.set("pin", "SIRKPortal");
+        endpoint.searchParams.set("asset", "bootstrap");
+        endpoint.searchParams.set("v", version);
+        return endpoint.href;
+    }
+
+    function probeSession() {
+        if (redirected || probePending) return;
+        probePending = true;
+        window.fetch(sessionProbeUrl(), {
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+        }).then(function (response) {
+            if (!response.ok) return null;
+            return response.json().catch(function () { return null; });
+        }).then(function (result) {
+            if (result && result.ok === true && result.user && String(result.user.name || "").trim()) finishLogin();
+        }).catch(function () {
+            // The iframe remains the source of truth while the user is not authenticated.
+        }).then(function () {
+            probePending = false;
+        });
+    }
+
     function inspect() {
+        probeSession();
         try {
             var documentValue = frame.contentDocument;
             if (!documentValue) return;
@@ -92,5 +121,6 @@
     }
 
     frame.addEventListener("load", inspect);
+    probeSession();
     window.setInterval(inspect, 500);
 }());
