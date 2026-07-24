@@ -2,3 +2,24 @@
 #sirkPortalRoot .mc-portal-view-surface{background:var(--sirk-panel,#fff);color:var(--sirk-text,#172033)}
 #sirkPortalRoot .mc-portal-card{border:1px solid var(--sirk-border,#dce3ec);border-radius:8px;background:var(--sirk-panel,#fff)}
 #sirkPortalRoot .mc-portal-button{font:inherit;cursor:pointer}
+
+/* Management owns one visual surface: remove the outer host frame and transfer
+   its border and rounding to the actual Management shell. */
+#sirkPortalRoot .sirk-portal-view-management{
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    overflow:visible!important;
+}
+#sirkPortalRoot .sirk-portal-view-management>.sirk-platform-management-host{
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    overflow:hidden;
+}
+#sirkPortalRoot .sirk-portal-view-management .sirk-management-shell{
+    border:1px solid var(--sirk-border,#dce3ec)!important;
+    border-radius:10px!important;
+    overflow:hidden;
+    background:var(--sirk-panel,#fff);
+}
