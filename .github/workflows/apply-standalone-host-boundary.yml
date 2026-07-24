@@ -1,0 +1,31 @@
+name: Apply standalone host boundary
+
+on:
+  push:
+    branches:
+      - refactor/standalone-host-boundary
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[standalone-boundary-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refactor/standalone-host-boundary
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/apply-standalone-host-boundary.js
+      - run: npm test
+      - name: Commit generated refactor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "refactor: isolate standalone Portal host boundary 1.6.0 [standalone-boundary-applied]"
+          git push origin HEAD:refactor/standalone-host-boundary
